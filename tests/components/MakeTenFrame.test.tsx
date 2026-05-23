@@ -11,4 +11,12 @@ describe('MakeTenFrame', () => {
     render(<MakeTenFrame filled={3} />);
     expect(screen.getAllByTestId('cell-filled')).toHaveLength(3);
   });
+  it('renders flash prop without crashing', () => {
+    render(<MakeTenFrame filled={10} flash />);
+    expect(screen.getAllByTestId('cell-filled')).toHaveLength(10);
+  });
+  it('clamps filled above 10', () => {
+    render(<MakeTenFrame filled={12} />);
+    expect(screen.getAllByTestId('cell-filled')).toHaveLength(10);
+  });
 });

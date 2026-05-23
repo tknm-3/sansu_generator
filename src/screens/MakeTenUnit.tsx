@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { MakeTenFrame } from '../components/MakeTenFrame';
 import { AnswerButtons } from '../components/AnswerButtons';
@@ -11,6 +12,7 @@ import { addStamp, EMPTY_STAMPS, type StampState } from '../features/rewards/sta
 
 const QUESTIONS_PER_UNIT = 3;
 const STAMP_KEY = 'math-app:stamps';
+const FRUITS = ['🍎', '🍊', '🍇', '🍓', '🍌'] as const;
 
 interface Props {
   characterName: string;
@@ -18,25 +20,32 @@ interface Props {
 }
 
 function newCurrent(): number {
-  return Math.floor(Math.random() * 9) + 1; // 1..9
+  return Math.floor(Math.random() * 9) + 1;
+}
+
+function randomFruit(): string {
+  return FRUITS[Math.floor(Math.random() * FRUITS.length)];
 }
 
 export function MakeTenUnit({ characterName, onExit }: Props) {
   const [current, setCurrent] = useState(newCurrent);
+  const [fruit, setFruit] = useState(randomFruit);
   const [solved, setSolved] = useState(0);
-  const [happy, setHappy] = useState(false);
+  const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [flash, setFlash] = useState(false);
   const choices = useMemo(() => makeAnswerChoices(current), [current]);
   const cleared = solved >= QUESTIONS_PER_UNIT;
-  // 連打による多重処理（スタンプ二重付与など）を防ぐガード。
   const processing = useRef(false);
 
   function handlePick(value: number) {
     if (processing.current) return;
     processing.current = true;
+    playSfx('tap');
     if (isCorrectMissing(current, value)) {
       playSfx('correct');
-      setHappy(true);
+      setExpression('happy');
+      setFlash(true);
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
       const nextSolved = solved + 1;
       setSolved(nextSolved);
@@ -44,29 +53,58 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
       if (nextSolved >= QUESTIONS_PER_UNIT) {
         const stamps = loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS);
         saveJson(STAMP_KEY, addStamp(stamps, 'make-ten', Date.now()));
-        playSfx('levelup');
+        playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
         setTimeout(() => {
-          setHappy(false);
+          setExpression('normal');
+          setFlash(false);
           setCurrent(newCurrent());
-          processing.current = false; // 次の問題で再び回答可能に
+          setFruit(randomFruit());
+          processing.current = false;
         }, 900);
       }
-      // 最終正解時はクリア画面に遷移しボタンが消えるためガードは解放しない。
     } else {
+      playSfx('wrong');
       setFeedback('wrong');
+      setExpression('hint');
       speakJa('おしい！ もういちど やってみよう');
-      processing.current = false; // 不正解はすぐ再回答可能に
+      processing.current = false;
     }
   }
 
   if (cleared) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-amber-50 p-8">
-        <div className="text-6xl">🎉</div>
-        <p className="text-2xl font-bold text-green-700">クリア！ スタンプ ゲット！</p>
-        <button type="button" onClick={onExit} className="rounded-2xl bg-blue-500 px-8 py-4 text-2xl font-bold text-white shadow-[0_5px_0_#1565c0]">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-8">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: [0, 1.2, 1] }}
+          transition={{ duration: 0.5 }}
+          className="text-7xl"
+        >
+          🎉
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-2xl font-bold text-green-700"
+        >
+          クリア！ スタンプ ゲット！
+        </motion.p>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: 'spring', stiffness: 300 }}
+          className="text-5xl"
+        >
+          ⭐
+        </motion.div>
+        <button
+          type="button"
+          onClick={onExit}
+          className="rounded-2xl bg-blue-500 px-8 py-4 text-2xl font-bold text-white shadow-[0_5px_0_#1565c0] active:translate-y-1 active:shadow-none transition-all"
+        >
           ホームに もどる
         </button>
       </div>
@@ -75,20 +113,34 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
 
   const missing = missingToTen(current);
   return (
-    <div className="flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-6">
-      <div className="self-stretch text-sm text-amber-700">といた かず: {solved} / {QUESTIONS_PER_UNIT}</div>
+    <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6">
+      <div className="self-stretch text-sm text-amber-700 font-bold">
+        といた かず: {solved} / {QUESTIONS_PER_UNIT}
+      </div>
       <Companion
         name={characterName}
-        emoji="🐰"
-        happy={happy}
-        message={`🍎が ${current}こ あるよ。あと なんこで 10こ になる？`}
+        expression={expression}
+        message={`${fruit}が ${current}こ あるよ。あと なんこで 10こ になる？`}
       />
-      <MakeTenFrame filled={current} />
-      <AnswerButtons choices={choices} onPick={handlePick} disabled={happy} />
-      {feedback === 'wrong' && (
-        <p className="text-lg font-bold text-orange-600">おしい！ もういちど やってみよう（ヒント：あと {missing}こ）</p>
-      )}
-      <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      <MakeTenFrame filled={current} fruit={fruit} flash={flash} />
+      <AnswerButtons choices={choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnimatePresence>
+        {feedback === 'wrong' && (
+          <motion.p
+            key="wrong"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: [0, -8, 8, -4, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-lg font-bold text-orange-600"
+          >
+            おしい！ もういちど やってみよう（ヒント：あと {missing}こ）
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">
+        やめる
+      </button>
     </div>
   );
 }
