@@ -17,7 +17,7 @@ import { CharacterCollection } from './features/character/CharacterCollection';
 import { NamingScreen } from './features/character/NamingScreen';
 import { loadCharacter } from './features/character/character';
 import { loadJson, saveJson } from './lib/storage';
-import { EMPTY_STAMPS, type StampState } from './features/rewards/stamps';
+import { EMPTY_STAMPS, STAMP_KEY, type StampState } from './features/rewards/stamps';
 import type { Character } from './features/character/character';
 import type { TemplateFilled } from './lib/problemTemplates';
 
@@ -38,7 +38,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
   const [refresh, setRefresh] = useState(0);
 
-  const stamps = loadJson<StampState>(PROFILE_KEY.replace('profile', 'stamps'), EMPTY_STAMPS);
+  const stamps = loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS);
   const stampTotal = stamps.total;
 
   if (!character.named) {

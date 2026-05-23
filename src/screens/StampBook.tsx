@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
 import { loadJson } from '../lib/storage';
-import { EMPTY_STAMPS, type StampState } from '../features/rewards/stamps';
+import { EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 
 interface Props {
   onClose: () => void;
 }
 
 export function StampBook({ onClose }: Props) {
-  const stamps = loadJson<StampState>('math-app:stamps', EMPTY_STAMPS);
+  const stamps = loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS);
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-yellow-100 to-amber-50 p-6">

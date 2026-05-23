@@ -7,11 +7,10 @@ import { generateBigSubtraction, checkBigSubtraction, type BigSubtractionProblem
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
-import { addStamp, EMPTY_STAMPS, type StampState } from '../features/rewards/stamps';
+import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
-const STAMP_KEY = 'math-app:stamps';
 const SKILL_ID = 'big-subtraction';
 
 interface Props {

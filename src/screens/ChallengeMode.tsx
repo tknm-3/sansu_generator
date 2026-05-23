@@ -9,10 +9,9 @@ import { loadMastery, saveMastery, recordAnswer } from '../lib/mastery';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
-import { addStamp, EMPTY_STAMPS, type StampState } from '../features/rewards/stamps';
+import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 
 const QUESTIONS_PER_SESSION = 10;
-const STAMP_KEY = 'math-app:stamps';
 
 const SKILL_WEIGHTS: SkillWeight[] = ALL_SKILL_IDS.map((id) => ({ skillId: id, weight: 1 }));
 

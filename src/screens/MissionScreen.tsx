@@ -9,9 +9,8 @@ import { loadMastery, saveMastery, recordAnswer } from '../lib/mastery';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
-import { addStamp, EMPTY_STAMPS, type StampState } from '../features/rewards/stamps';
+import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 
-const STAMP_KEY = 'math-app:stamps';
 const MISSION_KEY = 'math-app:lastMission';
 const MISSION_COUNT = 3;
 
