@@ -1,0 +1,19 @@
+# node_modules — 最大のトークン消費源
+node_modules/
+
+# ビルド成果物
+dist/
+.next/
+.wrangler/
+coverage/
+
+# Git 内部
+.git/
+
+# ブレインストーム HTMLモックアップ（大きいが不要）
+.superpowers/brainstorm/
+
+# ログ・一時ファイル
+*.log
+*.tmp
+.DS_Store

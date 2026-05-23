@@ -3,6 +3,7 @@
     "defaultMode": "acceptEdits",
     "allow": [
       "Bash(*)",
+      "PowerShell(*)",
       "Bash(git *)",
       "Bash(npm *)",
       "Bash(npx *)",
@@ -20,5 +21,14 @@
       "Glob",
       "Grep"
     ]
+  },
+  "language": "japanese",
+  "skillListingMaxDescChars": 400,
+  "skillOverrides": {
+    "anthropic-skills:docx": "name-only",
+    "anthropic-skills:pdf": "name-only",
+    "anthropic-skills:pptx": "name-only",
+    "anthropic-skills:xlsx": "name-only",
+    "anthropic-skills:setup-cowork": "name-only"
   }
 }
