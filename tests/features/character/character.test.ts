@@ -11,8 +11,12 @@ describe('character profile', () => {
     saveCharacterName('うさたろう');
     expect(loadCharacter().name).toBe('うさたろう');
   });
-  it('trims whitespace and ignores empty names', () => {
+  it('trims whitespace and keeps the default name for empty input', () => {
     saveCharacterName('   ');
     expect(loadCharacter().name).toBe(DEFAULT_CHARACTER.name);
+  });
+  it('persists the named flag even when the name is empty', () => {
+    saveCharacterName('   ');
+    expect(loadCharacter().named).toBe(true);
   });
 });

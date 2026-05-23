@@ -14,12 +14,14 @@ export function loadCharacter(): Character {
   return loadJson<Character>(KEY, DEFAULT_CHARACTER);
 }
 
-/** 名前を保存。空白のみは無視（既定のまま）。 */
+/** 名前を保存。空白のみのときは既定の名前のまま、命名済みフラグだけ立てる。 */
 export function saveCharacterName(name: string): Character {
   const trimmed = name.trim();
   const current = loadCharacter();
-  if (trimmed.length === 0) return current;
-  const next: Character = { ...current, name: trimmed, named: true };
+  // 空白のみでも named を永続化する（命名画面を再度出さないため）。
+  const next: Character = trimmed.length === 0
+    ? { ...current, named: true }
+    : { ...current, name: trimmed, named: true };
   saveJson(KEY, next);
   return next;
 }

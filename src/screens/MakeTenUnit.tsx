@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Companion } from '../features/character/Companion';
 import { MakeTenFrame } from '../components/MakeTenFrame';
@@ -28,8 +28,12 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const choices = useMemo(() => makeAnswerChoices(current), [current]);
   const cleared = solved >= QUESTIONS_PER_UNIT;
+  // 連打による多重処理（スタンプ二重付与など）を防ぐガード。
+  const processing = useRef(false);
 
   function handlePick(value: number) {
+    if (processing.current) return;
+    processing.current = true;
     if (isCorrectMissing(current, value)) {
       playSfx('correct');
       setHappy(true);
@@ -46,11 +50,14 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
         setTimeout(() => {
           setHappy(false);
           setCurrent(newCurrent());
+          processing.current = false; // 次の問題で再び回答可能に
         }, 900);
       }
+      // 最終正解時はクリア画面に遷移しボタンが消えるためガードは解放しない。
     } else {
       setFeedback('wrong');
       speakJa('おしい！ もういちど やってみよう');
+      processing.current = false; // 不正解はすぐ再回答可能に
     }
   }
 
