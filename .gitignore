@@ -20,3 +20,7 @@ Thumbs.db
 
 # Superpowers brainstorm session files (visual companion mockups)
 .superpowers/
+
+# Node
+node_modules/
+dist/
