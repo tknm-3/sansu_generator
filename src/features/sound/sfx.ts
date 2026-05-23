@@ -1,9 +1,9 @@
 import { Howl } from 'howler';
+import { playTone, type SynthName } from './synth';
 
-export type SfxName = 'correct' | 'tap' | 'levelup';
+export type SfxName = 'correct' | 'tap' | 'levelup' | 'wrong' | 'fanfare';
 
-// public/sounds/ に後でファイルを置く。未配置でも例外は出ない（再生時に無音）。
-const FILES: Record<SfxName, string> = {
+const FILES: Partial<Record<SfxName, string>> = {
   correct: 'sounds/correct.mp3',
   tap: 'sounds/tap.mp3',
   levelup: 'sounds/levelup.mp3',
@@ -22,12 +22,24 @@ export function isSoundEnabled(): boolean {
 
 export function playSfx(name: SfxName): void {
   if (!enabled) return;
-  try {
-    if (!cache[name]) {
-      cache[name] = new Howl({ src: [FILES[name]], volume: 0.6 });
+  const file = FILES[name];
+  if (file) {
+    try {
+      if (!cache[name]) {
+        cache[name] = new Howl({ src: [file], volume: 0.6, preload: false });
+      }
+      const h = cache[name]!;
+      h.on('loaderror', () => {
+        delete cache[name];
+        playTone(name as SynthName);
+      });
+      if (h.state() === 'loaded') {
+        h.play();
+        return;
+      }
+    } catch {
+      // fallthrough to synth
     }
-    cache[name]!.play();
-  } catch {
-    // 読み込み/再生失敗でも継続
   }
+  playTone(name as SynthName);
 }
