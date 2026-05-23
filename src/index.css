@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@source "../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";
 
 html, body, #root { height: 100%; margin: 0; }
 body { font-family: system-ui, "Hiragino Maru Gothic ProN", sans-serif; -webkit-user-select: none; user-select: none; }
