@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface DivisionProblem {
   dividend: number;
   divisor: number;
@@ -30,4 +32,27 @@ export function generateDivision(
 
 export function checkDivision(p: DivisionProblem, chosen: number): boolean {
   return chosen === p.quotient;
+}
+
+export function explainDivision(p: DivisionProblem, emoji: string): ExplainStep[] {
+  return [
+    {
+      kind: 'objects',
+      caption: `${emoji}が ${p.dividend}こ\nあるよ`,
+      narration: `${emoji}が ${p.dividend}こ あるよ`,
+      data: { emoji, count: p.dividend },
+    },
+    {
+      kind: 'groups',
+      caption: `${p.divisor}人に おなじ かずずつ。\nひとり ${p.quotient}こ`,
+      narration: `${p.divisor}人に わけると ひとり ${p.quotient}こ`,
+      data: { emoji, perGroup: p.quotient, groups: p.divisor },
+    },
+    {
+      kind: 'equation',
+      caption: 'しきに すると…',
+      narration: `${p.dividend}わる${p.divisor}は ${p.quotient}`,
+      data: { text: `${p.dividend}÷${p.divisor} ＝ ${p.quotient}` },
+    },
+  ];
 }
