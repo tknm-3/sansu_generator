@@ -6,6 +6,8 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { generateBigSubtraction, checkBigSubtraction, explainBigSubtraction, type BigSubtractionProblem } from '../lib/math/bigSubtraction';
 import { StepExplainer } from '../components/StepExplainer';
+import { ProblemVisual } from '../components/ProblemVisual';
+import { sceneFor } from '../lib/problemScene';
 import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
@@ -107,6 +109,7 @@ export function BigSubtractionUnit({ characterName, characterId, onExit }: Props
       >
         💡 ヒント
       </button>
+      <ProblemVisual scene={sceneFor(SKILL_ID, problem as unknown as Record<string, unknown>, scenario.emoji)} />
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
