@@ -146,7 +146,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">
         やめる
       </button>
-      {showHint && (<StepExplainer steps={explainMakeTen(current, fruit)} onClose={() => setShowHint(false)} />)}
+      {showHint && (<StepExplainer steps={explainMakeTen(current, fruit)} problem={`${current} ＋ ？ ＝ 10`} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }
