@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { StepExplainer } from '../components/StepExplainer';
+import { ProblemVisual } from '../components/ProblemVisual';
+import { sceneFor } from '../lib/problemScene';
 import { generateSubtraction, checkSubtraction, explainSubtraction, type SubtractionProblem } from '../lib/math/subtraction';
 import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
@@ -77,7 +79,6 @@ export function SubtractionUnit({ characterName, characterId, onExit }: Props) {
     );
   }
 
-  const answer = problem.a - problem.b;
   const message = scenario.build({ a: problem.a, b: problem.b });
   const formula = `${problem.a} － ${problem.b} ＝ ？`;
 
@@ -113,9 +114,7 @@ export function SubtractionUnit({ characterName, characterId, onExit }: Props) {
           </motion.p>
         )}
       </AnimatePresence>
-      {expression === 'happy' && (
-        <div className="text-6xl">{food.repeat(Math.max(0, answer))}</div>
-      )}
+      <ProblemVisual scene={sceneFor(SKILL_ID, problem as unknown as Record<string, unknown>, food)} />
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (<StepExplainer steps={explainSubtraction(problem, food)} problem={formula} onClose={() => setShowHint(false)} />)}
     </div>
