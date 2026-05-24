@@ -7,30 +7,29 @@
 メモ `docs/second.txt` の方針（CRA: 具体→表象→式で考えを育てる）をもとに、
 **問題画面そのものを視覚的にし、子どもが現実のものを想像しながら考えられるようにする**。
 
-現状、実物を並べる視覚（GroupsVisual / PlaceValueBlocks / objects など）は
-ヒントの `StepExplainer` の中にしか無く、メイン問題画面は「文章 + emoji + 数字ボタン」のみ。
-つまり具体（Concrete）がヒントの奥に隠れ、子どもは最初から抽象的な文章で考えさせられている。
-
-本仕様で、メイン画面に最初から実物を並べて見せる（具体先）。
+現状、実物を並べる視覚はヒントの `StepExplainer` の中が中心で、メイン問題画面に
+場面の絵が無い単元が残っている。具体（Concrete）がヒントの奥に隠れ、子どもは
+最初から抽象的な文章で考えさせられている。本仕様で、メイン画面に最初から実物を
+並べて見せる（具体先）。
 
 ### 決定事項（ブレストで合意）
 - 視覚は **最初から常に表示**（ボタンで後出しにしない）。
 - 絵で **数えれば答えが分かる状態でOK**（指で数えるのが低年齢の考える土台）。
-- 今回の範囲は **問題画面の視覚化のみ**。誤答タイプ別フィードバック(Phase 5)は今回含めない。
+- 今回の範囲は **問題画面の視覚化のみ**。誤答タイプ別フィードバック(Phase 5)は含めない。
 
 ## 対象範囲
 
-絵なしの6単元のみ対象:
-- AdditionUnit
-- SubtractionUnit
-- MultiplicationUnit
-- DivisionUnit
-- BigAdditionUnit
-- BigSubtractionUnit
+メイン画面に場面の絵が無い／不十分な **4単元** が対象:
+- AdditionUnit … 絵なし
+- SubtractionUnit … 現状 `food.repeat(answer)` で「残り＝答え」だけ表示。場面の絵に置き換える。
+- BigAdditionUnit … 絵なし
+- BigSubtractionUnit … 絵なし
 
 対象外（既にメイン画面に絵あり、触らない）:
-- MakeTenUnit（MakeTenFrame 表示済み）
-- CherryCalcUnit（CherryBranch 表示済み）
+- MakeTenUnit（`MakeTenFrame`）
+- CherryCalcUnit（`CherryBranch`）
+- MultiplicationUnit（ローカル `GroupVisual`）
+- DivisionUnit（ローカル `ShareVisual`）
 
 ## アーキテクチャ
 
@@ -42,11 +41,9 @@
 
 ```ts
 export type ProblemScene =
-  | { kind: 'combine'; emoji: string; a: number; b: number }            // たし算
-  | { kind: 'takeAway'; emoji: string; total: number; remove: number }  // 引き算
-  | { kind: 'groups'; emoji: string; perGroup: number; groups: number } // かけ算
-  | { kind: 'share'; emoji: string; total: number; containers: number } // わり算
-  | { kind: 'placeValue'; tens: number; ones: number };                 // 二桁(big)
+  | { kind: 'combine'; emoji: string; a: number; b: number }                 // たし算: 2山
+  | { kind: 'takeAway'; emoji: string; total: number; remove: number }       // 引き算: 全部+消す印
+  | { kind: 'placeValue'; aTens: number; aOnes: number; bTens: number; bOnes: number }; // 二桁: 位ブロック2つ
 
 export function sceneFor(
   unitId: string,
@@ -56,14 +53,13 @@ export function sceneFor(
 ```
 
 単元 → scene 種別の対応:
-- `addition` → `combine { a, b }`
-- `subtraction` → `takeAway { total: a, remove: b }`
-- `multiplication` → `groups { perGroup: b, groups: a }`
-- `division` → `share { total: dividend, containers: divisor }`
-- `big-addition` / `big-subtraction` → `placeValue { tens, ones }`（a の十・一の位）
+- `addition` → `combine { emoji, a, b }`
+- `subtraction` → `takeAway { emoji, total: a, remove: b }`
+- `big-addition` → `placeValue { aTens: tensA, aOnes: onesA, bTens: tensB, bOnes: onesB }`
+- `big-subtraction` → `placeValue { aTens: tensA, aOnes: onesA, bTens: tensB, bOnes: onesB }`
 - 未対応 unitId → `null`
 
-純関数なので副作用なし。Vitest でテスト可能。
+純関数・副作用なし。Vitest でテスト可能。
 
 ### 2. `src/components/ProblemVisual.tsx`（新規・描画）
 
@@ -71,24 +67,31 @@ export function sceneFor(
 interface Props { scene: ProblemScene | null }
 ```
 
-scene が `null` のとき何も描画しない。種別ごとに描画:
-- `combine`: a個の emoji と b個の emoji を2グループで並べ、「と」でつなぐ。
-- `takeAway`: total個を並べ、後ろ remove個に × 印（残りを数えられる）。
-- `groups`: 既存 `GroupsVisual` を再利用（emoji, perGroup, groups）。
-- `share`: total個の山 + 空のいれもの containers個を並べる。
-- `placeValue`: 既存 `PlaceValueBlocks` を再利用（tens, ones、carry無し）。
+scene が `null` のとき何も描画しない（`return null`）。種別ごとに描画:
+- `combine`: a個の emoji 群と b個の emoji 群を2つの枠で並べ、間に「と」を表示。
+  全部見えるので数えれば合計が分かる。
+- `takeAway`: total個を並べ、後ろ remove個に半透明＋「✕」を重ねる。
+  残り（消えていない数）を数えれば答え。
+- `placeValue`: 既存 `PlaceValueBlocks` を2つ並べる（A と B、carry無し）。
+  十のまとまりと一のばらで二桁の量を具体表現。
 
-ひらがな中心・大きめ表示。framer-motion の登場アニメは任意（既存 objects 描画に合わせる程度）。
+ひらがな中心・大きめ表示。登場アニメは既存 `GroupsVisual` に倣い framer-motion の
+`initial/animate` scale を使う（任意）。白カード `bg-white rounded-2xl shadow p-4` で統一。
 
-### 3. 6単元画面への組み込み
+### 3. 4単元画面への組み込み
 
 各画面で、Companion（文章）と AnswerButtons（数字ボタン）の間に常時表示:
 
 ```tsx
-<ProblemVisual scene={sceneFor(SKILL_ID, problem, animal)} />
+<ProblemVisual scene={sceneFor(SKILL_ID, problem, <emoji>)} />
 ```
 
-`emoji` は各画面が既に持つ `scenario.emoji` / `animal` を渡す。
+- `<emoji>` は各画面が既に持つ `scenario.emoji`（`animal` / `food` 等の変数）を渡す。
+- AdditionUnit: AnswerButtons の直前に追加。
+- SubtractionUnit: 既存の `<div className="text-6xl">{food.repeat(...)}</div>`（答え表示）を
+  `<ProblemVisual>` に置き換える。
+- BigAdditionUnit / BigSubtractionUnit: AnswerButtons の直前に追加。
+
 出題・採点ロジックは一切変更しない。`showFormula` / ヒント / 既存UIはそのまま。
 
 ## データフロー
@@ -104,31 +107,29 @@ scene が `null` のとき何も描画しない。種別ごとに描画:
 ## テスト（Vitest）
 
 `src/lib/problemScene.test.ts`:
-- addition → `combine`、a/b が一致。
+- addition → `combine`、emoji/a/b 一致。
 - subtraction → `takeAway`、total=a / remove=b。
-- multiplication → `groups`、perGroup=b / groups=a。
-- division → `share`、total=dividend / containers=divisor。
-- big-addition / big-subtraction → `placeValue`、tens/ones が a の桁と一致。
-- 未知 unitId → `null`。
+- big-addition → `placeValue`、aTens/aOnes/bTens/bOnes が a,b の桁と一致。
+- big-subtraction → `placeValue`、同上。
+- 未知 unitId（例 `'xyz'`）→ `null`。
 
 ## 数値レンジ（確認済み）
 
-- addition: a+b ≤ 20（最大~18個、2山で表示可）。
-- subtraction: ≤10個。
-- multiplication: a,b 2〜9（最大9×9、GroupsVisual がグリッド表示）。
-- division: dividend 最大~81、containers 2〜8（山＋いれもの）。
-- big add/sub: 二桁 → 位ブロックで表示（実物個別表示はしない）。
+- addition: a 1〜9, a+b ≤ 20（2山で最大~18個、表示可）。
+- subtraction: a 2〜10, b 1..a-1（≤10個）。
+- big-addition: a,b 10〜49 → 位ブロック2つ。
+- big-subtraction: a 最大~89, b 10〜49 → 位ブロック2つ。
 
 ## 禁止事項（メモ準拠）
 
 - サーバー / DB / 外部API / アカウント追加なし。
 - 既存の採点・出題ロジックを変更しない。
 - 報酬・スタンプを増やさない。
-- MakeTen / Cherry の既存表示を壊さない。
+- 既に絵のある単元（MakeTen/Cherry/Mult/Div）を触らない。
 
 ## 実装順（小さく）
 
 1. `problemScene.ts` + テスト。
 2. `ProblemVisual.tsx`。
-3. 6単元に `<ProblemVisual>` を差す。
+3. 4単元に組み込み（Subtraction は既存答え表示を置換）。
 4. `npm run test` / `npm run build` 確認。
