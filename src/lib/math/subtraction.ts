@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface SubtractionProblem {
   a: number;
   b: number;
@@ -18,4 +20,27 @@ export function generateSubtraction(rng: () => number = Math.random): Subtractio
 
 export function checkSubtraction(p: SubtractionProblem, chosen: number): boolean {
   return chosen === p.a - p.b;
+}
+
+export function explainSubtraction(p: SubtractionProblem, emoji: string): ExplainStep[] {
+  return [
+    {
+      kind: 'objects',
+      caption: `${emoji}が ${p.a}こ あるよ`,
+      narration: `はじめに ${p.a}こ`,
+      data: { emoji, count: p.a },
+    },
+    {
+      kind: 'objects',
+      caption: `${p.b}こ へると…\nのこりは ${p.a - p.b}こ`,
+      narration: `${p.b}こ へって のこりは ${p.a - p.b}こ`,
+      data: { emoji, count: p.a - p.b },
+    },
+    {
+      kind: 'equation',
+      caption: 'のこりは…',
+      narration: `${p.a}ひく${p.b}は ${p.a - p.b}`,
+      data: { text: `${p.a}－${p.b} ＝ ${p.a - p.b}` },
+    },
+  ];
 }
