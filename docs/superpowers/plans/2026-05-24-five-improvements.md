@@ -1,8 +1,8 @@
-# 5つの改善 実装計画
+# 6つの改善 実装計画
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** ヒント画面の問題表示・がんばりカレンダー・ユニット別BGM・お題付き作問・式の後出しの5機能を、既存の仕組みに乗せて追加する。
+**Goal:** ヒント画面の問題表示・がんばりカレンダー・ユニット別BGM・お題付き作問・式の後出し・二桁の式形式表示の6機能を、既存の仕組みに乗せて追加する。
 
 **Architecture:** 純ロジック（日付集計・お題判定）は `src/lib` に純関数として切り出し Vitest でテスト。表示系（StepExplainer・各ユニット・ProgressCalendar・ProblemMaker・BGM）は既存パターンに沿って改修し、dev サーバーで実機確認する。
 
@@ -599,9 +599,9 @@ git commit -m "feat: add goal-based challenge mode to problem maker"
 
 ---
 
-## Phase C — ① ヒントに問題表示 ＋ ⑤ 式の後出し
+## Phase C — ⑥ 二桁を式形式に ＋ ① ヒントに問題表示 ＋ ⑤ 式の後出し
 
-①と⑤は同じ7ユニットを触り、式文字列を共有するため一緒に行う。まず StepExplainer を拡張し、各ユニットで「式文字列を1箇所に定義 → 後出しトグル＋ヒントへ受け渡し」を行う。
+⑥でまず二桁ユニットを横式に変え、その後①⑤を適用する。①と⑤は同じ7ユニットを触り、式文字列を共有するため一緒に行う。まず StepExplainer を拡張し、各ユニットで「式文字列を1箇所に定義 → 後出しトグル＋ヒントへ受け渡し」を行う。二桁ユニット（BigAddition/BigSubtraction）は⑥＋⑤＋①をまとめて Task C4 で扱う。
 
 式文字列（ユニットごと）:
 | ユニット | formula | ⑤対象 |
@@ -705,12 +705,12 @@ git add src/screens/MakeTenUnit.tsx
 git commit -m "feat: pass problem to hint in MakeTenUnit"
 ```
 
-### Task C3: 7ユニットに式の後出し（⑤）＋ ヒントへ problem 受け渡し（①）
+### Task C3: 横式ユニット5つに式の後出し（⑤）＋ ヒントへ problem 受け渡し（①）
 
-各ユニットで同一パターンを適用する。下に AdditionUnit の完全な変更を示し、続けて他6ユニットの差分（formula 文字列・式ボックスの該当行）を列挙する。
+元から横式ボックスを持つ5ユニットを対象とする（MakeTen は C2、二桁の BigAddition/BigSubtraction は C4 で別途扱う）。各ユニットで同一パターンを適用する。下に AdditionUnit の完全な変更を示し、続けて他4ユニットの差分（formula 文字列・式ボックスの該当行）を列挙する。
 
 **Files:**
-- Modify: `src/screens/AdditionUnit.tsx`, `SubtractionUnit.tsx`, `CherryCalcUnit.tsx`, `MultiplicationUnit.tsx`, `DivisionUnit.tsx`, `BigAdditionUnit.tsx`, `BigSubtractionUnit.tsx`
+- Modify: `src/screens/AdditionUnit.tsx`, `SubtractionUnit.tsx`, `CherryCalcUnit.tsx`, `MultiplicationUnit.tsx`, `DivisionUnit.tsx`
 
 #### 共通パターン（AdditionUnit を例に）
 
@@ -770,7 +770,7 @@ StepExplainer 行を変更:
 Run: `npm run build`
 Expected: 成功
 
-#### 他6ユニットの差分
+#### 他4ユニットの差分
 
 各ユニットで Step 1（showFormula 追加）・Step 4（次問題で `setShowFormula(false)`）・Step 5（StepExplainer に `problem={formula}` 追加）は同様。**異なるのは formula 文字列と式ボックスの中身・色クラス**。下記の通り適用する。
 
@@ -798,29 +798,100 @@ Expected: 成功
   - StepExplainer: `problem={formula}`（`explainDivision(problem, emoji)` のまま）
   - 次問題で `setShowFormula(false)`
 
-- [ ] **BigAdditionUnit.tsx**
-  - formula: `const formula = `${problem.a} ＋ ${problem.b} ＝ ？`;`
-  - 式ボックス内を `{formula}` に（色は既存維持）
-  - StepExplainer: `problem={formula}`（`explainBigAddition(problem)` のまま）
-  - 次問題で `setShowFormula(false)`
+- [ ] **Step 7: 5ユニットの実機確認**
 
-- [ ] **BigSubtractionUnit.tsx**
-  - formula: `const formula = `${problem.a} － ${problem.b} ＝ ？`;`
-  - 式ボックス内を `{formula}` に（色は既存維持）
-  - StepExplainer: `problem={formula}`（`explainBigSubtraction(problem)` のまま）
-  - 次問題で `setShowFormula(false)`
-
-注: BigAddition/BigSubtraction の式ボックスは grep 上未確認のため、各ファイルの `text-5xl font-bold` の白いボックス（`{problem.a} ... ＝ ？` を表示している `<div>`）を Step 3 と同じ要領でトグル化すること。式ボックスが見当たらない場合はそのユニットの⑤適用は見送り、①（problem 受け渡し）のみ行う。
-
-- [ ] **Step 7: 全ユニットの実機確認**
-
-`npm run dev` で各ユニットを開き、(a) 最初は「🔢 しきを みる」ボタンのみで式が隠れている、(b) 押すと式が出る、(c) 正解して次の問題で再び隠れる、(d) 💡ヒントを開くと上部に式が出ていることを確認。
+`npm run dev` で Addition/Subtraction/CherryCalc/Multiplication/Division を開き、(a) 最初は「🔢 しきを みる」ボタンのみで式が隠れている、(b) 押すと式が出る、(c) 正解して次の問題で再び隠れる、(d) 💡ヒントを開くと上部に式が出ていることを確認。
 
 - [ ] **Step 8: コミット**
 
 ```bash
-git add src/screens/AdditionUnit.tsx src/screens/SubtractionUnit.tsx src/screens/CherryCalcUnit.tsx src/screens/MultiplicationUnit.tsx src/screens/DivisionUnit.tsx src/screens/BigAdditionUnit.tsx src/screens/BigSubtractionUnit.tsx
+git add src/screens/AdditionUnit.tsx src/screens/SubtractionUnit.tsx src/screens/CherryCalcUnit.tsx src/screens/MultiplicationUnit.tsx src/screens/DivisionUnit.tsx
 git commit -m "feat: hide formula behind reveal button and show problem in hints"
+```
+
+### Task C4: 二桁ユニットを横式に変更（⑥）＋ 式の後出し（⑤）＋ ヒントへ problem（①）
+
+`BigAdditionUnit` は筆算 `ColumnAddition`、`BigSubtractionUnit` は `ColumnSubtraction` で表示中（参照: 各ファイルの関数定義と本体の `<ColumnAddition problem={problem} />` / `<ColumnSubtraction problem={problem} />`）。これを横式ボックスに置き換え、その横式に⑤（後出しトグル）と①（ヒントに式）を適用する。
+
+**Files:**
+- Modify: `src/screens/BigAdditionUnit.tsx`, `src/screens/BigSubtractionUnit.tsx`
+
+#### BigAdditionUnit.tsx
+
+- [ ] **Step 1: 筆算コンポーネントを削除**
+
+`function ColumnAddition({ problem }: { problem: BigAdditionProblem }) { ... }` の関数定義（`return ( ... )` まで）を丸ごと削除する。
+
+- [ ] **Step 2: showFormula 状態を追加**
+
+`const [showHint, setShowHint] = useState(false);` の下に追加:
+```tsx
+  const [showFormula, setShowFormula] = useState(false);
+```
+
+- [ ] **Step 3: 式文字列を定義**
+
+`cleared` 判定の後、`return (` の直前に追加:
+```tsx
+  const formula = `${problem.a} ＋ ${problem.b} ＝ ？`;
+```
+
+- [ ] **Step 4: `<ColumnAddition .../>` を横式トグルに置き換える**
+
+本体の `<ColumnAddition problem={problem} />` を次に置き換える:
+```tsx
+      {showFormula ? (
+        <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
+          {formula}
+        </div>
+      ) : (
+        <button type="button"
+          onClick={() => { setShowFormula(true); playSfx('tap'); }}
+          className="rounded-2xl bg-white/80 px-6 py-3 text-lg font-bold text-amber-700 shadow active:translate-y-0.5">
+          🔢 しきを みる
+        </button>
+      )}
+```
+
+- [ ] **Step 5: 次の問題でリセット**
+
+正解後の `setTimeout` 内（`setProblem(generateBigAddition())` がある行）に `setShowFormula(false);` を併記:
+```tsx
+        setTimeout(() => { setExpression('normal'); setShowFormula(false); setProblem(generateBigAddition()); setScenario(pickScenario('big-addition')); processing.current = false; }, 900);
+```
+
+- [ ] **Step 6: ヒントに problem を渡す（①）**
+
+StepExplainer 行を変更:
+```tsx
+        <StepExplainer steps={explainBigAddition(problem)} problem={formula} onClose={() => setShowHint(false)} />
+```
+
+#### BigSubtractionUnit.tsx
+
+- [ ] **Step 7: 同様に変更**
+
+- `function ColumnSubtraction(...) { ... }` の関数定義を丸ごと削除。
+- `const [showFormula, setShowFormula] = useState(false);` を追加。
+- `return (` の直前に `const formula = `${problem.a} － ${problem.b} ＝ ？`;` を追加。
+- 本体の `<ColumnSubtraction problem={problem} />` を Step 4 と同じトグル（式ボックス内は `{formula}`、色 `text-amber-900`）に置き換える。
+- 正解後 `setTimeout`（`setProblem(generateBigSubtraction())` の行）に `setShowFormula(false);` を併記。
+- StepExplainer を `<StepExplainer steps={explainBigSubtraction(problem)} problem={formula} onClose={() => setShowHint(false)} />` に変更。
+
+- [ ] **Step 8: ビルド確認**
+
+Run: `npm run build`
+Expected: 成功（`ColumnAddition`/`ColumnSubtraction` 削除で未使用 import/変数が残っていないこと。`BigAdditionProblem`/`BigSubtractionProblem` 型 import は他で使われていなければ整理）
+
+- [ ] **Step 9: 実機確認**
+
+`npm run dev` で 大きいたしざん／大きいひきざん を開き、筆算ではなく横式（例 `34 ＋ 28 ＝ ？`）で表示されること、「🔢 しきを みる」で出し入れできること、次問題で隠れること、💡ヒントに式が出ること、正誤判定が従来どおり動くことを確認。
+
+- [ ] **Step 10: コミット**
+
+```bash
+git add src/screens/BigAdditionUnit.tsx src/screens/BigSubtractionUnit.tsx
+git commit -m "feat: show two-digit add/sub as horizontal expression with reveal and hint"
 ```
 
 ---
@@ -1047,12 +1118,13 @@ Expected: 成功
 
 - [ ] **Step 3: 通し実機確認**
 
-`npm run dev` で、①〜⑤を一通り操作して回帰がないことを確認（既存の正誤判定・スタンプ付与・読み上げ・作問の自由モードが壊れていないこと）。
+`npm run dev` で、①〜⑥を一通り操作して回帰がないことを確認（既存の正誤判定・スタンプ付与・読み上げ・作問の自由モードが壊れていないこと）。特に二桁ユニットが横式で表示され、筆算コンポーネントの残骸がないこと。
 
 ---
 
 ## 自己レビュー結果
 
-- **スペック網羅:** ①=C1/C3、②=A1〜A4、③=D1/D2、④=B1/B2、⑤=C3。全要件にタスクあり。
-- **型整合:** `Goal.validate(a,b,answer)`、`Track`、`setBgmTrack(id)`、`dateKey(ms)`、`countByDay/currentStreak` はタスク間で一貫。
-- **既知の注意点:** BigAddition/BigSubtraction の式ボックスは実ファイル確認のうえトグル化（無ければ①のみ）と明記。BGM の bass は `(number|null)[]` で、低音が要るなら定数（C3/F3/G3 等、必要なら A2 を追加）を使い、計算式（例 `A4/4`）は使わない。`useEffect` は各ファイルで重複 import しない。
+- **スペック網羅:** ①=C1/C3/C4、②=A1〜A4、③=D1/D2、④=B1/B2、⑤=C3/C4、⑥=C4。全要件にタスクあり。
+- **型整合:** `Goal.validate(a,b,answer)`、`Track`、`setBgmTrack(id)`、`dateKey(ms)`、`countByDay/currentStreak` はタスク間で一貫。formula 文字列は①の表・C3・C4で一致。
+- **実装順:** ⑥（C4で横式化）は⑤と同じ C4 内で行うため、二桁ユニットは筆算削除→横式→後出し→ヒントの順で一括変更される。
+- **既知の注意点:** C4 で `ColumnAddition`/`ColumnSubtraction` 削除後、未使用 import（型 `BigAdditionProblem` 等）が残らないようビルドで確認。BGM の bass は `(number|null)[]` で、低音が要るなら定数（C3/F3/G3 等、必要なら A2 を追加）を使い、計算式（例 `A4/4`）は使わない。`useEffect` は各ファイルで重複 import しない。
