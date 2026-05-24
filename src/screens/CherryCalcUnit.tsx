@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { CherryBranch } from '../components/CherryBranch';
+import { StepExplainer } from '../components/StepExplainer';
 import { StepIndicator } from '../components/StepIndicator';
 import {
   generateCarryProblem,
   checkCarry,
   decompose,
+  explainCherry,
   type CarryProblem,
 } from '../lib/math/cherryCalc';
 import { playSfx } from '../features/sound/sfx';
@@ -34,6 +36,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [hintStep, setHintStep] = useState<HintStep>(0);
+  const [showHint, setShowHint] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -103,6 +106,13 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
       <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-pink-900">
         {problem.a} ＋ {problem.b} ＝ ？
       </div>
+      <button
+        type="button"
+        onClick={() => { setShowHint(true); playSfx('tap'); }}
+        className="rounded-full bg-amber-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#b45309] active:translate-y-0.5"
+      >
+        💡 ヒント
+      </button>
 
       <AnimatePresence>
         {hintStep >= 1 && (
@@ -134,6 +144,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      {showHint && (<StepExplainer steps={explainCherry(problem)} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }
