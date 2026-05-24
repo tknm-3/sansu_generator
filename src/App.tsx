@@ -15,6 +15,7 @@ import { ParentSolveScreen } from './screens/ParentSolveScreen';
 import { StampBook } from './screens/StampBook';
 import { CharacterCollection } from './features/character/CharacterCollection';
 import { NamingScreen } from './features/character/NamingScreen';
+import { BgmToggle } from './features/sound/BgmToggle';
 import { loadCharacter } from './features/character/character';
 import { loadJson, saveJson } from './lib/storage';
 import { EMPTY_STAMPS, STAMP_KEY, type StampState } from './features/rewards/stamps';
@@ -60,6 +61,7 @@ export default function App() {
 
   const sharedProps = { characterName: character.name, onExit: handleExit };
 
+  function renderScreen() {
   if (screen.kind === 'unit') {
     switch (screen.unitId) {
       case 'make-ten':        return <MakeTenUnit        key={refresh} {...sharedProps} />;
@@ -130,5 +132,13 @@ export default function App() {
       onOpenCollection={() => setScreen({ kind: 'collection' })}
       onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
     />
+  );
+  }
+
+  return (
+    <>
+      {renderScreen()}
+      <BgmToggle />
+    </>
   );
 }
