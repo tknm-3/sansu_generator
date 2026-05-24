@@ -3,7 +3,9 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
-import { generateBigSubtraction, checkBigSubtraction, type BigSubtractionProblem } from '../lib/math/bigSubtraction';
+import { generateBigSubtraction, checkBigSubtraction, explainBigSubtraction, type BigSubtractionProblem } from '../lib/math/bigSubtraction';
+import { StepExplainer } from '../components/StepExplainer';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -47,9 +49,11 @@ function ColumnSubtraction({ problem }: { problem: BigSubtractionProblem }) {
 
 export function BigSubtractionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<BigSubtractionProblem>(() => generateBigSubtraction());
+  const [scenario, setScenario] = useState(() => pickScenario('big-subtraction'));
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [showHint, setShowHint] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -71,7 +75,7 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateBigSubtraction()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateBigSubtraction()); setScenario(pickScenario('big-subtraction')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -103,9 +107,16 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${problem.a} から ${problem.b} を ひくと いくつ？`}
+        message={scenario.build({ a: problem.a, b: problem.b })}
       />
       <ColumnSubtraction problem={problem} />
+      <button
+        type="button"
+        onClick={() => { setShowHint(true); playSfx('tap'); }}
+        className="rounded-full bg-amber-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#b45309] active:translate-y-0.5"
+      >
+        💡 ヒント
+      </button>
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
@@ -115,6 +126,9 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         )}
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      {showHint && (
+        <StepExplainer steps={explainBigSubtraction(problem)} onClose={() => setShowHint(false)} />
+      )}
     </div>
   );
 }

@@ -5,6 +5,21 @@ describe('TEMPLATES', () => {
   it('has at least 5 templates', () => {
     expect(TEMPLATES.length).toBeGreaterThanOrEqual(5);
   });
+
+  it('every template has title and sample numbers in range', () => {
+    for (const t of TEMPLATES) {
+      expect(t.title.length).toBeGreaterThan(0);
+      expect(t.sampleA).toBeGreaterThanOrEqual(t.aRange[0]);
+      expect(t.sampleA).toBeLessThanOrEqual(t.aRange[1]);
+      expect(t.sampleB).toBeGreaterThanOrEqual(t.bRange[0]);
+      expect(t.sampleB).toBeLessThanOrEqual(t.bRange[1]);
+    }
+  });
+
+  it('has 2 templates each for multiplication and division', () => {
+    expect(TEMPLATES.filter((t) => t.type === 'multiplication')).toHaveLength(2);
+    expect(TEMPLATES.filter((t) => t.type === 'division')).toHaveLength(2);
+  });
 });
 
 describe('fillTemplate', () => {

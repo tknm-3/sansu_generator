@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface Decomposition {
   a: number;
   b: number;
@@ -42,4 +44,22 @@ export function generateCarryProblem(rng: () => number = Math.random): CarryProb
 
 export function checkCarry(p: CarryProblem, chosen: number): boolean {
   return chosen === p.a + p.b;
+}
+
+export function explainCherry(p: CarryProblem): ExplainStep[] {
+  const dec = decompose(p.a, p.b);
+  return [
+    {
+      kind: 'cherryBranch',
+      caption: `${p.b}を ${dec.split}と ${dec.carry}に わけよう\n${p.a}＋${dec.split}で 10`,
+      narration: `${p.b}を ${dec.split}と ${dec.carry}に わけて まず 10をつくる`,
+      data: { b: p.b, split: dec.split, carry: dec.carry },
+    },
+    {
+      kind: 'equation',
+      caption: '10と のこりで…',
+      narration: `10たす${dec.carry}で ${dec.answer}`,
+      data: { text: `10 ＋ ${dec.carry} ＝ ${dec.answer}` },
+    },
+  ];
 }

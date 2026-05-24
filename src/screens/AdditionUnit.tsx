@@ -3,7 +3,9 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
-import { generateAddition, checkAddition, type AdditionProblem } from '../lib/math/addition';
+import { StepExplainer } from '../components/StepExplainer';
+import { generateAddition, checkAddition, explainAddition, type AdditionProblem } from '../lib/math/addition';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -12,7 +14,6 @@ import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'addition';
-const ANIMALS = ['🐱', '🐶', '🐸', '🐼', '🦊'];
 
 interface Props {
   characterName: string;
@@ -21,10 +22,12 @@ interface Props {
 
 export function AdditionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<AdditionProblem>(() => generateAddition());
-  const [animal] = useState(() => ANIMALS[Math.floor(Math.random() * ANIMALS.length)]);
+  const [scenario, setScenario] = useState(() => pickScenario('addition'));
+  const animal = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [showHint, setShowHint] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -46,7 +49,7 @@ export function AdditionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateAddition()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateAddition()); setScenario(pickScenario('addition')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -76,10 +79,17 @@ export function AdditionUnit({ characterName, onExit }: Props) {
         といた かず: {solved} / {QUESTIONS_PER_UNIT}
       </div>
       <Companion name={characterName} expression={expression}
-        message={`${animal}が ${problem.a}ひき。${problem.b}ひき きたよ。ぜんぶで なんびき？`} />
+        message={scenario.build({ a: problem.a, b: problem.b })} />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
         {problem.a} ＋ {problem.b} ＝ ？
       </div>
+      <button
+        type="button"
+        onClick={() => { setShowHint(true); playSfx('tap'); }}
+        className="rounded-full bg-amber-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#b45309] active:translate-y-0.5"
+      >
+        💡 ヒント
+      </button>
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
@@ -89,6 +99,7 @@ export function AdditionUnit({ characterName, onExit }: Props) {
         )}
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      {showHint && (<StepExplainer steps={explainAddition(problem, animal)} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }

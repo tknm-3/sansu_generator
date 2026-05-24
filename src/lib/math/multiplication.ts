@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface MultiplicationProblem {
   a: number;
   b: number;
@@ -24,4 +26,28 @@ export function generateMultiplication(rng: () => number = Math.random): Multipl
 
 export function checkMultiplication(p: MultiplicationProblem, chosen: number): boolean {
   return chosen === p.a * p.b;
+}
+
+export function explainMultiplication(p: MultiplicationProblem, emoji: string): ExplainStep[] {
+  const repeated = Array(p.a).fill(p.b).join('＋');
+  return [
+    {
+      kind: 'objects',
+      caption: `${emoji}が ${p.b}こで\n1つの かたまり`,
+      narration: `${p.b}こで ひとつの かたまりだよ`,
+      data: { emoji, count: p.b },
+    },
+    {
+      kind: 'groups',
+      caption: `それが ${p.a}つ。\n${repeated} だね`,
+      narration: `${p.b}こが ${p.a}つ。${repeated}`,
+      data: { emoji, perGroup: p.b, groups: p.a },
+    },
+    {
+      kind: 'equation',
+      caption: 'しきに すると…',
+      narration: `${p.a}かける${p.b}は ${p.a * p.b}`,
+      data: { text: `${p.a}×${p.b} ＝ ${p.a * p.b}` },
+    },
+  ];
 }
