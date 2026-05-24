@@ -3,7 +3,8 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
-import { generateBigSubtraction, checkBigSubtraction, type BigSubtractionProblem } from '../lib/math/bigSubtraction';
+import { generateBigSubtraction, checkBigSubtraction, explainBigSubtraction, type BigSubtractionProblem } from '../lib/math/bigSubtraction';
+import { StepExplainer } from '../components/StepExplainer';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -50,6 +51,7 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [showHint, setShowHint] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -106,6 +108,13 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         message={`${problem.a} から ${problem.b} を ひくと いくつ？`}
       />
       <ColumnSubtraction problem={problem} />
+      <button
+        type="button"
+        onClick={() => { setShowHint(true); playSfx('tap'); }}
+        className="rounded-full bg-amber-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#b45309] active:translate-y-0.5"
+      >
+        💡 ヒント
+      </button>
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
@@ -115,6 +124,9 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         )}
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      {showHint && (
+        <StepExplainer steps={explainBigSubtraction(problem)} onClose={() => setShowHint(false)} />
+      )}
     </div>
   );
 }
