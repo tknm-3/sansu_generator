@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 /** 10にするために あと何個必要か（0..10にクランプ） */
 export function missingToTen(current: number): number {
   if (current >= 10) return 0;
@@ -30,4 +32,28 @@ export function makeAnswerChoices(current: number, rng: () => number = Math.rand
     choices.add(candidate);
   }
   return [...choices].sort(() => rng() - 0.5);
+}
+
+export function explainMakeTen(current: number, emoji: string): ExplainStep[] {
+  const missing = missingToTen(current);
+  return [
+    {
+      kind: 'objects',
+      caption: `いま ${current}こ`,
+      narration: `いま ${current}こ あるよ`,
+      data: { emoji, count: current },
+    },
+    {
+      kind: 'objects',
+      caption: `あと ${missing}こ たすと…`,
+      narration: `あと ${missing}こで 10こ`,
+      data: { emoji, count: missing },
+    },
+    {
+      kind: 'equation',
+      caption: '10の できあがり！',
+      narration: `${current}たす${missing}で 10`,
+      data: { text: `${current} ＋ ${missing} ＝ 10` },
+    },
+  ];
 }
