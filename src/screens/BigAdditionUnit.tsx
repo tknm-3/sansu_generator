@@ -5,6 +5,7 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { generateBigAddition, checkBigAddition, explainBigAddition, type BigAdditionProblem } from '../lib/math/bigAddition';
 import { StepExplainer } from '../components/StepExplainer';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -48,6 +49,7 @@ function ColumnAddition({ problem }: { problem: BigAdditionProblem }) {
 
 export function BigAdditionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<BigAdditionProblem>(() => generateBigAddition());
+  const [scenario, setScenario] = useState(() => pickScenario('big-addition'));
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -73,7 +75,7 @@ export function BigAdditionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateBigAddition()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateBigAddition()); setScenario(pickScenario('big-addition')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -105,7 +107,7 @@ export function BigAdditionUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${problem.a} と ${problem.b} を たすと いくつ？`}
+        message={scenario.build({ a: problem.a, b: problem.b })}
       />
       <ColumnAddition problem={problem} />
       <button

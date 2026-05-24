@@ -6,13 +6,13 @@ import { MakeTenFrame } from '../components/MakeTenFrame';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { StepExplainer } from '../components/StepExplainer';
 import { missingToTen, isCorrectMissing, makeAnswerChoices, explainMakeTen } from '../lib/math/makeTen';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 
 const QUESTIONS_PER_UNIT = 3;
-const FRUITS = ['🍎', '🍊', '🍇', '🍓', '🍌'] as const;
 
 interface Props {
   characterName: string;
@@ -23,13 +23,10 @@ function newCurrent(): number {
   return Math.floor(Math.random() * 9) + 1;
 }
 
-function randomFruit(): string {
-  return FRUITS[Math.floor(Math.random() * FRUITS.length)];
-}
-
 export function MakeTenUnit({ characterName, onExit }: Props) {
   const [current, setCurrent] = useState(newCurrent);
-  const [fruit, setFruit] = useState(randomFruit);
+  const [scenario, setScenario] = useState(() => pickScenario('make-ten'));
+  const fruit = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -61,7 +58,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
           setExpression('normal');
           setFlash(false);
           setCurrent(newCurrent());
-          setFruit(randomFruit());
+          setScenario(pickScenario('make-ten'));
           processing.current = false;
         }, 900);
       }
@@ -121,7 +118,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${fruit}が ${current}こ あるよ。あと なんこで 10こ になる？`}
+        message={scenario.build({ a: current, b: missingToTen(current) })}
       />
       <MakeTenFrame filled={current} fruit={fruit} flash={flash} />
       <button

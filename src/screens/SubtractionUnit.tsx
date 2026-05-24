@@ -5,6 +5,7 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { StepExplainer } from '../components/StepExplainer';
 import { generateSubtraction, checkSubtraction, explainSubtraction, type SubtractionProblem } from '../lib/math/subtraction';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -13,7 +14,6 @@ import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'subtraction';
-const FOODS = ['🍎', '🍊', '🍇', '🍓', '🍌'];
 
 interface Props {
   characterName: string;
@@ -22,7 +22,8 @@ interface Props {
 
 export function SubtractionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<SubtractionProblem>(() => generateSubtraction());
-  const [food] = useState(() => FOODS[Math.floor(Math.random() * FOODS.length)]);
+  const [scenario, setScenario] = useState(() => pickScenario('subtraction'));
+  const food = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -48,7 +49,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateSubtraction()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateSubtraction()); setScenario(pickScenario('subtraction')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -73,7 +74,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
   }
 
   const answer = problem.a - problem.b;
-  const message = `${food}が ${problem.a}こ あります。${problem.b}こ たべたら のこりは？`;
+  const message = scenario.build({ a: problem.a, b: problem.b });
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6">

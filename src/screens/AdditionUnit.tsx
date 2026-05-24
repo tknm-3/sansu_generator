@@ -5,6 +5,7 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { StepExplainer } from '../components/StepExplainer';
 import { generateAddition, checkAddition, explainAddition, type AdditionProblem } from '../lib/math/addition';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -13,7 +14,6 @@ import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'addition';
-const ANIMALS = ['🐱', '🐶', '🐸', '🐼', '🦊'];
 
 interface Props {
   characterName: string;
@@ -22,7 +22,8 @@ interface Props {
 
 export function AdditionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<AdditionProblem>(() => generateAddition());
-  const [animal] = useState(() => ANIMALS[Math.floor(Math.random() * ANIMALS.length)]);
+  const [scenario, setScenario] = useState(() => pickScenario('addition'));
+  const animal = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -48,7 +49,7 @@ export function AdditionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateAddition()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateAddition()); setScenario(pickScenario('addition')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -78,7 +79,7 @@ export function AdditionUnit({ characterName, onExit }: Props) {
         といた かず: {solved} / {QUESTIONS_PER_UNIT}
       </div>
       <Companion name={characterName} expression={expression}
-        message={`${animal}が ${problem.a}ひき。${problem.b}ひき きたよ。ぜんぶで なんびき？`} />
+        message={scenario.build({ a: problem.a, b: problem.b })} />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
         {problem.a} ＋ {problem.b} ＝ ？
       </div>

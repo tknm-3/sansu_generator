@@ -13,6 +13,7 @@ import {
   explainCherry,
   type CarryProblem,
 } from '../lib/math/cherryCalc';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -32,6 +33,7 @@ type HintStep = 0 | 1;
 
 export function CherryCalcUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<CarryProblem>(() => generateCarryProblem());
+  const [scenario, setScenario] = useState(() => pickScenario('cherry-calc'));
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -44,6 +46,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
 
   function nextProblem() {
     setProblem(generateCarryProblem());
+    setScenario(pickScenario('cherry-calc'));
     setHintStep(0);
     setExpression('normal');
     processing.current = false;
@@ -101,7 +104,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${problem.a} ＋ ${problem.b} を さくらんぼ計算で とこう！`}
+        message={scenario.build({ a: problem.a, b: problem.b })}
       />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-pink-900">
         {problem.a} ＋ {problem.b} ＝ ？
