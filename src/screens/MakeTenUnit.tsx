@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { MakeTenFrame } from '../components/MakeTenFrame';
 import { AnswerButtons } from '../components/AnswerButtons';
-import { missingToTen, isCorrectMissing, makeAnswerChoices } from '../lib/math/makeTen';
+import { StepExplainer } from '../components/StepExplainer';
+import { missingToTen, isCorrectMissing, makeAnswerChoices, explainMakeTen } from '../lib/math/makeTen';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -33,6 +34,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [flash, setFlash] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const choices = useMemo(() => makeAnswerChoices(current), [current]);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
@@ -122,6 +124,13 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
         message={`${fruit}が ${current}こ あるよ。あと なんこで 10こ になる？`}
       />
       <MakeTenFrame filled={current} fruit={fruit} flash={flash} />
+      <button
+        type="button"
+        onClick={() => { setShowHint(true); playSfx('tap'); }}
+        className="rounded-full bg-amber-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#b45309] active:translate-y-0.5"
+      >
+        💡 ヒント
+      </button>
       <AnswerButtons choices={choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
@@ -140,6 +149,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">
         やめる
       </button>
+      {showHint && (<StepExplainer steps={explainMakeTen(current, fruit)} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }
