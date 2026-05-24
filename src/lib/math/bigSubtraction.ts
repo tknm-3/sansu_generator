@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface BigSubtractionProblem {
   a: number;
   b: number;
@@ -26,4 +28,36 @@ export function generateBigSubtraction(rng: () => number = Math.random): BigSubt
 
 export function checkBigSubtraction(p: BigSubtractionProblem, chosen: number): boolean {
   return chosen === p.a - p.b;
+}
+
+export function explainBigSubtraction(p: BigSubtractionProblem): ExplainStep[] {
+  const borrow = p.onesA < p.onesB;
+  const onesResult = borrow ? p.onesA + 10 - p.onesB : p.onesA - p.onesB;
+  const tensResult = (borrow ? p.tensA - 1 : p.tensA) - p.tensB;
+  return [
+    {
+      kind: 'placeValue',
+      caption: borrow
+        ? `いちの くらい: ${p.onesA}から ${p.onesB}は ひけない\nじゅうから 10 かりて ${p.onesA + 10}－${p.onesB}＝${onesResult}`
+        : `いちの くらい: ${p.onesA}－${p.onesB}＝${onesResult}`,
+      narration: borrow
+        ? `いちのくらいは じゅうから かりて ${onesResult}`
+        : `いちのくらいは ${p.onesA}ひく${p.onesB}で ${onesResult}`,
+      data: { tens: 0, ones: onesResult, carry: borrow },
+    },
+    {
+      kind: 'placeValue',
+      caption: borrow
+        ? `じゅうの くらい: ${p.tensA}－1－${p.tensB}＝${tensResult}`
+        : `じゅうの くらい: ${p.tensA}－${p.tensB}＝${tensResult}`,
+      narration: `じゅうのくらいは ${tensResult}`,
+      data: { tens: tensResult, ones: 0 },
+    },
+    {
+      kind: 'equation',
+      caption: 'のこりは…',
+      narration: `${p.a}ひく${p.b}は ${p.a - p.b}`,
+      data: { text: `${p.a}－${p.b} ＝ ${p.a - p.b}` },
+    },
+  ];
 }
