@@ -5,6 +5,7 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { generateDivision, checkDivision, explainDivision, type DivisionProblem } from '../lib/math/division';
 import { StepExplainer } from '../components/StepExplainer';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -13,7 +14,6 @@ import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'division';
-const SHARE_EMOJI = ['🍬', '🎀', '⭐', '🍪', '🌸'];
 
 interface Props {
   characterName: string;
@@ -50,7 +50,8 @@ function ShareVisual({ problem, emoji }: { problem: DivisionProblem; emoji: stri
 
 export function DivisionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<DivisionProblem>(() => generateDivision());
-  const [emoji] = useState(() => SHARE_EMOJI[Math.floor(Math.random() * SHARE_EMOJI.length)]);
+  const [scenario, setScenario] = useState(() => pickScenario('division'));
+  const emoji = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -76,7 +77,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateDivision()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateDivision()); setScenario(pickScenario('division')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -108,7 +109,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${emoji} が ${problem.dividend}こ。${problem.divisor}人で わけると ひとり なんこ？`}
+        message={scenario.build({ a: problem.dividend, b: problem.divisor })}
       />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-purple-900">
         {problem.dividend} ÷ {problem.divisor} ＝ ？

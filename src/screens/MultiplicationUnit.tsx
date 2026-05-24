@@ -5,6 +5,7 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { generateMultiplication, checkMultiplication, explainMultiplication, type MultiplicationProblem } from '../lib/math/multiplication';
 import { StepExplainer } from '../components/StepExplainer';
+import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -13,7 +14,6 @@ import { recordAnswer, loadMastery, saveMastery } from '../lib/mastery';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'multiplication';
-const GROUP_EMOJI = ['🍭', '🌟', '🎈', '🍪', '🎀'];
 
 interface Props {
   characterName: string;
@@ -44,7 +44,8 @@ function GroupVisual({ problem, emoji }: { problem: MultiplicationProblem; emoji
 
 export function MultiplicationUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<MultiplicationProblem>(() => generateMultiplication());
-  const [emoji] = useState(() => GROUP_EMOJI[Math.floor(Math.random() * GROUP_EMOJI.length)]);
+  const [scenario, setScenario] = useState(() => pickScenario('multiplication'));
+  const emoji = scenario.emoji;
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
@@ -70,7 +71,7 @@ export function MultiplicationUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateMultiplication()); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateMultiplication()); setScenario(pickScenario('multiplication')); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -102,7 +103,7 @@ export function MultiplicationUnit({ characterName, onExit }: Props) {
       <Companion
         name={characterName}
         expression={expression}
-        message={`${emoji} が ${problem.b}こ ずつ ${problem.a}グループ。ぜんぶで なんこ？`}
+        message={scenario.build({ a: problem.a, b: problem.b })}
       />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-amber-900">
         {problem.a} ✕ {problem.b} ＝ ？
