@@ -1,3 +1,5 @@
+import type { ExplainStep } from './explain';
+
 export interface BigAdditionProblem {
   a: number;
   b: number;
@@ -26,4 +28,34 @@ export function generateBigAddition(rng: () => number = Math.random): BigAdditio
 
 export function checkBigAddition(p: BigAdditionProblem, chosen: number): boolean {
   return chosen === p.a + p.b;
+}
+
+export function explainBigAddition(p: BigAdditionProblem): ExplainStep[] {
+  const onesSum = p.onesA + p.onesB;
+  const carry = onesSum >= 10;
+  const tensSum = p.tensA + p.tensB + (carry ? 1 : 0);
+  return [
+    {
+      kind: 'placeValue',
+      caption: carry
+        ? `いちの くらい: ${p.onesA}＋${p.onesB}＝${onesSum}\n10は じゅうに くりあげ`
+        : `いちの くらい: ${p.onesA}＋${p.onesB}＝${onesSum}`,
+      narration: `いちのくらいは ${p.onesA}たす${p.onesB}で ${onesSum}`,
+      data: { tens: 0, ones: onesSum, carry },
+    },
+    {
+      kind: 'placeValue',
+      caption: carry
+        ? `じゅうの くらい: ${p.tensA}＋${p.tensB}＋1＝${tensSum}`
+        : `じゅうの くらい: ${p.tensA}＋${p.tensB}＝${tensSum}`,
+      narration: `じゅうのくらいは あわせて ${tensSum}`,
+      data: { tens: tensSum, ones: 0 },
+    },
+    {
+      kind: 'equation',
+      caption: 'ぜんぶ あわせると…',
+      narration: `${p.a}たす${p.b}は ${p.a + p.b}`,
+      data: { text: `${p.a}＋${p.b} ＝ ${p.a + p.b}` },
+    },
+  ];
 }
