@@ -56,6 +56,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -77,7 +78,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateDivision()); setScenario(pickScenario('division')); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateDivision()); setScenario(pickScenario('division')); setShowFormula(false); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -101,6 +102,8 @@ export function DivisionUnit({ characterName, onExit }: Props) {
     );
   }
 
+  const formula = `${problem.dividend} ÷ ${problem.divisor} ＝ ？`;
+
   return (
     <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-purple-100 to-amber-50 p-6">
       <div className="self-stretch text-sm text-amber-700 font-bold">
@@ -111,9 +114,17 @@ export function DivisionUnit({ characterName, onExit }: Props) {
         expression={expression}
         message={scenario.build({ a: problem.dividend, b: problem.divisor })}
       />
-      <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-purple-900">
-        {problem.dividend} ÷ {problem.divisor} ＝ ？
-      </div>
+      {showFormula ? (
+        <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-purple-900">
+          {formula}
+        </div>
+      ) : (
+        <button type="button"
+          onClick={() => { setShowFormula(true); playSfx('tap'); }}
+          className="rounded-2xl bg-white/80 px-6 py-3 text-lg font-bold text-amber-700 shadow active:translate-y-0.5">
+          🔢 しきを みる
+        </button>
+      )}
       <ShareVisual problem={problem} emoji={emoji} />
       <button
         type="button"
@@ -132,7 +143,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (
-        <StepExplainer steps={explainDivision(problem, emoji)} onClose={() => setShowHint(false)} />
+        <StepExplainer steps={explainDivision(problem, emoji)} problem={formula} onClose={() => setShowHint(false)} />
       )}
     </div>
   );

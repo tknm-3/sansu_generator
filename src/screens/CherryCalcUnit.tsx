@@ -39,15 +39,18 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [hintStep, setHintStep] = useState<HintStep>(0);
   const [showHint, setShowHint] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
   const dec = decompose(problem.a, problem.b);
+  const formula = `${problem.a} ＋ ${problem.b} ＝ ？`;
 
   function nextProblem() {
     setProblem(generateCarryProblem());
     setScenario(pickScenario('cherry-calc'));
     setHintStep(0);
+    setShowFormula(false);
     setExpression('normal');
     processing.current = false;
   }
@@ -106,9 +109,17 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />
-      <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-pink-900">
-        {problem.a} ＋ {problem.b} ＝ ？
-      </div>
+      {showFormula ? (
+        <div className="rounded-3xl bg-white shadow-lg px-10 py-5 text-5xl font-bold text-pink-900">
+          {formula}
+        </div>
+      ) : (
+        <button type="button"
+          onClick={() => { setShowFormula(true); playSfx('tap'); }}
+          className="rounded-2xl bg-white/80 px-6 py-3 text-lg font-bold text-amber-700 shadow active:translate-y-0.5">
+          🔢 しきを みる
+        </button>
+      )}
       <button
         type="button"
         onClick={() => { setShowHint(true); playSfx('tap'); }}
@@ -147,7 +158,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
-      {showHint && (<StepExplainer steps={explainCherry(problem)} onClose={() => setShowHint(false)} />)}
+      {showHint && (<StepExplainer steps={explainCherry(problem)} problem={formula} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }
