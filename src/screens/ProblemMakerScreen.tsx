@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TEMPLATES, fillTemplate, type Template, type TemplateFilled } from '../lib/problemTemplates';
+import { TEMPLATES, fillTemplate, type ProblemType, type Template, type TemplateFilled } from '../lib/problemTemplates';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { loadJson, saveJson } from '../lib/storage';
@@ -18,7 +18,8 @@ export function ProblemMakerScreen({ characterName: _characterName, onMake, onEx
   const [a, setA] = useState(3);
   const [b, setB] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
-  const [step, setStep] = useState<'select' | 'fill' | 'preview'>('select');
+  const [step, setStep] = useState<'op' | 'select' | 'fill' | 'preview'>('op');
+  const [op, setOp] = useState<ProblemType | null>(null);
 
   function handleConfirm() {
     if (!selectedTpl) return;
@@ -31,32 +32,75 @@ export function ProblemMakerScreen({ characterName: _characterName, onMake, onEx
     onMake(filled);
   }
 
-  if (step === 'select') {
+  const OPS: { type: ProblemType; label: string; mark: string; color: string }[] = [
+    { type: 'addition', label: 'たしざん', mark: '➕', color: 'bg-sky-400 shadow-[0_4px_0_#0369a1]' },
+    { type: 'subtraction', label: 'ひきざん', mark: '➖', color: 'bg-orange-400 shadow-[0_4px_0_#c2410c]' },
+    { type: 'multiplication', label: 'かけざん', mark: '✖️', color: 'bg-purple-400 shadow-[0_4px_0_#7e22ce]' },
+    { type: 'division', label: 'わりざん', mark: '➗', color: 'bg-green-500 shadow-[0_4px_0_#15803d]' },
+  ];
+
+  if (step === 'op') {
     return (
       <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-green-100 to-amber-50 p-6">
-        <h1 className="text-2xl font-bold text-green-800">もんだいを えらんでね！</h1>
-        <div className="flex flex-wrap justify-center gap-4">
-          {TEMPLATES.map((tpl) => (
+        <h1 className="text-2xl font-bold text-green-800">どの けいさんに する？</h1>
+        <div className="grid grid-cols-2 gap-4">
+          {OPS.map((o) => (
             <motion.button
-              key={tpl.id}
+              key={o.type}
               type="button"
               whileTap={{ scale: 0.95 }}
               whileHover={{ scale: 1.05 }}
               onClick={() => {
-                setSelectedTpl(tpl);
-                setA(tpl.aRange[0] + 1);
-                setB(tpl.bRange[0]);
-                setEmojiIdx(0);
-                setStep('fill');
+                setOp(o.type);
+                setStep('select');
               }}
-              className="w-48 rounded-2xl border-2 border-green-200 bg-white p-4 text-center shadow-md"
+              className={`flex h-32 w-40 flex-col items-center justify-center rounded-2xl text-white ${o.color} active:translate-y-1`}
             >
-              <div className="text-3xl">{tpl.emojiOptions[0]}</div>
-              <div className="mt-1 text-sm font-bold text-green-800">{tpl.textPattern.slice(0, 20)}…</div>
+              <span className="text-5xl">{o.mark}</span>
+              <span className="mt-2 text-xl font-bold">{o.label}</span>
             </motion.button>
           ))}
         </div>
         <button type="button" onClick={onExit} className="text-sm text-amber-600 underline">もどる</button>
+      </div>
+    );
+  }
+
+  if (step === 'select') {
+    const list = TEMPLATES.filter((t) => t.type === op);
+    return (
+      <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-green-100 to-amber-50 p-6">
+        <h1 className="text-2xl font-bold text-green-800">どの ばめんに する？</h1>
+        <div className="flex flex-wrap justify-center gap-4">
+          {list.map((tpl) => {
+            const example = fillTemplate(tpl, {
+              a: tpl.sampleA,
+              b: tpl.sampleB,
+              emoji: tpl.emojiOptions[0],
+            });
+            return (
+              <motion.button
+                key={tpl.id}
+                type="button"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => {
+                  setSelectedTpl(tpl);
+                  setA(tpl.sampleA);
+                  setB(tpl.sampleB);
+                  setEmojiIdx(0);
+                  setStep('fill');
+                }}
+                className="w-56 rounded-2xl border-2 border-green-200 bg-white p-4 text-center shadow-md"
+              >
+                <div className="text-3xl">{tpl.emojiOptions[0]}</div>
+                <div className="mt-1 text-base font-bold text-green-800">{tpl.title}</div>
+                <div className="mt-2 text-xs text-amber-700 whitespace-pre-line">{example.questionText}</div>
+              </motion.button>
+            );
+          })}
+        </div>
+        <button type="button" onClick={() => setStep('op')} className="text-sm text-amber-600 underline">もどる</button>
       </div>
     );
   }
