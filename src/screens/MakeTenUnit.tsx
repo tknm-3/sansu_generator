@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { setBgmTrack } from '../features/sound/bgm';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
@@ -32,6 +33,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [flash, setFlash] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  useEffect(() => { setBgmTrack('make-ten'); }, []);
   const choices = useMemo(() => makeAnswerChoices(current), [current]);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);

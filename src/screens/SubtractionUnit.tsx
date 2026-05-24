@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { setBgmTrack } from '../features/sound/bgm';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
@@ -29,6 +30,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  useEffect(() => { setBgmTrack('subtraction'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 

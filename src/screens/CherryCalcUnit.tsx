@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { setBgmTrack } from '../features/sound/bgm';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
@@ -40,6 +41,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
   const [hintStep, setHintStep] = useState<HintStep>(0);
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  useEffect(() => { setBgmTrack('cherry-calc'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
