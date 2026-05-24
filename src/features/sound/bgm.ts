@@ -7,22 +7,98 @@ import { loadJson, saveJson } from '../../lib/storage';
 
 const BGM_KEY = 'math-app:bgm-enabled';
 
-// ハ長調の軽快なメロディ（null=休符）。1音 = NOTE 秒でループ。
+// ハ長調の音名（null=休符）。1音 = track.note 秒でループ。
 const E4 = 329.63, F4 = 349.23, G4 = 392.0, A4 = 440.0, B4 = 493.88;
 const C5 = 523.25, D5 = 587.33, E5 = 659.25;
 
-const MELODY: (number | null)[] = [
-  E4, G4, C5, G4, E4, G4, C5, G4,
-  F4, A4, D5, A4, F4, A4, D5, C5,
-  E4, G4, C5, E5, D5, C5, B4, G4,
-  C5, G4, E4, G4, C5, null, C5, null,
-];
-
-// 4音ごとに鳴る低音（コードのルート）
+// 低音（コードのルート）
+const A2 = 110.0;
 const C3 = 130.81, F3 = 174.61, G3 = 196.0;
-const BASS: (number | null)[] = [C3, F3, C3, G3, C3, F3, C3, C3];
 
-const NOTE = 0.28; // 1音の長さ（秒）
+export interface Track {
+  melody: (number | null)[];
+  bass: (number | null)[];
+  note: number;
+  melodyWave?: OscillatorType;
+}
+
+// ホーム（既存の明るいループ）
+const TRACK_HOME: Track = {
+  melody: [
+    E4, G4, C5, G4, E4, G4, C5, G4,
+    F4, A4, D5, A4, F4, A4, D5, C5,
+    E4, G4, C5, E5, D5, C5, B4, G4,
+    C5, G4, E4, G4, C5, null, C5, null,
+  ],
+  bass: [C3, F3, C3, G3, C3, F3, C3, C3],
+  note: 0.28,
+  melodyWave: 'triangle',
+};
+
+// たし算系（やや速くはずむ感じ・triangle）
+const TRACK_ADD: Track = {
+  melody: [
+    C5, E5, G4, C5, E5, D5, C5, G4,
+    A4, C5, E5, C5, G4, A4, C5, G4,
+    C5, E5, G4, C5, D5, E5, D5, C5,
+    G4, A4, C5, A4, G4, null, C5, null,
+  ],
+  bass: [C3, G3, F3, G3, C3, F3, G3, C3],
+  note: 0.24,
+  melodyWave: 'triangle',
+};
+
+// ひき算系（ゆったり落ち着いた感じ・sine）
+const TRACK_SUB: Track = {
+  melody: [
+    A4, G4, F4, E4, F4, G4, A4, null,
+    G4, F4, E4, D5, C5, B4, A4, null,
+    F4, A4, C5, A4, G4, F4, E4, null,
+    E4, F4, G4, A4, G4, null, F4, null,
+  ],
+  bass: [A2, F3, C3, G3, A2, F3, G3, C3],
+  note: 0.32,
+  melodyWave: 'sine',
+};
+
+// かけ算系（リズミカルで元気・square）
+const TRACK_MUL: Track = {
+  melody: [
+    C5, C5, G4, G4, A4, A4, G4, null,
+    F4, F4, E4, E4, D5, D5, C5, null,
+    C5, E5, C5, E5, G4, C5, G4, null,
+    E5, D5, C5, B4, C5, null, C5, null,
+  ],
+  bass: [C3, C3, F3, F3, G3, G3, C3, C3],
+  note: 0.22,
+  melodyWave: 'square',
+};
+
+// わり算系（やさしくなめらか・triangle）
+const TRACK_DIV: Track = {
+  melody: [
+    G4, A4, B4, C5, D5, C5, B4, A4,
+    F4, G4, A4, B4, C5, B4, A4, G4,
+    E4, F4, G4, A4, B4, A4, G4, F4,
+    G4, A4, B4, C5, B4, null, G4, null,
+  ],
+  bass: [C3, G3, F3, C3, G3, F3, G3, C3],
+  note: 0.30,
+  melodyWave: 'triangle',
+};
+
+const TRACKS: Record<string, Track> = {
+  home: TRACK_HOME,
+  'make-ten': TRACK_ADD,
+  addition: TRACK_ADD,
+  'big-addition': TRACK_ADD,
+  subtraction: TRACK_SUB,
+  'big-subtraction': TRACK_SUB,
+  'cherry-calc': TRACK_SUB,
+  multiplication: TRACK_MUL,
+  division: TRACK_DIV,
+};
+
 const LOOKAHEAD = 0.2; // 先読みスケジュール窓（秒）
 
 let ctx: AudioContext | null = null;
@@ -32,6 +108,7 @@ let playing = false;
 let timer: ReturnType<typeof setInterval> | null = null;
 let nextNoteTime = 0;
 let noteIndex = 0;
+let current: Track = TRACKS.home;
 
 function ensureCtx(): AudioContext | null {
   try {
@@ -72,13 +149,14 @@ function playNote(
 function scheduler(): void {
   if (!ctx) return;
   while (nextNoteTime < ctx.currentTime + LOOKAHEAD) {
-    const m = MELODY[noteIndex % MELODY.length];
-    if (m != null) playNote(m, nextNoteTime, NOTE * 0.9, 0.07, 'triangle');
+    const note = current.note;
+    const m = current.melody[noteIndex % current.melody.length];
+    if (m != null) playNote(m, nextNoteTime, note * 0.9, 0.07, current.melodyWave ?? 'triangle');
     if (noteIndex % 4 === 0) {
-      const b = BASS[Math.floor(noteIndex / 4) % BASS.length];
-      if (b != null) playNote(b, nextNoteTime, NOTE * 3.6, 0.05, 'sine');
+      const b = current.bass[Math.floor(noteIndex / 4) % current.bass.length];
+      if (b != null) playNote(b, nextNoteTime, note * 3.6, 0.05, 'sine');
     }
-    nextNoteTime += NOTE;
+    nextNoteTime += note;
     noteIndex += 1;
   }
 }
@@ -114,4 +192,15 @@ export function setBgmEnabled(on: boolean): void {
   saveJson(BGM_KEY, on);
   if (on) startBgm();
   else stopBgm();
+}
+
+let currentTrackId = 'home';
+
+/** 画面に応じてBGMの曲を切り替える。未知IDは home にフォールバック。
+ *  同じ曲の再指定は無視（リスタートさせない）。enabled/再生状態は維持。 */
+export function setBgmTrack(id: string): void {
+  if (id === currentTrackId) return;
+  currentTrackId = id;
+  current = TRACKS[id] ?? TRACKS.home;
+  noteIndex = 0;
 }
