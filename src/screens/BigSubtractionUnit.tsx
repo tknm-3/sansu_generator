@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { setBgmTrack } from '../features/sound/bgm';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
@@ -20,33 +21,6 @@ interface Props {
   onExit: () => void;
 }
 
-function ColumnSubtraction({ problem }: { problem: BigSubtractionProblem }) {
-  const borrow = problem.onesA < problem.onesB;
-  return (
-    <div className="rounded-3xl bg-white shadow-lg px-8 py-5 font-bold text-amber-900 select-none">
-      <div className="flex flex-col items-end gap-1 text-4xl tabular-nums">
-        <div className="flex gap-3">
-          <span className="w-8 text-right">{problem.tensA}</span>
-          <span className="w-8 text-right">{problem.onesA}</span>
-        </div>
-        <div className="flex gap-3">
-          <span className="text-blue-500">－</span>
-          <span className="w-8 text-right">{problem.tensB}</span>
-          <span className="w-8 text-right">{problem.onesB}</span>
-        </div>
-        <div className="w-full border-b-4 border-amber-900" />
-        <div className="flex gap-3">
-          <span className="w-8 text-right">？</span>
-          <span className="w-8 text-right">？</span>
-        </div>
-      </div>
-      {borrow && (
-        <p className="text-center text-xs text-pink-600 font-bold mt-2">くり下がり あり！</p>
-      )}
-    </div>
-  );
-}
-
 export function BigSubtractionUnit({ characterName, onExit }: Props) {
   const [problem, setProblem] = useState<BigSubtractionProblem>(() => generateBigSubtraction());
   const [scenario, setScenario] = useState(() => pickScenario('big-subtraction'));
@@ -54,6 +28,8 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
+  useEffect(() => { setBgmTrack('big-subtraction'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -75,7 +51,7 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateBigSubtraction()); setScenario(pickScenario('big-subtraction')); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateBigSubtraction()); setScenario(pickScenario('big-subtraction')); setShowFormula(false); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -99,6 +75,8 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
     );
   }
 
+  const formula = `${problem.a} － ${problem.b} ＝ ？`;
+
   return (
     <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6">
       <div className="self-stretch text-sm text-amber-700 font-bold">
@@ -109,7 +87,17 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />
-      <ColumnSubtraction problem={problem} />
+      {showFormula ? (
+        <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
+          {formula}
+        </div>
+      ) : (
+        <button type="button"
+          onClick={() => { setShowFormula(true); playSfx('tap'); }}
+          className="rounded-2xl bg-white/80 px-6 py-3 text-lg font-bold text-amber-700 shadow active:translate-y-0.5">
+          🔢 しきを みる
+        </button>
+      )}
       <button
         type="button"
         onClick={() => { setShowHint(true); playSfx('tap'); }}
@@ -127,7 +115,7 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (
-        <StepExplainer steps={explainBigSubtraction(problem)} onClose={() => setShowHint(false)} />
+        <StepExplainer steps={explainBigSubtraction(problem)} problem={formula} onClose={() => setShowHint(false)} />
       )}
     </div>
   );

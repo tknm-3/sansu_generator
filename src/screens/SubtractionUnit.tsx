@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { setBgmTrack } from '../features/sound/bgm';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
@@ -28,6 +29,8 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
+  const [showFormula, setShowFormula] = useState(false);
+  useEffect(() => { setBgmTrack('subtraction'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
 
@@ -49,7 +52,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateSubtraction()); setScenario(pickScenario('subtraction')); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateSubtraction()); setScenario(pickScenario('subtraction')); setShowFormula(false); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -75,6 +78,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
 
   const answer = problem.a - problem.b;
   const message = scenario.build({ a: problem.a, b: problem.b });
+  const formula = `${problem.a} － ${problem.b} ＝ ？`;
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6">
@@ -82,9 +86,17 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
         といた かず: {solved} / {QUESTIONS_PER_UNIT}
       </div>
       <Companion name={characterName} expression={expression} message={message} />
-      <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
-        {problem.a} － {problem.b} ＝ ？
-      </div>
+      {showFormula ? (
+        <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
+          {formula}
+        </div>
+      ) : (
+        <button type="button"
+          onClick={() => { setShowFormula(true); playSfx('tap'); }}
+          className="rounded-2xl bg-white/80 px-6 py-3 text-lg font-bold text-amber-700 shadow active:translate-y-0.5">
+          🔢 しきを みる
+        </button>
+      )}
       <button
         type="button"
         onClick={() => { setShowHint(true); playSfx('tap'); }}
@@ -102,7 +114,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
       </AnimatePresence>
       <div className="text-6xl">{food.repeat(Math.max(0, answer))}</div>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
-      {showHint && (<StepExplainer steps={explainSubtraction(problem, food)} onClose={() => setShowHint(false)} />)}
+      {showHint && (<StepExplainer steps={explainSubtraction(problem, food)} problem={formula} onClose={() => setShowHint(false)} />)}
     </div>
   );
 }

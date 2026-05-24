@@ -11,6 +11,7 @@ interface Props {
   onStartMaker: () => void;
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
+  onOpenProgress: () => void;
 }
 
 const UNIT_EMOJIS: Record<string, string> = {
@@ -33,6 +34,7 @@ export function HomeScreen({
   onStartMaker,
   onOpenCollection,
   onOpenStampBook,
+  onOpenProgress,
 }: Props) {
   const missionDone = hasMissionToday();
 
@@ -43,16 +45,22 @@ export function HomeScreen({
           <span className="text-2xl">🐰</span>
           <span className="font-bold text-amber-900">{characterName}</span>
         </button>
-        <motion.button
-          type="button"
-          onClick={onOpenStampBook}
-          initial={{ scale: 0.9 }}
-          animate={{ scale: [0.9, 1.05, 1] }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="rounded-full bg-yellow-200 px-4 py-1 font-bold text-amber-900 shadow-sm"
-        >
-          ⭐ スタンプ {stampTotal}
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onOpenProgress}
+            className="rounded-2xl bg-amber-400 px-6 py-3 text-lg font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1">
+            📅 がんばりカレンダー
+          </button>
+          <motion.button
+            type="button"
+            onClick={onOpenStampBook}
+            initial={{ scale: 0.9 }}
+            animate={{ scale: [0.9, 1.05, 1] }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="rounded-full bg-yellow-200 px-4 py-1 font-bold text-amber-900 shadow-sm"
+          >
+            ⭐ スタンプ {stampTotal}
+          </motion.button>
+        </div>
       </div>
 
       <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-amber-900">

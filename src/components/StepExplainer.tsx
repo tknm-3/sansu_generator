@@ -16,6 +16,7 @@ import type {
 
 interface Props {
   steps: ExplainStep[];
+  problem: string;
   onClose: () => void;
 }
 
@@ -66,7 +67,7 @@ function StepBody({ step }: { step: ExplainStep }) {
   }
 }
 
-export function StepExplainer({ steps, onClose }: Props) {
+export function StepExplainer({ steps, problem, onClose }: Props) {
   const [index, setIndex] = useState(0);
   const step = steps[index];
   const isLast = index >= steps.length - 1;
@@ -82,6 +83,9 @@ export function StepExplainer({ steps, onClose }: Props) {
       <div className="flex items-center gap-3">
         <span className="text-lg font-bold text-amber-700">どうして そうなる？</span>
         <StepIndicator total={steps.length} current={index} />
+      </div>
+      <div className="rounded-2xl bg-amber-100 px-5 py-2 text-2xl font-bold text-amber-900">
+        {problem}
       </div>
       <p className="text-xl font-bold text-amber-900 text-center whitespace-pre-line max-w-sm">
         {step.caption}

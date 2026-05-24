@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HomeScreen } from './screens/HomeScreen';
 import { MakeTenUnit } from './screens/MakeTenUnit';
 import { AdditionUnit } from './screens/AdditionUnit';
@@ -13,9 +13,11 @@ import { MissionScreen } from './screens/MissionScreen';
 import { ProblemMakerScreen } from './screens/ProblemMakerScreen';
 import { ParentSolveScreen } from './screens/ParentSolveScreen';
 import { StampBook } from './screens/StampBook';
+import { ProgressCalendar } from './screens/ProgressCalendar';
 import { CharacterCollection } from './features/character/CharacterCollection';
 import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
+import { setBgmTrack } from './features/sound/bgm';
 import { loadCharacter } from './features/character/character';
 import { loadJson, saveJson } from './lib/storage';
 import { EMPTY_STAMPS, STAMP_KEY, type StampState } from './features/rewards/stamps';
@@ -32,12 +34,19 @@ type Screen =
   | { kind: 'maker' }
   | { kind: 'parentSolve'; problem: TemplateFilled }
   | { kind: 'collection' }
-  | { kind: 'stampBook' };
+  | { kind: 'stampBook' }
+  | { kind: 'progress' };
 
 export default function App() {
   const [character, setCharacter] = useState<Character>(loadCharacter);
   const [screen, setScreen] = useState<Screen>({ kind: 'home' });
   const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    if (screen.kind === 'home' || screen.kind === 'progress' || screen.kind === 'stampBook' || screen.kind === 'collection') {
+      setBgmTrack('home');
+    }
+  }, [screen.kind]);
 
   const stamps = loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS);
   const stampTotal = stamps.total;
@@ -120,6 +129,10 @@ export default function App() {
     return <StampBook onClose={() => setScreen({ kind: 'home' })} />;
   }
 
+  if (screen.kind === 'progress') {
+    return <ProgressCalendar onClose={() => setScreen({ kind: 'home' })} />;
+  }
+
   return (
     <HomeScreen
       key={refresh}
@@ -131,6 +144,7 @@ export default function App() {
       onStartMaker={() => setScreen({ kind: 'maker' })}
       onOpenCollection={() => setScreen({ kind: 'collection' })}
       onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
+      onOpenProgress={() => setScreen({ kind: 'progress' })}
     />
   );
   }
