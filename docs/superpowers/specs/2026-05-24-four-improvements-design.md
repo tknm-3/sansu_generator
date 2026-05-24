@@ -1,18 +1,21 @@
-# 5つの改善 設計書
+# 6つの改善 設計書
 
 日付: 2026-05-24
 
 ## 概要
 
-小学生向け算数アプリ「算数ジェネレーター」に5つの改善を加える。
+小学生向け算数アプリ「算数ジェネレーター」に6つの改善を加える。
 
 1. **ヒント画面に問題を常時表示** — ヒント表示中も元の問題が見えるようにする
 2. **子供向け「がんばりカレンダー」** — 何日にどのくらいできたかを子供向けに記録・表示
 3. **BGMをユニット画面ごとに切替** — 飽きさせないため画面ごとに曲を変える
 4. **お題付き作問モード** — 作る側も答えの構造を考える必要がある制約付き作問
 5. **文章先・式は後出し** — 数字の概念理解を目的に、最初は文章だけ出し、式はボタンで表示する
+6. **二桁の足し算・引き算を式形式に** — 筆算（縦書き）ではなく、普通の横式で表示する
 
 いずれも既存の仕組みに乗せる。新規データ収集は不要（②はスタンプ履歴を再利用）。
+
+実装順の注意: ⑥を⑤より先に行う。⑥で二桁ユニットに横式ボックスができてから、⑤の「式の後出し」が他ユニットと同じ形で適用できる。
 
 ---
 
@@ -155,7 +158,7 @@
 各ユニットは Companion のセリフ（文章）と式ボックス（例 `5 ＋ 8 ＝ ？`）を**同時に**表示している。
 
 ### 設計（決定済み）
-- 適用範囲: **式ボックスを持つ全ユニット（7つ）** = Addition, Subtraction, CherryCalc, Multiplication, Division, BigAddition, BigSubtraction。MakeTen は式ボックスがないため対象外。
+- 適用範囲: **横式ボックスを持つ全ユニット（7つ）** = Addition, Subtraction, CherryCalc, Multiplication, Division, BigAddition, BigSubtraction。MakeTen は式ボックスがないため対象外。BigAddition/BigSubtraction は元々筆算表示だが、⑥で横式ボックスに変えた後に⑤を適用する。
 - 各ユニットに `showFormula` 状態（初期 `false`）を追加する。
 - `showFormula === false` のとき: 既存の式ボックスの代わりに「**しきを みる**」ボタンを表示する。
 - ボタン押下で `showFormula = true` にし、既存の式ボックスを表示する。`playSfx('tap')` を鳴らす。
@@ -171,6 +174,23 @@
 
 ### ①との関係
 ①（ヒントに式表示）はこのまま有効。ヒントは「どうして そうなる？」を解説する場で、そこでは式を見せて理解を助ける。⑤は通常画面で式を後出しにするだけで、両者は矛盾しない。
+
+## ⑥ 二桁の足し算・引き算を式形式に
+
+### 現状
+`BigAdditionUnit`（[src/screens/BigAdditionUnit.tsx](../../../src/screens/BigAdditionUnit.tsx)）は `ColumnAddition`、`BigSubtractionUnit`（[src/screens/BigSubtractionUnit.tsx](../../../src/screens/BigSubtractionUnit.tsx)）は `ColumnSubtraction` という**筆算（縦書き・位を縦に揃えた）**コンポーネントで問題を表示している。各 problem は `problem.a`/`problem.b`（二桁の数）を持つ。
+
+### 設計
+- 筆算コンポーネント（`ColumnAddition`/`ColumnSubtraction`）の使用をやめ、他ユニットと同じ**横式ボックス**で表示する。
+  - BigAddition: `` `${problem.a} ＋ ${problem.b} ＝ ？` ``
+  - BigSubtraction: `` `${problem.a} － ${problem.b} ＝ ？` ``
+- 筆算に付いていた「くり上がり あり！／くり下がり あり！」の注記は廃止する。くり上がり・くり下がりの理解はヒント（StepExplainer の位ブロック解説）で引き続き行うため、通常画面では出さない。
+- `ColumnAddition`/`ColumnSubtraction` 関数は不要になるので削除する。
+- 算数ロジック（生成・正誤判定・ヒント）は変更しない。表示のみ。
+- この横式ボックスに対して⑤（式の後出し）と①（ヒントに式表示）を適用する。
+
+### 対象ファイル
+- `src/screens/BigAdditionUnit.tsx`、`src/screens/BigSubtractionUnit.tsx`
 
 ## テスト方針
 - 純関数（`progress.ts` の集計・連続日数、`problemGoals.ts` の各 validate）は Vitest で単体テスト。
