@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { StepExplainer } from '../components/StepExplainer';
+import { ProblemVisual } from '../components/ProblemVisual';
+import { sceneFor } from '../lib/problemScene';
 import { generateAddition, checkAddition, explainAddition, type AdditionProblem } from '../lib/math/addition';
 import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
@@ -104,6 +106,7 @@ export function AdditionUnit({ characterName, characterId, onExit }: Props) {
       >
         💡 ヒント
       </button>
+      <ProblemVisual scene={sceneFor(SKILL_ID, problem as unknown as Record<string, unknown>, animal)} />
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
