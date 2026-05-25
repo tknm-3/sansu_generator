@@ -30,7 +30,7 @@ export function ShapeRotationUnit({ onExit }: Props) {
   const cleared = solved >= QUESTIONS_PER_UNIT;
 
   function handlePick(idx: number) {
-    if (processing.current || showAnswer) return;
+    if (processing.current) return;
     processing.current = true;
     playSfx('tap');
     const correct = idx === problem.answerIndex;
