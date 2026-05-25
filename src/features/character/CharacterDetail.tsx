@@ -1,21 +1,39 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CHARACTER_DEFS } from './characterDefs';
 import { getUnitStampCount, type StampEntry } from '../rewards/stamps';
 import { UNITS } from '../../data/units';
+import { getCharName } from './character';
 
 interface Props {
   charId: string;
   stampHistory: StampEntry[];
   activeCharId: string;
+  characterNames: Record<string, string>;
   onSelect: (charId: string) => void;
+  onNameChange: (charId: string, name: string) => void;
   onClose: () => void;
 }
 
-export function CharacterDetail({ charId, stampHistory, activeCharId, onSelect, onClose }: Props) {
+export function CharacterDetail({ charId, stampHistory, activeCharId, characterNames, onSelect, onNameChange, onClose }: Props) {
   const def = CHARACTER_DEFS.find((c) => c.id === charId)!;
   const unit = def.unitId ? UNITS.find((u) => u.id === def.unitId) : null;
   const unitStamps = def.unitId ? getUnitStampCount(stampHistory, def.unitId) : 0;
   const isActive = activeCharId === charId;
+
+  const currentName = getCharName(charId, characterNames);
+  const [editing, setEditing] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+
+  function handleEditStart() {
+    setNameInput(currentName);
+    setEditing(true);
+  }
+
+  function handleSaveName() {
+    onNameChange(charId, nameInput);
+    setEditing(false);
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-6 bg-gradient-to-b from-purple-100 to-amber-50 p-6">
@@ -28,7 +46,46 @@ export function CharacterDetail({ charId, stampHistory, activeCharId, onSelect, 
         {def.emoji}
       </motion.div>
 
-      <h1 className="text-3xl font-bold text-purple-800">{def.name}</h1>
+      {editing ? (
+        <div className="flex flex-col items-center gap-3">
+          <input
+            className="rounded-xl border-2 border-amber-300 px-4 py-2 text-center text-2xl w-48"
+            value={nameInput}
+            maxLength={8}
+            autoFocus
+            onChange={(e) => setNameInput(e.target.value)}
+            placeholder={def.name}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handleSaveName}
+              className="rounded-xl bg-green-500 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#2e7d32]"
+            >
+              けってい
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="rounded-xl bg-gray-300 px-5 py-2 text-lg font-bold text-gray-700"
+            >
+              もどる
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-3xl font-bold text-purple-800">{currentName}</h1>
+          <button
+            type="button"
+            onClick={handleEditStart}
+            className="text-sm text-purple-500 underline"
+          >
+            なまえをかえる
+          </button>
+        </div>
+      )}
+
       <p className="text-center text-lg text-amber-700 max-w-xs">{def.description}</p>
 
       {unit && (

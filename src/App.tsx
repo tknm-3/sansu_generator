@@ -19,7 +19,8 @@ import { CharacterDetail } from './features/character/CharacterDetail';
 import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
 import { setBgmTrack } from './features/sound/bgm';
-import { loadCharacter } from './features/character/character';
+import { loadCharacter, getCharName, saveCharacterNameForId } from './features/character/character';
+import { CHARACTER_DEFS } from './features/character/characterDefs';
 import { loadJson, saveJson } from './lib/storage';
 import { EMPTY_STAMPS, STAMP_KEY, type StampState } from './features/rewards/stamps';
 import type { Character } from './features/character/character';
@@ -117,6 +118,7 @@ export default function App() {
       <CharacterCollection
         stampHistory={stampHistory}
         activeCharId={character.id}
+        characterNames={character.characterNames}
         onOpenDetail={(charId) => setScreen({ kind: 'characterDetail', charId })}
         onClose={() => setScreen({ kind: 'home' })}
       />
@@ -129,11 +131,18 @@ export default function App() {
         charId={screen.charId}
         stampHistory={stampHistory}
         activeCharId={character.id}
+        characterNames={character.characterNames}
         onSelect={(charId) => {
-          const next = { ...character, id: charId };
+          const def = CHARACTER_DEFS.find((c) => c.id === charId)!;
+          const newName = getCharName(charId, character.characterNames) ?? def.name;
+          const next = { ...character, id: charId, name: newName };
           saveJson(PROFILE_KEY, next);
           setCharacter(next);
           setScreen({ kind: 'collection' });
+        }}
+        onNameChange={(charId, name) => {
+          const saved = saveCharacterNameForId(charId, name);
+          setCharacter(saved);
         }}
         onClose={() => setScreen({ kind: 'collection' })}
       />
