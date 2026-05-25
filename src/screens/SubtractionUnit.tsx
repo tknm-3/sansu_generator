@@ -113,7 +113,9 @@ export function SubtractionUnit({ characterName, characterId, onExit }: Props) {
           </motion.p>
         )}
       </AnimatePresence>
-      <div className="text-6xl">{food.repeat(Math.max(0, answer))}</div>
+      {expression === 'happy' && (
+        <div className="text-6xl">{food.repeat(Math.max(0, answer))}</div>
+      )}
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (<StepExplainer steps={explainSubtraction(problem, food)} problem={formula} onClose={() => setShowHint(false)} />)}
     </div>
