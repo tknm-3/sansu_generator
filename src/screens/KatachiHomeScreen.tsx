@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUnitsByCategory, type UnitMeta } from '../data/units';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
+import { hasMissionTodayKatachi } from './KatachiMissionScreen';
 
 interface Props {
   characterName: string;
   characterId: string;
   stampTotal: number;
   onSelectUnit: (unitId: string, hard: boolean) => void;
+  onStartMission: () => void;
+  onStartChallenge: () => void;
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
   onOpenProgress: () => void;
@@ -21,6 +24,8 @@ export function KatachiHomeScreen({
   characterId,
   stampTotal,
   onSelectUnit,
+  onStartMission,
+  onStartChallenge,
   onOpenCollection,
   onOpenStampBook,
   onOpenProgress,
@@ -28,6 +33,7 @@ export function KatachiHomeScreen({
 }: Props) {
   const characterEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐧';
   const [pendingUnit, setPendingUnit] = useState<UnitMeta | null>(null);
+  const missionDone = hasMissionTodayKatachi();
 
   function handleUnitClick(unit: UnitMeta) {
     setPendingUnit(unit);
@@ -80,6 +86,33 @@ export function KatachiHomeScreen({
         🔷 かたちあそび
       </motion.h1>
 
+      <motion.button
+        type="button"
+        onClick={onStartMission}
+        disabled={missionDone}
+        whileTap={missionDone ? undefined : { scale: 0.96 }}
+        whileHover={missionDone ? undefined : { scale: 1.03 }}
+        className={`w-full max-w-sm rounded-2xl p-4 text-center shadow-lg font-bold transition-all ${
+          missionDone
+            ? 'bg-gray-200 text-gray-500 cursor-default'
+            : 'bg-yellow-400 text-yellow-900 shadow-[0_4px_0_#f9a825]'
+        }`}
+      >
+        <div className="text-2xl">🌟</div>
+        <div className="text-lg">{missionDone ? 'きょうの ミッション クリア済み！' : 'きょうの ミッション をやろう！'}</div>
+      </motion.button>
+
+      <motion.button
+        type="button"
+        onClick={onStartChallenge}
+        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.04 }}
+        className="w-full max-w-sm rounded-2xl bg-orange-500 p-4 text-center text-white font-bold shadow-[0_4px_0_#c2410c]"
+      >
+        <div className="text-2xl">⚔️</div>
+        <div>チャレンジ</div>
+      </motion.button>
+
       <p className="text-teal-700 font-bold">がくしゅう</p>
       <div className="flex flex-wrap justify-center gap-4">
         {KATACHI_UNITS.map((u, index) => (
@@ -101,7 +134,6 @@ export function KatachiHomeScreen({
         ))}
       </div>
 
-      {/* 難易度選択モーダル */}
       <AnimatePresence>
         {pendingUnit && (
           <motion.div

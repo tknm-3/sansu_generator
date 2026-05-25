@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { HomeScreen } from './screens/HomeScreen';
 import { KatachiHomeScreen } from './screens/KatachiHomeScreen';
+import { KatachiMissionScreen } from './screens/KatachiMissionScreen';
+import { KatachiChallengeScreen } from './screens/KatachiChallengeScreen';
 import { CategorySelectScreen } from './screens/CategorySelectScreen';
 import { MakeTenUnit } from './screens/MakeTenUnit';
 import { AdditionUnit } from './screens/AdditionUnit';
@@ -42,9 +44,11 @@ type Screen =
   | { kind: 'categorySelect' }
   | { kind: 'home' }
   | { kind: 'katachiHome' }
-  | { kind: 'unit'; unitId: string; hard?: boolean }
+  | { kind: 'unit'; unitId: string; hard?: boolean; returnTo?: 'katachi-mission' | 'katachi-challenge' }
   | { kind: 'challenge' }
   | { kind: 'mission' }
+  | { kind: 'katachi-mission' }
+  | { kind: 'katachi-challenge' }
   | { kind: 'maker' }
   | { kind: 'parentSolve'; problem: TemplateFilled }
   | { kind: 'collection' }
@@ -62,7 +66,7 @@ export default function App() {
     if (screen.kind === 'home' || screen.kind === 'progress' || screen.kind === 'stampBook' || screen.kind === 'collection' || screen.kind === 'characterDetail') {
       setBgmTrack('home');
     }
-    if (screen.kind === 'katachiHome') {
+    if (screen.kind === 'katachiHome' || screen.kind === 'katachi-mission' || screen.kind === 'katachi-challenge') {
       setBgmTrack('katachi-home');
     }
     if (screen.kind === 'categorySelect') {
@@ -88,6 +92,14 @@ export default function App() {
 
   function handleExit() {
     setRefresh((r) => r + 1);
+    if (screen.kind === 'unit' && screen.returnTo === 'katachi-mission') {
+      setScreen({ kind: 'katachi-mission' });
+      return;
+    }
+    if (screen.kind === 'unit' && screen.returnTo === 'katachi-challenge') {
+      setScreen({ kind: 'katachi-challenge' });
+      return;
+    }
     setScreen(category === 'katachi' ? { kind: 'katachiHome' } : { kind: 'home' });
   }
 
@@ -128,6 +140,26 @@ export default function App() {
 
     if (screen.kind === 'challenge') return <ChallengeMode key={refresh} {...sharedProps} />;
     if (screen.kind === 'mission')   return <MissionScreen  key={refresh} {...sharedProps} />;
+
+    if (screen.kind === 'katachi-mission') {
+      return (
+        <KatachiMissionScreen
+          key={refresh}
+          onSelectUnit={(unitId, hard) => setScreen({ kind: 'unit', unitId, hard, returnTo: 'katachi-mission' })}
+          onExit={() => setScreen({ kind: 'katachiHome' })}
+        />
+      );
+    }
+
+    if (screen.kind === 'katachi-challenge') {
+      return (
+        <KatachiChallengeScreen
+          key={refresh}
+          onSelectUnit={(unitId, hard) => setScreen({ kind: 'unit', unitId, hard, returnTo: 'katachi-challenge' })}
+          onExit={() => setScreen({ kind: 'katachiHome' })}
+        />
+      );
+    }
 
     if (screen.kind === 'maker') {
       return (
@@ -202,6 +234,8 @@ export default function App() {
           characterId={character.id}
           stampTotal={stampTotal}
           onSelectUnit={(unitId, hard) => setScreen({ kind: 'unit', unitId, hard })}
+          onStartMission={() => setScreen({ kind: 'katachi-mission' })}
+          onStartChallenge={() => setScreen({ kind: 'katachi-challenge' })}
           onOpenCollection={() => setScreen({ kind: 'collection' })}
           onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
           onOpenProgress={() => setScreen({ kind: 'progress' })}

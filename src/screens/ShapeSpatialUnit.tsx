@@ -30,7 +30,6 @@ function SceneDisplay({ objects }: { objects: SceneObj[] }) {
 
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      {/* grid */}
       {Array.from({ length: rows }, (_, r) =>
         Array.from({ length: cols }, (_, c) => (
           <rect
@@ -46,15 +45,6 @@ function SceneDisplay({ objects }: { objects: SceneObj[] }) {
           />
         ))
       )}
-      {/* direction labels (only 1-row layout) */}
-      {rows === 1 && (
-        <>
-          <text x={PAD + CELL * 0.5} y={PAD - 4} fontSize="9" textAnchor="middle" fill="#6b7280">ひだり</text>
-          {cols === 3 && <text x={PAD + CELL * 1.5} y={PAD - 4} fontSize="9" textAnchor="middle" fill="#6b7280">まんなか</text>}
-          <text x={PAD + CELL * (cols - 0.5)} y={PAD - 4} fontSize="9" textAnchor="middle" fill="#6b7280">みぎ</text>
-        </>
-      )}
-      {/* objects */}
       {objects.map((obj) => {
         const cx = PAD + obj.col * CELL + CELL / 2;
         const cy = PAD + obj.row * CELL + CELL / 2;
