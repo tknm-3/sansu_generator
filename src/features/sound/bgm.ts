@@ -87,6 +87,32 @@ const TRACK_DIV: Track = {
   melodyWave: 'triangle',
 };
 
+// 図形カテゴリホーム（木琴風・軽快で工作感・triangle）
+const TRACK_KATACHI_HOME: Track = {
+  melody: [
+    C5, E5, G4, E5, C5, D5, E5, null,
+    A4, C5, E5, C5, A4, B4, C5, null,
+    G4, A4, B4, C5, D5, C5, B4, A4,
+    G4, B4, D5, B4, G4, null, G4, null,
+  ],
+  bass: [C3, F3, G3, C3, F3, G3, C3, G3],
+  note: 0.26,
+  melodyWave: 'triangle',
+};
+
+// 図形ユニット（ゆったりした考える系・sine）
+const TRACK_KATACHI_UNIT: Track = {
+  melody: [
+    E4, G4, B4, G4, E4, F4, G4, null,
+    D5, C5, B4, A4, G4, A4, B4, null,
+    C5, B4, A4, G4, F4, G4, A4, null,
+    G4, A4, B4, C5, B4, null, G4, null,
+  ],
+  bass: [C3, G3, F3, C3, G3, C3, F3, G3],
+  note: 0.34,
+  melodyWave: 'sine',
+};
+
 const TRACKS: Record<string, Track> = {
   home: TRACK_HOME,
   'make-ten': TRACK_ADD,
@@ -97,6 +123,10 @@ const TRACKS: Record<string, Track> = {
   'cherry-calc': TRACK_SUB,
   multiplication: TRACK_MUL,
   division: TRACK_DIV,
+  'katachi-home': TRACK_KATACHI_HOME,
+  'shape-rotation': TRACK_KATACHI_UNIT,
+  'shape-compose': TRACK_KATACHI_UNIT,
+  'shape-viewpoint': TRACK_KATACHI_UNIT,
 };
 
 const LOOKAHEAD = 0.2; // 先読みスケジュール窓（秒）
