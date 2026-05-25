@@ -18,6 +18,7 @@ const SKILL_ID = 'multiplication';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
@@ -43,7 +44,7 @@ function GroupVisual({ problem, emoji }: { problem: MultiplicationProblem; emoji
   );
 }
 
-export function MultiplicationUnit({ characterName, onExit }: Props) {
+export function MultiplicationUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<MultiplicationProblem>(() => generateMultiplication());
   const [scenario, setScenario] = useState(() => pickScenario('multiplication'));
   const emoji = scenario.emoji;
@@ -107,6 +108,7 @@ export function MultiplicationUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />

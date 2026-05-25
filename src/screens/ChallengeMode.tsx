@@ -17,6 +17,7 @@ const SKILL_WEIGHTS: SkillWeight[] = ALL_SKILL_IDS.map((id) => ({ skillId: id, w
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
@@ -26,7 +27,7 @@ function nextProblem(): Problem {
   return generateProblem(skillId);
 }
 
-export function ChallengeMode({ characterName, onExit }: Props) {
+export function ChallengeMode({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<Problem>(() => nextProblem());
   const [answered, setAnswered] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -90,7 +91,7 @@ export function ChallengeMode({ characterName, onExit }: Props) {
         <span className="text-sm font-bold text-amber-700">もんだい {answered + 1} / {QUESTIONS_PER_SESSION}</span>
         <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-800">せいかい {correct}</span>
       </div>
-      <Companion name={characterName} expression={expression} message={problem.questionText} />
+      <Companion name={characterName} characterId={characterId} expression={expression} message={problem.questionText} />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-3xl font-bold text-amber-900 text-center">
         {problem.questionText}
       </div>

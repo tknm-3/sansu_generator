@@ -26,13 +26,14 @@ const SKILL_ID = 'cherry-calc';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
 // hint step: 0=none, 1=show branch
 type HintStep = 0 | 1;
 
-export function CherryCalcUnit({ characterName, onExit }: Props) {
+export function CherryCalcUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<CarryProblem>(() => generateCarryProblem());
   const [scenario, setScenario] = useState(() => pickScenario('cherry-calc'));
   const [solved, setSolved] = useState(0);
@@ -108,6 +109,7 @@ export function CherryCalcUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />

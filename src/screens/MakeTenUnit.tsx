@@ -17,6 +17,7 @@ const QUESTIONS_PER_UNIT = 3;
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
@@ -24,7 +25,7 @@ function newCurrent(): number {
   return Math.floor(Math.random() * 9) + 1;
 }
 
-export function MakeTenUnit({ characterName, onExit }: Props) {
+export function MakeTenUnit({ characterName, characterId, onExit }: Props) {
   const [current, setCurrent] = useState(newCurrent);
   const [scenario, setScenario] = useState(() => pickScenario('make-ten'));
   const fruit = scenario.emoji;
@@ -119,6 +120,7 @@ export function MakeTenUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: current, b: missingToTen(current) })}
       />

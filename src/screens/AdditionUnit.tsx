@@ -18,10 +18,11 @@ const SKILL_ID = 'addition';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
-export function AdditionUnit({ characterName, onExit }: Props) {
+export function AdditionUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<AdditionProblem>(() => generateAddition());
   const [scenario, setScenario] = useState(() => pickScenario('addition'));
   const animal = scenario.emoji;
@@ -83,7 +84,7 @@ export function AdditionUnit({ characterName, onExit }: Props) {
       <div className="self-stretch text-sm text-amber-700 font-bold">
         といた かず: {solved} / {QUESTIONS_PER_UNIT}
       </div>
-      <Companion name={characterName} expression={expression}
+      <Companion name={characterName} characterId={characterId} expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })} />
       {showFormula ? (
         <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">

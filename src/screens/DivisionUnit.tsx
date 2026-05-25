@@ -18,6 +18,7 @@ const SKILL_ID = 'division';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
@@ -49,7 +50,7 @@ function ShareVisual({ problem, emoji }: { problem: DivisionProblem; emoji: stri
   );
 }
 
-export function DivisionUnit({ characterName, onExit }: Props) {
+export function DivisionUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<DivisionProblem>(() => generateDivision());
   const [scenario, setScenario] = useState(() => pickScenario('division'));
   const emoji = scenario.emoji;
@@ -113,6 +114,7 @@ export function DivisionUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: problem.dividend, b: problem.divisor })}
       />

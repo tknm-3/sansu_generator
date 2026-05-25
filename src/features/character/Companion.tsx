@@ -1,16 +1,28 @@
 import { motion } from 'framer-motion';
 import { speakJa } from '../speech/tts';
 import { CompanionSvg, type FaceExpression } from './CompanionSvg';
+import { CHARACTER_DEFS } from './characterDefs';
 
 interface Props {
   name: string;
   message: string;
   expression?: FaceExpression;
   size?: number;
+  characterId?: string;
 }
 
-export function Companion({ name, message, expression = 'normal', size = 90 }: Props) {
+export function Companion({ name, message, expression = 'normal', size = 90, characterId = 'usagi' }: Props) {
   const isHappy = expression === 'happy';
+  const def = CHARACTER_DEFS.find((c) => c.id === characterId);
+
+  const characterVisual = characterId === 'usagi' ? (
+    <CompanionSvg expression={expression} size={size} />
+  ) : (
+    <div style={{ fontSize: size, lineHeight: 1 }} className="select-none">
+      {def?.emoji ?? '🐰'}
+    </div>
+  );
+
   return (
     <div className="flex items-end gap-3">
       <motion.div
@@ -22,7 +34,7 @@ export function Companion({ name, message, expression = 'normal', size = 90 }: P
         }
         transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
-        <CompanionSvg expression={expression} size={size} />
+        {characterVisual}
         <div className="rounded-full bg-yellow-200 px-2 text-xs font-bold text-amber-900 shadow-sm">{name}</div>
       </motion.div>
 
