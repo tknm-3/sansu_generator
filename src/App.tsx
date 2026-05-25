@@ -8,6 +8,7 @@ import { BigAdditionUnit } from './screens/BigAdditionUnit';
 import { BigSubtractionUnit } from './screens/BigSubtractionUnit';
 import { MultiplicationUnit } from './screens/MultiplicationUnit';
 import { DivisionUnit } from './screens/DivisionUnit';
+import { WordProblemUnit } from './screens/WordProblemUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
 import { ProblemMakerScreen } from './screens/ProblemMakerScreen';
@@ -84,8 +85,10 @@ export default function App() {
       case 'big-addition':    return <BigAdditionUnit     key={refresh} {...sharedProps} />;
       case 'big-subtraction': return <BigSubtractionUnit  key={refresh} {...sharedProps} />;
       case 'multiplication':  return <MultiplicationUnit  key={refresh} {...sharedProps} />;
-      case 'division':        return <DivisionUnit        key={refresh} {...sharedProps} />;
-      default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
+      case 'division':          return <DivisionUnit          key={refresh} {...sharedProps} />;
+      case 'word-addition':     return <WordProblemUnit      key={refresh} variant="word-addition"    {...sharedProps} />;
+      case 'word-subtraction':  return <WordProblemUnit      key={refresh} variant="word-subtraction" {...sharedProps} />;
+      default:                  return <MakeTenUnit           key={refresh} {...sharedProps} />;
     }
   }
 
