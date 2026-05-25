@@ -65,6 +65,18 @@ function playFanfare(ac: AudioContext): void {
   );
 }
 
+// ページ非表示時にAudioContextをサスペンドし、再表示時に再開する
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx) return;
+    if (document.visibilityState === 'hidden') {
+      ctx.suspend();
+    } else {
+      ctx.resume();
+    }
+  });
+}
+
 export function playTone(name: SynthName): void {
   const ac = getCtx();
   if (!ac) return;

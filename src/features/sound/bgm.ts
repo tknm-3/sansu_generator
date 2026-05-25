@@ -234,3 +234,15 @@ export function setBgmTrack(id: string): void {
   current = TRACKS[id] ?? TRACKS.home;
   noteIndex = 0;
 }
+
+// ページ非表示時にBGMを停止し、再表示時に再開する
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      stopBgm();
+    } else if (enabled) {
+      startBgm();
+    }
+  });
+  document.addEventListener('pagehide', stopBgm);
+}
