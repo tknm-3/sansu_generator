@@ -14,6 +14,9 @@ import { WordProblemUnit } from './screens/WordProblemUnit';
 import { ShapeRotationUnit } from './screens/ShapeRotationUnit';
 import { ShapeComposeUnit } from './screens/ShapeComposeUnit';
 import { ShapeViewpointUnit } from './screens/ShapeViewpointUnit';
+import { ShapeFoldUnit } from './screens/ShapeFoldUnit';
+import { ShapePatternUnit } from './screens/ShapePatternUnit';
+import { ShapeSpatialUnit } from './screens/ShapeSpatialUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
 import { ProblemMakerScreen } from './screens/ProblemMakerScreen';
@@ -39,7 +42,7 @@ type Screen =
   | { kind: 'categorySelect' }
   | { kind: 'home' }
   | { kind: 'katachiHome' }
-  | { kind: 'unit'; unitId: string }
+  | { kind: 'unit'; unitId: string; hard?: boolean }
   | { kind: 'challenge' }
   | { kind: 'mission' }
   | { kind: 'maker' }
@@ -101,6 +104,7 @@ export default function App() {
     }
 
     if (screen.kind === 'unit') {
+      const hard = screen.hard ?? false;
       switch (screen.unitId) {
         case 'make-ten':        return <MakeTenUnit        key={refresh} {...sharedProps} />;
         case 'addition':        return <AdditionUnit        key={refresh} {...sharedProps} />;
@@ -112,9 +116,12 @@ export default function App() {
         case 'division':        return <DivisionUnit        key={refresh} {...sharedProps} />;
         case 'word-addition':   return <WordProblemUnit     key={refresh} variant="word-addition"    {...sharedProps} />;
         case 'word-subtraction':return <WordProblemUnit     key={refresh} variant="word-subtraction" {...sharedProps} />;
-        case 'shape-rotation':  return <ShapeRotationUnit   key={refresh} {...sharedProps} />;
-        case 'shape-compose':   return <ShapeComposeUnit    key={refresh} {...sharedProps} />;
-        case 'shape-viewpoint': return <ShapeViewpointUnit  key={refresh} {...sharedProps} />;
+        case 'shape-rotation':  return <ShapeRotationUnit   key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-compose':   return <ShapeComposeUnit    key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-viewpoint': return <ShapeViewpointUnit  key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-fold':      return <ShapeFoldUnit       key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-pattern':   return <ShapePatternUnit    key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-spatial':   return <ShapeSpatialUnit    key={refresh} hard={hard} {...sharedProps} />;
         default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
       }
     }
@@ -194,7 +201,7 @@ export default function App() {
           characterName={character.name}
           characterId={character.id}
           stampTotal={stampTotal}
-          onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
+          onSelectUnit={(unitId, hard) => setScreen({ kind: 'unit', unitId, hard })}
           onOpenCollection={() => setScreen({ kind: 'collection' })}
           onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
           onOpenProgress={() => setScreen({ kind: 'progress' })}

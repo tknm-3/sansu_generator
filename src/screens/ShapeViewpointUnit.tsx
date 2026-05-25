@@ -14,6 +14,7 @@ const SKILL_ID = 'shape-viewpoint';
 interface Props {
   characterName: string;
   characterId: string;
+  hard?: boolean;
   onExit: () => void;
 }
 

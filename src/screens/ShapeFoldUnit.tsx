@@ -6,11 +6,10 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
-import { ShapeSvg } from '../components/shapes/ShapeSvg';
-import { generateRotationProblem, type RotationProblem } from '../lib/geometry/rotation';
+import { generateFoldProblem, type FoldProblem } from '../lib/geometry/fold';
 
 const QUESTIONS_PER_UNIT = 3;
-const SKILL_ID = 'shape-rotation';
+const SKILL_ID = 'shape-fold';
 
 interface Props {
   characterName: string;
@@ -19,23 +18,26 @@ interface Props {
   onExit: () => void;
 }
 
-export function ShapeRotationUnit({ hard = false, onExit }: Props) {
-  const [problem, setProblem] = useState<RotationProblem>(() => generateRotationProblem(hard));
+function SvgView({ svg, viewBox, w, h }: { svg: string; viewBox: string; w: number; h: number }) {
+  return (
+    <svg width={w} height={h} viewBox={viewBox} dangerouslySetInnerHTML={{ __html: svg }} />
+  );
+}
+
+export function ShapeFoldUnit({ hard = false, onExit }: Props) {
+  const [problem, setProblem] = useState<FoldProblem>(() => generateFoldProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [spinning, setSpinning] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
 
   function handlePick(idx: number) {
-    if (processing.current || showAnswer) return;
+    if (processing.current) return;
     processing.current = true;
     playSfx('tap');
-    const correct = idx === problem.answerIndex;
-    if (correct) {
+    if (idx === problem.answerIndex) {
       playSfx('correct');
       confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
       const next = solved + 1;
@@ -47,8 +49,7 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         speakJa('クリア！ よくできたね！');
       } else {
         setTimeout(() => {
-          setProblem(generateRotationProblem(hard));
-          setShowAnswer(false);
+          setProblem(generateFoldProblem(hard));
           processing.current = false;
         }, 900);
       }
@@ -58,14 +59,6 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
       speakJa('おしい！ もういちど やってみよう');
       processing.current = false;
     }
-  }
-
-  function handleSpin() {
-    if (spinning) return;
-    setSpinning(true);
-    setShowAnswer(true);
-    playSfx('tap');
-    setTimeout(() => setSpinning(false), 800);
   }
 
   if (cleared) {
@@ -82,49 +75,28 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-emerald-100 to-teal-50 p-6">
-      <div className="self-stretch text-sm text-teal-700 font-bold">
-        といた かず: {solved} / {QUESTIONS_PER_UNIT}
+    <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-amber-50 to-yellow-50 p-6">
+      <div className="self-stretch flex items-center justify-between text-sm text-teal-700 font-bold">
+        <span>といた かず: {solved} / {QUESTIONS_PER_UNIT}</span>
+        {hard && <span className="rounded-full bg-orange-100 px-2 py-0.5 text-orange-600 text-xs font-bold">むずかしい</span>}
       </div>
 
       <motion.h2
+        key={problem.id}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-xl font-bold text-teal-900 text-center"
+        className="text-xl font-bold text-amber-900 text-center"
       >
-        この かたちを コロンって まわしたら、どれ？
+        {problem.questionLabel}
       </motion.h2>
 
-      {/* お題 */}
-      <div className="rounded-3xl bg-white shadow-lg p-6 flex flex-col items-center gap-3">
-        <p className="text-sm text-teal-600 font-bold">もとのかたち</p>
-        <ShapeSvg shapeId={problem.shapeId} transform={{ rotate: 0, flipX: false }} size={100} color="#f59e0b" />
-        <p className="text-sm text-teal-500">↓ コロン</p>
-        <motion.div
-          animate={spinning ? { rotate: [0, 180, problem.transform.rotate] } : {}}
-          transition={{ duration: 0.7, ease: 'easeInOut' }}
-        >
-          {showAnswer ? (
-            <ShapeSvg shapeId={problem.shapeId} transform={problem.transform} size={100} color="#34d399" />
-          ) : (
-            <div className="w-24 h-24 rounded-2xl border-4 border-dashed border-teal-300 flex items-center justify-center text-teal-400 text-3xl">？</div>
-          )}
-        </motion.div>
+      <div className="rounded-3xl bg-white shadow-lg px-6 py-5 flex flex-col items-center gap-2">
+        <p className="text-xs text-amber-500 font-bold">おりがみ（おって きった ところ）</p>
+        <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={180} h={110} />
       </div>
 
-      {/* たしかめるボタン */}
-      {!showAnswer && (
-        <button
-          type="button"
-          onClick={handleSpin}
-          className="rounded-2xl bg-amber-400 px-6 py-3 text-lg font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1"
-        >
-          🔄 まわして たしかめる
-        </button>
-      )}
+      <p className="text-amber-700 font-bold">ひらいたら どれ？</p>
 
-      {/* 4択 */}
-      <p className="text-teal-700 font-bold">どれになる？</p>
       <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
         {problem.choices.map((choice, idx) => (
           <motion.button
@@ -133,9 +105,9 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
             onClick={() => handlePick(idx)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="rounded-2xl bg-white border-2 border-teal-200 p-4 flex items-center justify-center shadow-md"
+            className="rounded-2xl bg-white border-2 border-amber-200 p-3 flex items-center justify-center shadow-md"
           >
-            <ShapeSvg shapeId={problem.shapeId} transform={choice} size={70} color="#60a5fa" />
+            <SvgView svg={choice.svg} viewBox="0 0 80 80" w={80} h={80} />
           </motion.button>
         ))}
       </div>
@@ -154,7 +126,7 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         )}
       </AnimatePresence>
 
-      <button type="button" onClick={onExit} className="mt-2 text-sm text-teal-600 underline">やめる</button>
+      <button type="button" onClick={onExit} className="mt-2 text-sm text-amber-600 underline">やめる</button>
     </div>
   );
 }

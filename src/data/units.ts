@@ -115,6 +115,30 @@ export const UNITS: UnitMeta[] = [
     curriculum: '視点取得：積み木の立体を真上から見た図を選ぶ',
     emoji: '🏗️',
   },
+  {
+    id: 'shape-fold',
+    category: 'katachi',
+    title: 'おりがみをひらくと？',
+    grade: '年長〜小2',
+    curriculum: '対称・折り紙：折って切った紙を開いた形を予想する',
+    emoji: '📄',
+  },
+  {
+    id: 'shape-pattern',
+    category: 'katachi',
+    title: 'つぎはどれ？',
+    grade: '年長〜小2',
+    curriculum: 'パターン補完：形・色の繰り返しパターンの続きを選ぶ',
+    emoji: '🔁',
+  },
+  {
+    id: 'shape-spatial',
+    category: 'katachi',
+    title: 'どこにいる？',
+    grade: '年長〜小2',
+    curriculum: '空間言語：左右・上下の位置関係を言葉で理解する',
+    emoji: '🗺️',
+  },
 ];
 
 export function getUnit(id: string): UnitMeta | undefined {
