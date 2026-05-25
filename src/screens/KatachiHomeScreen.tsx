@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { getUnitsByCategory } from '../data/units';
+import { CHARACTER_DEFS } from '../features/character/characterDefs';
 
 interface Props {
   characterName: string;
+  characterId: string;
   stampTotal: number;
   onSelectUnit: (unitId: string) => void;
   onOpenCollection: () => void;
@@ -21,6 +23,7 @@ const KATACHI_UNITS = getUnitsByCategory('katachi');
 
 export function KatachiHomeScreen({
   characterName,
+  characterId,
   stampTotal,
   onSelectUnit,
   onOpenCollection,
@@ -28,6 +31,7 @@ export function KatachiHomeScreen({
   onOpenProgress,
   onBack,
 }: Props) {
+  const characterEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐧';
   return (
     <div className="flex h-screen flex-col items-center gap-6 bg-gradient-to-b from-emerald-200 to-teal-50 p-6 overflow-y-auto">
       <div className="flex w-full items-center justify-between">
@@ -36,7 +40,7 @@ export function KatachiHomeScreen({
             ← もどる
           </button>
           <button type="button" onClick={onOpenCollection} className="flex items-center gap-2">
-            <span className="text-2xl">🐧</span>
+            <span className="text-2xl">{characterEmoji}</span>
             <span className="font-bold text-teal-900">{characterName}</span>
           </button>
         </div>

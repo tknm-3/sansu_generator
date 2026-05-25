@@ -192,6 +192,7 @@ export default function App() {
         <KatachiHomeScreen
           key={refresh}
           characterName={character.name}
+          characterId={character.id}
           stampTotal={stampTotal}
           onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
           onOpenCollection={() => setScreen({ kind: 'collection' })}
@@ -206,6 +207,7 @@ export default function App() {
       <HomeScreen
         key={refresh}
         characterName={character.name}
+        characterId={character.id}
         stampTotal={stampTotal}
         onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
         onStartChallenge={() => setScreen({ kind: 'challenge' })}

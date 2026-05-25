@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { UNITS } from '../data/units';
 import { hasMissionToday } from './MissionScreen';
+import { CHARACTER_DEFS } from '../features/character/characterDefs';
 
 interface Props {
   characterName: string;
+  characterId: string;
   stampTotal: number;
   onSelectUnit: (unitId: string) => void;
   onStartChallenge: () => void;
@@ -27,6 +29,7 @@ const UNIT_EMOJIS: Record<string, string> = {
 
 export function HomeScreen({
   characterName,
+  characterId,
   stampTotal,
   onSelectUnit,
   onStartChallenge,
@@ -37,12 +40,13 @@ export function HomeScreen({
   onOpenProgress,
 }: Props) {
   const missionDone = hasMissionToday();
+  const characterEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
 
   return (
     <div className="flex h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6 overflow-y-auto">
       <div className="flex w-full items-center justify-between">
         <button type="button" onClick={onOpenCollection} className="flex items-center gap-2">
-          <span className="text-2xl">🐰</span>
+          <span className="text-2xl">{characterEmoji}</span>
           <span className="font-bold text-amber-900">{characterName}</span>
         </button>
         <div className="flex items-center gap-2">
