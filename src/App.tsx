@@ -223,6 +223,7 @@ export default function App() {
         onOpenCollection={() => setScreen({ kind: 'collection' })}
         onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
         onOpenProgress={() => setScreen({ kind: 'progress' })}
+        onBack={() => setScreen({ kind: 'categorySelect' })}
       />
     );
   }
