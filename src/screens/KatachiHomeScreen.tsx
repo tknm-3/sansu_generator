@@ -1,23 +1,18 @@
-import { motion } from 'framer-motion';
-import { getUnitsByCategory } from '../data/units';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getUnitsByCategory, type UnitMeta } from '../data/units';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
 
 interface Props {
   characterName: string;
   characterId: string;
   stampTotal: number;
-  onSelectUnit: (unitId: string) => void;
+  onSelectUnit: (unitId: string, hard: boolean) => void;
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
   onOpenProgress: () => void;
   onBack: () => void;
 }
-
-const UNIT_EMOJIS: Record<string, string> = {
-  'shape-rotation': '🔄',
-  'shape-compose':  '🧩',
-  'shape-viewpoint': '🏗️',
-};
 
 const KATACHI_UNITS = getUnitsByCategory('katachi');
 
@@ -32,6 +27,18 @@ export function KatachiHomeScreen({
   onBack,
 }: Props) {
   const characterEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐧';
+  const [pendingUnit, setPendingUnit] = useState<UnitMeta | null>(null);
+
+  function handleUnitClick(unit: UnitMeta) {
+    setPendingUnit(unit);
+  }
+
+  function handleModeSelect(hard: boolean) {
+    if (!pendingUnit) return;
+    onSelectUnit(pendingUnit.id, hard);
+    setPendingUnit(null);
+  }
+
   return (
     <div className="flex h-screen flex-col items-center gap-6 bg-gradient-to-b from-emerald-200 to-teal-50 p-6 overflow-y-auto">
       <div className="flex w-full items-center justify-between">
@@ -79,20 +86,70 @@ export function KatachiHomeScreen({
           <motion.button
             key={u.id}
             type="button"
-            onClick={() => onSelectUnit(u.id)}
+            onClick={() => handleUnitClick(u)}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08, type: 'spring', stiffness: 200 }}
+            transition={{ delay: index * 0.06, type: 'spring', stiffness: 200 }}
             whileHover={{ scale: 1.06, y: -4 }}
             whileTap={{ scale: 0.95 }}
             className="w-40 rounded-2xl border-2 border-teal-200 bg-white p-4 text-center shadow-md"
           >
-            <div className="text-4xl">{UNIT_EMOJIS[u.id] ?? '🔷'}</div>
+            <div className="text-4xl">{u.emoji}</div>
             <div className="mt-1 text-base font-bold text-teal-900">{u.title}</div>
             <div className="mt-0.5 text-xs text-teal-500">{u.grade}</div>
           </motion.button>
         ))}
       </div>
+
+      {/* 難易度選択モーダル */}
+      <AnimatePresence>
+        {pendingUnit && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6"
+            onClick={() => setPendingUnit(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 280 }}
+              className="rounded-3xl bg-white p-6 shadow-2xl w-full max-w-xs flex flex-col items-center gap-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-5xl">{pendingUnit.emoji}</div>
+              <p className="text-xl font-bold text-teal-900 text-center">{pendingUnit.title}</p>
+              <p className="text-sm text-teal-600 font-bold">どっちに チャレンジする？</p>
+
+              <button
+                type="button"
+                onClick={() => handleModeSelect(false)}
+                className="w-full rounded-2xl bg-teal-400 py-4 text-xl font-bold text-white shadow-[0_4px_0_#0f766e] active:translate-y-1 flex items-center justify-center gap-2"
+              >
+                🌟 ふつう
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeSelect(true)}
+                className="w-full rounded-2xl bg-orange-400 py-4 text-xl font-bold text-white shadow-[0_4px_0_#c2410c] active:translate-y-1 flex items-center justify-center gap-2"
+              >
+                🔥 むずかしい
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPendingUnit(null)}
+                className="text-sm text-teal-500 underline"
+              >
+                キャンセル
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
