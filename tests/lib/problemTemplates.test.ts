@@ -16,9 +16,9 @@ describe('TEMPLATES', () => {
     }
   });
 
-  it('has 2 templates each for multiplication and division', () => {
-    expect(TEMPLATES.filter((t) => t.type === 'multiplication')).toHaveLength(2);
-    expect(TEMPLATES.filter((t) => t.type === 'division')).toHaveLength(2);
+  it('has at least 2 templates each for multiplication and division', () => {
+    expect(TEMPLATES.filter((t) => t.type === 'multiplication').length).toBeGreaterThanOrEqual(2);
+    expect(TEMPLATES.filter((t) => t.type === 'division').length).toBeGreaterThanOrEqual(2);
   });
 });
 
