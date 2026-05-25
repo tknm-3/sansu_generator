@@ -63,6 +63,20 @@ export const UNITS: UnitMeta[] = [
     curriculum: '小3：除法、余りのある除法',
     emoji: '➗',
   },
+  {
+    id: 'word-addition',
+    title: 'ぴったり？（たしざん）',
+    grade: '年長〜小1',
+    curriculum: '小1：たしざんを使った文章題、過不足の比較',
+    emoji: '🤔',
+  },
+  {
+    id: 'word-subtraction',
+    title: 'ぴったり？（ひきざん）',
+    grade: '年長〜小1',
+    curriculum: '小1：ひきざんを使った文章題、過不足の比較',
+    emoji: '💭',
+  },
 ];
 
 export function getUnit(id: string): UnitMeta | undefined {
