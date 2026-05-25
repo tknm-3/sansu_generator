@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { UNITS } from '../data/units';
+import { getUnitsByCategory } from '../data/units';
 import { hasMissionToday } from './MissionScreen';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
 
@@ -112,7 +112,7 @@ export function HomeScreen({
 
       <p className="text-amber-700 font-bold">がくしゅう</p>
       <div className="flex flex-wrap justify-center gap-4">
-        {UNITS.map((u, index) => (
+        {getUnitsByCategory('sansu').map((u, index) => (
           <motion.button
             key={u.id}
             type="button"
