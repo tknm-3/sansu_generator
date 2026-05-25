@@ -4,6 +4,7 @@ export interface RotationProblem {
   shapeId: string;
   label: string;
   transform: RotationTransform;
+  rotationLabel: string;
   choices: RotationTransform[];
   answerIndex: number;
 }
@@ -58,15 +59,32 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-// 年長向け（90度のみ、鏡像なし）
-const EASY_TRANSFORMS: RotationTransform[] = [
+function getRotationLabel(transform: RotationTransform): string {
+  if (transform.flipX) {
+    return `${transform.rotate}度 まわして うらがえします`;
+  }
+  switch (transform.rotate) {
+    case 90:  return '右に 90度 まわします ➡️';
+    case 180: return '180度 まわします 🔃';
+    case 270: return '左に 90度 まわします ⬅️';
+    default:  return 'そのまま';
+  }
+}
+
+// 簡単モード: 90度のみ（右回り1回転）
+const EASY_QUESTION_TRANSFORMS: RotationTransform[] = [
+  { rotate: 90, flipX: false },
+];
+
+// 簡単モードの選択肢: 4方向すべて（違いがわかりやすい）
+const EASY_CHOICE_POOL: RotationTransform[] = [
   { rotate: 0,   flipX: false },
   { rotate: 90,  flipX: false },
   { rotate: 180, flipX: false },
   { rotate: 270, flipX: false },
 ];
 
-// 小1向け（180度・鏡像含む）
+// 難しいモード: 180度・鏡像含む
 const HARD_TRANSFORMS: RotationTransform[] = [
   { rotate: 0,   flipX: false },
   { rotate: 90,  flipX: false },
@@ -78,14 +96,21 @@ const HARD_TRANSFORMS: RotationTransform[] = [
 
 export function generateRotationProblem(hard = false): RotationProblem {
   const shape = SHAPE_DEFS[Math.floor(Math.random() * SHAPE_DEFS.length)];
-  const pool = hard ? HARD_TRANSFORMS : EASY_TRANSFORMS;
 
-  // お題の変換（元の向きは除く）
-  const questionPool = pool.filter((t) => !(t.rotate === 0 && !t.flipX));
-  const transform = questionPool[Math.floor(Math.random() * questionPool.length)];
+  let transform: RotationTransform;
+  let choicePool: RotationTransform[];
+
+  if (hard) {
+    const questionPool = HARD_TRANSFORMS.filter((t) => !(t.rotate === 0 && !t.flipX));
+    transform = questionPool[Math.floor(Math.random() * questionPool.length)];
+    choicePool = HARD_TRANSFORMS;
+  } else {
+    transform = EASY_QUESTION_TRANSFORMS[Math.floor(Math.random() * EASY_QUESTION_TRANSFORMS.length)];
+    choicePool = EASY_CHOICE_POOL;
+  }
 
   // 正解 + 紛らわしい選択肢3つ
-  const distractors = pool.filter(
+  const distractors = choicePool.filter(
     (t) => !(t.rotate === transform.rotate && t.flipX === transform.flipX),
   );
   const picked = shuffle(distractors).slice(0, 3);
@@ -94,5 +119,12 @@ export function generateRotationProblem(hard = false): RotationProblem {
     (t) => t.rotate === transform.rotate && t.flipX === transform.flipX,
   );
 
-  return { shapeId: shape.id, label: shape.label, transform, choices: allChoices, answerIndex };
+  return {
+    shapeId: shape.id,
+    label: shape.label,
+    transform,
+    rotationLabel: getRotationLabel(transform),
+    choices: allChoices,
+    answerIndex,
+  };
 }
