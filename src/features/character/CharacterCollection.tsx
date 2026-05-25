@@ -1,17 +1,19 @@
 import { motion } from 'framer-motion';
 import { getUnlockedDefs, getLockedDefs } from './characterDefs';
 import { getUnitStampCount, type StampEntry } from '../rewards/stamps';
+import { getCharName } from './character';
 import { UNITS } from '../../data/units';
 import { playSfx } from '../sound/sfx';
 
 interface Props {
   stampHistory: StampEntry[];
   activeCharId: string;
+  characterNames: Record<string, string>;
   onOpenDetail: (charId: string) => void;
   onClose: () => void;
 }
 
-export function CharacterCollection({ stampHistory, activeCharId, onOpenDetail, onClose }: Props) {
+export function CharacterCollection({ stampHistory, activeCharId, characterNames, onOpenDetail, onClose }: Props) {
   const unlocked = getUnlockedDefs(stampHistory);
   const locked = getLockedDefs(stampHistory);
 
@@ -34,7 +36,7 @@ export function CharacterCollection({ stampHistory, activeCharId, onOpenDetail, 
             }`}
           >
             <div className="text-5xl">{def.emoji}</div>
-            <div className="mt-1 font-bold text-purple-900">{def.name}</div>
+            <div className="mt-1 font-bold text-purple-900">{getCharName(def.id, characterNames)}</div>
             {activeCharId === def.id && <div className="text-xs text-yellow-700 font-bold">いま えらんでる</div>}
           </motion.button>
         ))}
