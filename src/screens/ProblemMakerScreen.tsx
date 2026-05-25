@@ -4,7 +4,7 @@ import { TEMPLATES, fillTemplate, type ProblemType, type Template, type Template
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { loadJson, saveJson } from '../lib/storage';
-import { goalsForType, type Goal } from '../lib/problemGoals';
+import { goalsForType, randomGoalForType, type Goal } from '../lib/problemGoals';
 
 const MY_PROBLEMS_KEY = 'math-app:myProblems';
 
@@ -83,6 +83,15 @@ export function ProblemMakerScreen({ characterName: _characterName, onMake, onEx
           onClick={() => { setMode('goal'); setStep('goalPick'); }}
           className="w-64 rounded-2xl bg-orange-400 px-6 py-5 text-xl font-bold text-white shadow-[0_4px_0_#c2410c] active:translate-y-1">
           おだいに ちょうせん
+        </button>
+        <button type="button"
+          onClick={() => {
+            if (!op) return;
+            const random = randomGoalForType(op);
+            if (random) { setGoal(random); setMode('goal'); setStep('select'); }
+          }}
+          className="w-64 rounded-2xl bg-purple-400 px-6 py-5 text-xl font-bold text-white shadow-[0_4px_0_#7e22ce] active:translate-y-1">
+          🎲 おまかせ ちょうせん！
         </button>
         <button type="button" onClick={() => setStep('op')} className="text-sm text-amber-600 underline">もどる</button>
       </div>
