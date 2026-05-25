@@ -6,6 +6,8 @@ import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
 import { generateBigAddition, checkBigAddition, explainBigAddition, type BigAdditionProblem } from '../lib/math/bigAddition';
 import { StepExplainer } from '../components/StepExplainer';
+import { ProblemVisual } from '../components/ProblemVisual';
+import { sceneFor } from '../lib/problemScene';
 import { pickScenario } from '../data/scenarios';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
@@ -30,6 +32,7 @@ export function BigAdditionUnit({ characterName, characterId, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [showVisual, setShowVisual] = useState(false);
   useEffect(() => { setBgmTrack('big-addition'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
@@ -52,7 +55,7 @@ export function BigAdditionUnit({ characterName, characterId, onExit }: Props) {
         playSfx('fanfare');
         speakJa('クリア！ よくできたね！');
       } else {
-        setTimeout(() => { setExpression('normal'); setProblem(generateBigAddition()); setScenario(pickScenario('big-addition')); setShowFormula(false); processing.current = false; }, 900);
+        setTimeout(() => { setExpression('normal'); setProblem(generateBigAddition()); setScenario(pickScenario('big-addition')); setShowFormula(false); setShowVisual(false); processing.current = false; }, 900);
       }
     } else {
       playSfx('wrong');
@@ -107,6 +110,16 @@ export function BigAdditionUnit({ characterName, characterId, onExit }: Props) {
       >
         💡 ヒント
       </button>
+      <button
+        type="button"
+        onClick={() => { setShowVisual((v) => !v); playSfx('tap'); }}
+        className="rounded-full bg-emerald-400 px-5 py-2 text-lg font-bold text-white shadow-[0_3px_0_#047857] active:translate-y-0.5"
+      >
+        {showVisual ? '🙈 えを かくす' : '🖼️ えで みる'}
+      </button>
+      {(showVisual || expression === 'happy') && (
+        <ProblemVisual scene={sceneFor(SKILL_ID, problem as unknown as Record<string, unknown>, scenario.emoji)} />
+      )}
       <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
       <AnimatePresence>
         {feedback === 'wrong' && (
