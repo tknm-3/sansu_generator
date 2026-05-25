@@ -18,10 +18,11 @@ const SKILL_ID = 'subtraction';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
-export function SubtractionUnit({ characterName, onExit }: Props) {
+export function SubtractionUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<SubtractionProblem>(() => generateSubtraction());
   const [scenario, setScenario] = useState(() => pickScenario('subtraction'));
   const food = scenario.emoji;
@@ -85,7 +86,7 @@ export function SubtractionUnit({ characterName, onExit }: Props) {
       <div className="self-stretch text-sm text-amber-700 font-bold">
         といた かず: {solved} / {QUESTIONS_PER_UNIT}
       </div>
-      <Companion name={characterName} expression={expression} message={message} />
+      <Companion name={characterName} characterId={characterId} expression={expression} message={message} />
       {showFormula ? (
         <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-5xl font-bold text-amber-900">
           {formula}

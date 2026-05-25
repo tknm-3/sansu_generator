@@ -18,10 +18,11 @@ const SKILL_ID = 'big-subtraction';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
-export function BigSubtractionUnit({ characterName, onExit }: Props) {
+export function BigSubtractionUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<BigSubtractionProblem>(() => generateBigSubtraction());
   const [scenario, setScenario] = useState(() => pickScenario('big-subtraction'));
   const [solved, setSolved] = useState(0);
@@ -84,6 +85,7 @@ export function BigSubtractionUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />

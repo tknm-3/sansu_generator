@@ -15,6 +15,7 @@ import { ParentSolveScreen } from './screens/ParentSolveScreen';
 import { StampBook } from './screens/StampBook';
 import { ProgressCalendar } from './screens/ProgressCalendar';
 import { CharacterCollection } from './features/character/CharacterCollection';
+import { CharacterDetail } from './features/character/CharacterDetail';
 import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
 import { setBgmTrack } from './features/sound/bgm';
@@ -34,6 +35,7 @@ type Screen =
   | { kind: 'maker' }
   | { kind: 'parentSolve'; problem: TemplateFilled }
   | { kind: 'collection' }
+  | { kind: 'characterDetail'; charId: string }
   | { kind: 'stampBook' }
   | { kind: 'progress' };
 
@@ -43,13 +45,14 @@ export default function App() {
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    if (screen.kind === 'home' || screen.kind === 'progress' || screen.kind === 'stampBook' || screen.kind === 'collection') {
+    if (screen.kind === 'home' || screen.kind === 'progress' || screen.kind === 'stampBook' || screen.kind === 'collection' || screen.kind === 'characterDetail') {
       setBgmTrack('home');
     }
   }, [screen.kind]);
 
   const stamps = loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS);
   const stampTotal = stamps.total;
+  const stampHistory = stamps.history;
 
   if (!character.named) {
     return (
@@ -68,7 +71,7 @@ export default function App() {
     setScreen({ kind: 'home' });
   }
 
-  const sharedProps = { characterName: character.name, onExit: handleExit };
+  const sharedProps = { characterName: character.name, characterId: character.id, onExit: handleExit };
 
   function renderScreen() {
   if (screen.kind === 'unit') {
@@ -112,15 +115,27 @@ export default function App() {
   if (screen.kind === 'collection') {
     return (
       <CharacterCollection
-        totalStamps={stampTotal}
+        stampHistory={stampHistory}
+        activeCharId={character.id}
+        onOpenDetail={(charId) => setScreen({ kind: 'characterDetail', charId })}
+        onClose={() => setScreen({ kind: 'home' })}
+      />
+    );
+  }
+
+  if (screen.kind === 'characterDetail') {
+    return (
+      <CharacterDetail
+        charId={screen.charId}
+        stampHistory={stampHistory}
         activeCharId={character.id}
         onSelect={(charId) => {
           const next = { ...character, id: charId };
           saveJson(PROFILE_KEY, next);
           setCharacter(next);
-          setScreen({ kind: 'home' });
+          setScreen({ kind: 'collection' });
         }}
-        onClose={() => setScreen({ kind: 'home' })}
+        onClose={() => setScreen({ kind: 'collection' })}
       />
     );
   }

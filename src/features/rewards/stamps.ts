@@ -20,3 +20,8 @@ export function addStamp(state: StampState, unitId: string, at: number): StampSt
     history: [...state.history, { unitId, at }],
   };
 }
+
+/** 指定した単元のスタンプ獲得数を返す */
+export function getUnitStampCount(history: StampEntry[], unitId: string): number {
+  return history.filter((e) => e.unitId === unitId).length;
+}

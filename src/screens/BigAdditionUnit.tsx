@@ -18,10 +18,11 @@ const SKILL_ID = 'big-addition';
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
-export function BigAdditionUnit({ characterName, onExit }: Props) {
+export function BigAdditionUnit({ characterName, characterId, onExit }: Props) {
   const [problem, setProblem] = useState<BigAdditionProblem>(() => generateBigAddition());
   const [scenario, setScenario] = useState(() => pickScenario('big-addition'));
   const [solved, setSolved] = useState(0);
@@ -84,6 +85,7 @@ export function BigAdditionUnit({ characterName, onExit }: Props) {
       </div>
       <Companion
         name={characterName}
+        characterId={characterId}
         expression={expression}
         message={scenario.build({ a: problem.a, b: problem.b })}
       />

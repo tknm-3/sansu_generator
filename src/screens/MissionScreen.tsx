@@ -26,6 +26,7 @@ export function hasMissionToday(): boolean {
 
 interface Props {
   characterName: string;
+  characterId: string;
   onExit: () => void;
 }
 
@@ -45,7 +46,7 @@ function buildMission(): Problem[] {
   return problems;
 }
 
-export function MissionScreen({ characterName, onExit }: Props) {
+export function MissionScreen({ characterName, characterId, onExit }: Props) {
   const [problems] = useState<Problem[]>(() => buildMission());
   const [idx, setIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -112,7 +113,7 @@ export function MissionScreen({ characterName, onExit }: Props) {
         <span className="text-sm font-bold text-amber-700">きょうの ミッション {idx + 1} / {MISSION_COUNT}</span>
         <span className="rounded-full bg-yellow-200 px-3 py-1 text-sm font-bold text-amber-800">🌟 ミッション</span>
       </div>
-      <Companion name={characterName} expression={expression} message={problem?.questionText ?? ''} />
+      <Companion name={characterName} characterId={characterId} expression={expression} message={problem?.questionText ?? ''} />
       <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-3xl font-bold text-amber-900 text-center">
         {problem?.questionText}
       </div>
