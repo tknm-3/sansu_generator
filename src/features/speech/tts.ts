@@ -40,6 +40,15 @@ export function speechifyMath(text: string): string {
   return out.replace(STRIP_EMOJI, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// ページ非表示時に読み上げをキャンセルする
+if (typeof document !== 'undefined' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  const cancelSpeech = () => window.speechSynthesis.cancel();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') cancelSpeech();
+  });
+  document.addEventListener('pagehide', cancelSpeech);
+}
+
 /** 日本語で読み上げ。非対応なら何もしない（優雅な劣化） */
 export function speakJa(text: string): void {
   if (!isSpeechSupported()) return;
