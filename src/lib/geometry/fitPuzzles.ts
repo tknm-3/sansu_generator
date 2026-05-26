@@ -274,3 +274,56 @@ export function getPuzzles(variant: 'fit' | 'tangram', hard: boolean): FitPuzzle
   if (variant === 'fit') return hard ? FIT_HARD : FIT_EASY;
   return hard ? TANGRAM_HARD : TANGRAM_EASY;
 }
+
+// ピースを w×h ボックスの中心まわりに rot 度（0/90/180/270）かいてんしたあと、
+// 中心を げんてんにした シルエットの「かたち」を あらわす かぎ もじれつ を つくる。
+// おなじ かぎ なら 見た目（はめたときの シルエット）が おなじ。
+// → おなじ かぎ どうしの ピースは どの スロットに はめても せいかい にできる。
+export function silhouetteKey(shape: FitShape, w: number, h: number, rotDeg: number): string {
+  const rot = ((Math.round(rotDeg / 90) * 90) % 360 + 360) % 360;
+  const cx = w / 2;
+  const cy = h / 2;
+  // 中心きじゅんの (dx, dy) を rot かいてんした ざひょう（中心きじゅんのまま）を かえす
+  const rotate = (px: number, py: number): [number, number] => {
+    const dx = px - cx;
+    const dy = py - cy;
+    switch (rot) {
+      case 90: return [-dy, dx];
+      case 180: return [-dx, -dy];
+      case 270: return [dy, -dx];
+      default: return [dx, dy];
+    }
+  };
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+  const fmt = (p: [number, number]) => `${r1(p[0])},${r1(p[1])}`;
+
+  if (shape.type === 'circle') {
+    const c = rotate(shape.cx, shape.cy);
+    return `C|${r1(shape.r)}|${fmt(c)}`;
+  }
+  let corners: Array<[number, number]>;
+  let tag: string;
+  if (shape.type === 'rect') {
+    corners = [
+      [shape.x, shape.y],
+      [shape.x + shape.w, shape.y],
+      [shape.x + shape.w, shape.y + shape.h],
+      [shape.x, shape.y + shape.h],
+    ];
+    tag = `R|${shape.rx ?? 0}`;
+  } else {
+    corners = shape.points
+      .trim()
+      .split(/\s+/)
+      .map((pair) => {
+        const [px, py] = pair.split(',').map(Number);
+        return [px, py] as [number, number];
+      });
+    tag = 'P';
+  }
+  const pts = corners
+    .map((c) => rotate(c[0], c[1]))
+    .map(fmt)
+    .sort();
+  return `${tag}|${pts.join(' ')}`;
+}
