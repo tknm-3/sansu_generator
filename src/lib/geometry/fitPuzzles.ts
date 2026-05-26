@@ -73,6 +73,39 @@ const FIT_EASY: FitPuzzle[] = [
       { id: 'fin', color: GREEN, w: 60, h: 45, x: 105, y: 18, shape: { type: 'poly', points: '0,45 60,45 30,0' } },
     ],
   },
+  {
+    id: 'flower',
+    title: 'おはなを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'fl-stem', color: GREEN, w: 24, h: 92, x: 108, y: 128, shape: { type: 'rect', x: 0, y: 0, w: 24, h: 92, rx: 6 } },
+      { id: 'fl-petals', color: PINK, w: 120, h: 120, x: 60, y: 28, shape: { type: 'circle', cx: 60, cy: 60, r: 58 } },
+      { id: 'fl-center', color: YELLOW, w: 50, h: 50, x: 95, y: 63, shape: { type: 'circle', cx: 25, cy: 25, r: 24 } },
+    ],
+  },
+  {
+    id: 'mountain',
+    title: 'やまを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'mt-sun', color: YELLOW, w: 56, h: 56, x: 28, y: 28, shape: { type: 'circle', cx: 28, cy: 28, r: 27 } },
+      { id: 'mt-base', color: GREEN, w: 200, h: 110, x: 20, y: 110, shape: { type: 'poly', points: '0,110 100,0 200,110' } },
+      { id: 'mt-snow', color: '#e0f2fe', w: 60, h: 34, x: 90, y: 110, shape: { type: 'poly', points: '30,0 0,34 60,34' } },
+    ],
+  },
+  {
+    id: 'duck',
+    title: 'あひるを つくろう',
+    boardW: 240,
+    boardH: 200,
+    pieces: [
+      { id: 'dk-body', color: YELLOW, w: 120, h: 90, x: 40, y: 90, shape: { type: 'circle', cx: 60, cy: 45, r: 45 } },
+      { id: 'dk-head', color: YELLOW, w: 62, h: 62, x: 138, y: 48, shape: { type: 'circle', cx: 31, cy: 31, r: 31 } },
+      { id: 'dk-beak', color: ORANGE, w: 34, h: 24, x: 196, y: 68, shape: { type: 'poly', points: '0,0 34,12 0,24' } },
+    ],
+  },
 ];
 
 // ── 「ぴったりはめよう」むずかしい（4〜5ピース） ──
@@ -99,6 +132,32 @@ const FIT_HARD: FitPuzzle[] = [
       { id: 'eyeL', color: '#374151', w: 26, h: 26, x: 84, y: 95, shape: { type: 'circle', cx: 13, cy: 13, r: 13 } },
       { id: 'eyeR', color: '#374151', w: 26, h: 26, x: 130, y: 95, shape: { type: 'circle', cx: 13, cy: 13, r: 13 } },
       { id: 'mouth', color: RED, w: 80, h: 30, x: 80, y: 150, shape: { type: 'poly', points: '0,0 80,0 40,30' } },
+    ],
+  },
+  {
+    id: 'butterfly',
+    title: 'ちょうちょを つくろう',
+    boardW: 240,
+    boardH: 220,
+    pieces: [
+      { id: 'bf-body', color: BROWN, w: 20, h: 110, x: 110, y: 55, shape: { type: 'rect', x: 0, y: 0, w: 20, h: 110, rx: 8 } },
+      { id: 'bf-wingTL', color: PINK, w: 90, h: 60, x: 20, y: 50, shape: { type: 'circle', cx: 45, cy: 30, r: 30 } },
+      { id: 'bf-wingTR', color: PINK, w: 90, h: 60, x: 130, y: 50, shape: { type: 'circle', cx: 45, cy: 30, r: 30 } },
+      { id: 'bf-wingBL', color: PURPLE, w: 80, h: 54, x: 25, y: 108, shape: { type: 'circle', cx: 40, cy: 27, r: 27 } },
+      { id: 'bf-wingBR', color: PURPLE, w: 80, h: 54, x: 135, y: 108, shape: { type: 'circle', cx: 40, cy: 27, r: 27 } },
+    ],
+  },
+  {
+    id: 'robot',
+    title: 'ロボットを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'rb-head', color: TEAL, w: 80, h: 60, x: 80, y: 20, shape: { type: 'rect', x: 0, y: 0, w: 80, h: 60, rx: 8 } },
+      { id: 'rb-eye', color: YELLOW, w: 40, h: 20, x: 100, y: 40, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 20, rx: 10 } },
+      { id: 'rb-body', color: BLUE, w: 110, h: 90, x: 65, y: 85, shape: { type: 'rect', x: 0, y: 0, w: 110, h: 90, rx: 6 } },
+      { id: 'rb-armL', color: PURPLE, w: 24, h: 70, x: 36, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 24, h: 70, rx: 8 } },
+      { id: 'rb-armR', color: PURPLE, w: 24, h: 70, x: 180, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 24, h: 70, rx: 8 } },
     ],
   },
 ];
@@ -129,6 +188,30 @@ const TANGRAM_EASY: FitPuzzle[] = [
       { id: 'a-down', color: PURPLE, w: 60, h: 60, x: 60, y: 110, shape: { type: 'poly', points: '0,0 60,0 60,60' }, targetRotation: 180 },
     ],
   },
+  {
+    id: 'bigtriangle',
+    title: 'おおきな さんかくを つくろう',
+    boardW: 200,
+    boardH: 180,
+    pieces: [
+      { id: 'bt-top', color: BLUE, w: 100, h: 90, x: 50, y: 0, shape: { type: 'poly', points: '50,0 0,90 100,90' } },
+      { id: 'bt-left', color: GREEN, w: 100, h: 90, x: 0, y: 90, shape: { type: 'poly', points: '0,90 50,0 100,90' } },
+      { id: 'bt-right', color: ORANGE, w: 100, h: 90, x: 100, y: 90, shape: { type: 'poly', points: '0,90 50,0 100,90' } },
+      { id: 'bt-mid', color: PURPLE, w: 100, h: 90, x: 50, y: 90, shape: { type: 'poly', points: '0,0 100,0 50,90' } },
+    ],
+  },
+  {
+    id: 'diamond',
+    title: 'ダイヤを つくろう',
+    boardW: 200,
+    boardH: 200,
+    pieces: [
+      { id: 'dm-tr', color: BLUE, w: 90, h: 90, x: 100, y: 10, shape: { type: 'poly', points: '0,0 90,90 0,90' } },
+      { id: 'dm-br', color: GREEN, w: 90, h: 90, x: 100, y: 100, shape: { type: 'poly', points: '90,0 0,90 0,0' } },
+      { id: 'dm-bl', color: ORANGE, w: 90, h: 90, x: 10, y: 100, shape: { type: 'poly', points: '90,90 0,0 90,0' } },
+      { id: 'dm-tl', color: PURPLE, w: 90, h: 90, x: 10, y: 10, shape: { type: 'poly', points: '90,0 0,90 90,90' } },
+    ],
+  },
 ];
 
 // ── 「タングラム」むずかしい（5〜6ピース） ──
@@ -157,6 +240,32 @@ const TANGRAM_HARD: FitPuzzle[] = [
       { id: 'b-sailR', color: PURPLE, w: 60, h: 110, x: 125, y: 20, shape: { type: 'poly', points: '0,0 60,0 60,110' }, targetRotation: 180 },
       { id: 'b-hull', color: BLUE, w: 180, h: 50, x: 30, y: 150, shape: { type: 'poly', points: '0,0 180,0 150,50 30,50' } },
       { id: 'b-wave', color: TEAL, w: 200, h: 24, x: 20, y: 200, shape: { type: 'rect', x: 0, y: 0, w: 200, h: 24, rx: 10 } },
+    ],
+  },
+  {
+    id: 'cross',
+    title: 'プラスを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'cr-mid', color: BLUE, w: 60, h: 60, x: 90, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 60 } },
+      { id: 'cr-top', color: RED, w: 60, h: 60, x: 90, y: 30, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 60 } },
+      { id: 'cr-bottom', color: GREEN, w: 60, h: 60, x: 90, y: 150, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 60 } },
+      { id: 'cr-left', color: ORANGE, w: 60, h: 60, x: 30, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 60 } },
+      { id: 'cr-right', color: PURPLE, w: 60, h: 60, x: 150, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 60 } },
+    ],
+  },
+  {
+    id: 'crown',
+    title: 'おうかんを つくろう',
+    boardW: 240,
+    boardH: 160,
+    pieces: [
+      { id: 'cw-base', color: YELLOW, w: 180, h: 50, x: 30, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 180, h: 50, rx: 4 } },
+      { id: 'cw-spikeL', color: ORANGE, w: 80, h: 60, x: 30, y: 30, shape: { type: 'poly', points: '0,60 40,0 80,60' } },
+      { id: 'cw-spikeM', color: RED, w: 80, h: 70, x: 80, y: 20, shape: { type: 'poly', points: '0,70 40,0 80,70' } },
+      { id: 'cw-spikeR', color: ORANGE, w: 80, h: 60, x: 130, y: 30, shape: { type: 'poly', points: '0,60 40,0 80,60' } },
+      { id: 'cw-jewel', color: PINK, w: 28, h: 28, x: 106, y: 101, shape: { type: 'circle', cx: 14, cy: 14, r: 14 } },
     ],
   },
 ];
