@@ -95,26 +95,21 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         まわしたら どのかたち？
       </motion.h2>
 
-      {/* お題 */}
       <div className="rounded-3xl bg-white shadow-lg p-6 flex flex-col items-center gap-3 w-full max-w-sm">
-        {/* 回転量ラベル（大きく表示） */}
         <div className="rounded-xl bg-amber-100 px-4 py-2 text-center">
           <p className="text-lg font-bold text-amber-800">{problem.rotationLabel}</p>
         </div>
 
         <div className="flex items-center gap-6 mt-2">
-          {/* 元の形 */}
           <div className="flex flex-col items-center gap-1">
             <p className="text-xs text-teal-600 font-bold">まえ</p>
             <ShapeSvg shapeId={problem.shapeId} transform={{ rotate: 0, flipX: false }} size={90} color="#f59e0b" />
           </div>
 
-          {/* 矢印 */}
           <div className="flex flex-col items-center gap-1">
             <span className="text-3xl">➡️</span>
           </div>
 
-          {/* 回転後 */}
           <div className="flex flex-col items-center gap-1">
             <p className="text-xs text-teal-600 font-bold">あと</p>
             <motion.div
@@ -130,7 +125,6 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
           </div>
         </div>
 
-        {/* アニメーションで確かめるボタン */}
         {!showAnswer && (
           <button
             type="button"
@@ -142,7 +136,6 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         )}
       </div>
 
-      {/* 4択 */}
       <p className="text-teal-700 font-bold">どれになる？</p>
       <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
         {problem.choices.map((choice, idx) => (
@@ -152,16 +145,9 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
             onClick={() => handlePick(idx)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="rounded-2xl bg-white border-2 border-teal-200 p-4 flex flex-col items-center justify-center gap-1 shadow-md"
+            className="rounded-2xl bg-white border-2 border-teal-200 p-4 flex items-center justify-center shadow-md"
           >
             <ShapeSvg shapeId={problem.shapeId} transform={choice} size={70} color="#60a5fa" />
-            <span className="text-xs text-teal-500 font-bold">
-              {choice.rotate === 0 && !choice.flipX ? 'もとのまま' :
-               choice.rotate === 90 && !choice.flipX ? '右90度' :
-               choice.rotate === 180 && !choice.flipX ? '180度' :
-               choice.rotate === 270 && !choice.flipX ? '左90度' :
-               choice.flipX ? `${choice.rotate}度+うら` : `${choice.rotate}度`}
-            </span>
           </motion.button>
         ))}
       </div>

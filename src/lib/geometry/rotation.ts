@@ -9,11 +9,10 @@ export interface RotationProblem {
   answerIndex: number;
 }
 
-// 非対称な形の定義（SVGパス）
 export interface ShapeDef {
   id: string;
   label: string;
-  path: string;   // 100x100 viewBox 内のパス
+  path: string;
   viewBox: string;
 }
 
@@ -61,22 +60,20 @@ function shuffle<T>(arr: T[]): T[] {
 
 function getRotationLabel(transform: RotationTransform): string {
   if (transform.flipX) {
-    return `${transform.rotate}度 まわして うらがえします`;
+    return 'まわして うらがえします';
   }
   switch (transform.rotate) {
-    case 90:  return '右に 90度 まわします ➡️';
-    case 180: return '180度 まわします 🔃';
-    case 270: return '左に 90度 まわします ⬅️';
+    case 90:  return 'みぎに まわします ➡️';
+    case 180: return 'くるっと まわします 🔃';
+    case 270: return 'ひだりに まわします ⬅️';
     default:  return 'そのまま';
   }
 }
 
-// 簡単モード: 90度のみ（右回り1回転）
 const EASY_QUESTION_TRANSFORMS: RotationTransform[] = [
   { rotate: 90, flipX: false },
 ];
 
-// 簡単モードの選択肢: 4方向すべて（違いがわかりやすい）
 const EASY_CHOICE_POOL: RotationTransform[] = [
   { rotate: 0,   flipX: false },
   { rotate: 90,  flipX: false },
@@ -84,7 +81,6 @@ const EASY_CHOICE_POOL: RotationTransform[] = [
   { rotate: 270, flipX: false },
 ];
 
-// 難しいモード: 180度・鏡像含む
 const HARD_TRANSFORMS: RotationTransform[] = [
   { rotate: 0,   flipX: false },
   { rotate: 90,  flipX: false },
@@ -109,7 +105,6 @@ export function generateRotationProblem(hard = false): RotationProblem {
     choicePool = EASY_CHOICE_POOL;
   }
 
-  // 正解 + 紛らわしい選択肢3つ
   const distractors = choicePool.filter(
     (t) => !(t.rotate === transform.rotate && t.flipX === transform.flipX),
   );
