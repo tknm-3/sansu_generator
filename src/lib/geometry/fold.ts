@@ -121,6 +121,55 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       },
     ],
   },
+  // Easy 4: vertical fold, cut away from fold (middle of front) → 2 symmetric side holes
+  {
+    id: 'fold-v-edge',
+    hard: false,
+    questionLabel: 'おって きったよ。ひらいたら どんな あな？',
+    foldSvg: [
+      fbr(80, 15, 60, 80),
+      pr(20, 15, 60, 80),
+      fl(80, 10, 80, 100),
+      cutr(34, 48, 16, 14),
+      tx(90, 12, 'たてに おりました', 12),
+      tx(42, 45, '✂️', 14),
+      tx(50, 88, 'おもて'),
+      tx(110, 58, 'うら'),
+    ].join(''),
+    choices: [
+      { svg: pr(5, 5, 70, 70) + hr(14, 31, 16, 16) + hr(50, 31, 16, 16) }, // correct: 2 symmetric side holes
+      { svg: pr(5, 5, 70, 70) + hr(27, 31, 16, 16) },                      // wrong: center hole
+      { svg: pr(5, 5, 70, 70) + hr(14, 31, 16, 16) },                      // wrong: 1 hole
+      { svg: pr(5, 5, 70, 70) + hr(14, 10, 16, 14) + hr(50, 10, 16, 14) }, // wrong: 2 top holes
+    ],
+  },
+  // Easy 5: vertical fold, triangle cut on fold edge → center diamond hole
+  {
+    id: 'fold-v-tri',
+    hard: false,
+    questionLabel: 'おって おりめを きったよ。ひらいたら どんな あな？',
+    foldSvg: [
+      fbr(80, 15, 60, 80),
+      pr(20, 15, 60, 80),
+      fl(80, 10, 80, 100),
+      `<polygon points="80,46 66,57 80,68" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
+      tx(90, 12, 'たてに おりました', 12),
+      tx(45, 84, 'おもて'),
+      tx(110, 58, 'うら'),
+    ].join(''),
+    choices: [
+      { // correct: diamond hole at center
+        svg: pr(5, 5, 70, 70)
+          + `<polygon points="40,27 53,40 40,53 27,40" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
+      },
+      { // wrong: triangle on one side only
+        svg: pr(5, 5, 70, 70)
+          + `<polygon points="40,27 53,40 40,53" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
+      },
+      { svg: pr(5, 5, 70, 70) + hr(28, 28, 24, 24) },                      // wrong: square center hole
+      { svg: pr(5, 5, 70, 70) + hr(8, 31, 14, 18) + hr(58, 31, 14, 18) },  // wrong: 2 side holes
+    ],
+  },
   // Hard 1: double fold (vertical + horizontal), corner cut → 4 corner holes
   {
     id: 'fold-double',
@@ -168,6 +217,53 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       { // wrong: corner triangle hole
         svg: pr(5, 5, 70, 70)
           + `<polygon points="5,5 25,5 5,25" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
+      },
+    ],
+  },
+  // Hard 3: double fold, cut the inner (center) corner → 1 center hole
+  {
+    id: 'fold-quarter-center',
+    hard: true,
+    questionLabel: '2かい おって まんなかの かどを きったよ。ひらいたら？',
+    foldSvg: [
+      pr(55, 25, 60, 60),
+      fl(55, 25, 55, 85),
+      fl(55, 85, 115, 85),
+      `<polygon points="55,73 67,85 55,85" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
+      tx(88, 18, '2かい おりました', 12),
+    ].join(''),
+    choices: [
+      { // correct: 1 center diamond hole
+        svg: pr(5, 5, 70, 70)
+          + `<polygon points="40,20 58,40 40,60 22,40" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
+      },
+      { svg: pr(5, 5, 70, 70) + hc(15, 15, 9) + hc(55, 15, 9) + hc(15, 55, 9) + hc(55, 55, 9) }, // wrong: 4 corner holes
+      { svg: pr(5, 5, 70, 70) + hc(15, 15, 9) },                                                  // wrong: 1 corner hole
+      { svg: pr(5, 5, 70, 70) + hr(8, 31, 14, 16) + hr(58, 31, 14, 16) },                         // wrong: 2 side holes
+    ],
+  },
+  // Hard 4: diagonal fold, cut off the fold → 2 holes symmetric across the diagonal
+  {
+    id: 'fold-diag-edge',
+    hard: true,
+    questionLabel: 'かくに おって おりめの ちかくを きったよ。ひらいたら？',
+    foldSvg: [
+      `<polygon points="20,90 90,90 20,20" fill="${FB}" stroke="${FBS}" stroke-width="1.5" stroke-dasharray="4,3"/>`,
+      `<polygon points="20,90 90,20 90,90" fill="${P}" stroke="${PS}" stroke-width="2"/>`,
+      fl(20, 90, 90, 20),
+      cutr(66, 66, 14, 14),
+      tx(90, 14, 'かくに おりました', 12),
+      tx(35, 45, 'うら'),
+      tx(78, 84, 'おもて'),
+    ].join(''),
+    choices: [
+      { svg: pr(5, 5, 70, 70) + hr(44, 22, 16, 16) + hr(22, 44, 16, 16) }, // correct: 2 holes symmetric across diagonal
+      { svg: pr(5, 5, 70, 70) + hr(32, 32, 16, 16) },                      // wrong: 1 center hole on diagonal
+      { svg: pr(5, 5, 70, 70) + hr(44, 22, 16, 16) },                      // wrong: 1 hole
+      { // wrong: 2 diamonds along the diagonal
+        svg: pr(5, 5, 70, 70)
+          + `<polygon points="20,35 35,20 50,35 35,50" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`
+          + `<polygon points="35,50 50,35 65,50 50,65" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
       },
     ],
   },
