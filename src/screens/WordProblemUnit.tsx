@@ -15,12 +15,13 @@ import {
   checkDiff,
   type WordProblem,
   type WordVerdict,
+  type WordVariant,
 } from '../lib/math/wordProblem';
 
 const QUESTIONS_PER_UNIT = 3;
 
 interface Props {
-  variant: 'word-addition' | 'word-subtraction';
+  variant: WordVariant;
   characterName: string;
   characterId: string;
   onExit: () => void;

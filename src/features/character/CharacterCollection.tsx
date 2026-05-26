@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { getUnlockedDefs, getLockedDefs } from './characterDefs';
+import { getUnlockedDefs, getLockedDefs, getCharLevel } from './characterDefs';
 import { getUnitStampCount, type StampEntry } from '../rewards/stamps';
 import { getCharName } from './character';
 import { UNITS } from '../../data/units';
@@ -13,6 +13,8 @@ interface Props {
   onClose: () => void;
 }
 
+const LEVEL_BADGE = ['', '', '⭐', '🌟'];
+
 export function CharacterCollection({ stampHistory, activeCharId, characterNames, onOpenDetail, onClose }: Props) {
   const unlocked = getUnlockedDefs(stampHistory);
   const locked = getLockedDefs(stampHistory);
@@ -22,24 +24,34 @@ export function CharacterCollection({ stampHistory, activeCharId, characterNames
       <h1 className="text-2xl font-bold text-purple-800">なかま ずかん</h1>
 
       <div className="flex flex-wrap justify-center gap-4">
-        {unlocked.map((def) => (
-          <motion.button
-            key={def.id}
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.06 }}
-            onClick={() => { playSfx('tap'); onOpenDetail(def.id); }}
-            className={`rounded-2xl p-4 text-center shadow-md w-36 ${
-              activeCharId === def.id
-                ? 'bg-yellow-200 ring-2 ring-yellow-500 border-2 border-yellow-400'
-                : 'bg-white border-2 border-purple-100'
-            }`}
-          >
-            <div className="text-5xl">{def.emoji}</div>
-            <div className="mt-1 font-bold text-purple-900">{getCharName(def.id, characterNames)}</div>
-            {activeCharId === def.id && <div className="text-xs text-yellow-700 font-bold">いま えらんでる</div>}
-          </motion.button>
-        ))}
+        {unlocked.map((def) => {
+          const unitStamps = def.unitId ? getUnitStampCount(stampHistory, def.unitId) : 0;
+          const level = getCharLevel(unitStamps, def);
+          const badge = def.maxLevel > 1 ? LEVEL_BADGE[level] : '';
+          return (
+            <motion.button
+              key={def.id}
+              type="button"
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.06 }}
+              onClick={() => { playSfx('tap'); onOpenDetail(def.id); }}
+              className={`rounded-2xl p-4 text-center shadow-md w-36 relative ${
+                activeCharId === def.id
+                  ? 'bg-yellow-200 ring-2 ring-yellow-500 border-2 border-yellow-400'
+                  : 'bg-white border-2 border-purple-100'
+              }`}
+            >
+              <div className="relative inline-block text-5xl">
+                {def.emoji}
+                {badge && (
+                  <span className="absolute -top-1 -right-2 text-xl">{badge}</span>
+                )}
+              </div>
+              <div className="mt-1 font-bold text-purple-900">{getCharName(def.id, characterNames)}</div>
+              {activeCharId === def.id && <div className="text-xs text-yellow-700 font-bold">いま えらんでる</div>}
+            </motion.button>
+          );
+        })}
       </div>
 
       {locked.length > 0 && (
