@@ -14,6 +14,7 @@ interface Props {
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
   onOpenProgress: () => void;
+  onBack?: () => void;
 }
 
 const UNIT_EMOJIS: Record<string, string> = {
@@ -38,6 +39,7 @@ export function HomeScreen({
   onOpenCollection,
   onOpenStampBook,
   onOpenProgress,
+  onBack,
 }: Props) {
   const missionDone = hasMissionToday();
   const characterEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
@@ -45,10 +47,17 @@ export function HomeScreen({
   return (
     <div className="flex h-screen flex-col items-center gap-6 bg-gradient-to-b from-sky-200 to-amber-50 p-6 overflow-y-auto">
       <div className="flex w-full items-center justify-between">
-        <button type="button" onClick={onOpenCollection} className="flex items-center gap-2">
-          <span className="text-2xl">{characterEmoji}</span>
-          <span className="font-bold text-amber-900">{characterName}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <button type="button" onClick={onBack} className="rounded-xl bg-white/60 px-3 py-2 text-amber-700 font-bold text-sm">
+              ← もどる
+            </button>
+          )}
+          <button type="button" onClick={onOpenCollection} className="flex items-center gap-2">
+            <span className="text-2xl">{characterEmoji}</span>
+            <span className="font-bold text-amber-900">{characterName}</span>
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={onOpenProgress}
             className="rounded-2xl bg-amber-400 px-6 py-3 text-lg font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1">
