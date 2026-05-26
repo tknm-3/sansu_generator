@@ -95,6 +95,27 @@ export function ShapeFoldUnit({ hard = false, onExit }: Props) {
         <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={180} h={110} />
       </div>
 
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center text-xs text-slate-600 bg-white/70 rounded-2xl px-4 py-2 border border-amber-100">
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-sm inline-block bg-yellow-100 border-2 border-amber-500" />
+          おもて
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-sm inline-block bg-blue-100 border border-dashed border-blue-300" />
+          うら（おった ところ）
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-5 h-3 rounded-sm inline-block bg-red-300 border border-red-500" />
+          きった ところ
+        </span>
+        <span className="flex items-center gap-1.5">
+          <svg width="20" height="10" viewBox="0 0 20 10">
+            <line x1="0" y1="5" x2="20" y2="5" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,3" />
+          </svg>
+          おりめ
+        </span>
+      </div>
+
       <p className="text-amber-700 font-bold">ひらいたら どれ？</p>
 
       <div className="grid grid-cols-2 gap-4 w-full max-w-sm">

@@ -51,8 +51,10 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       pr(20, 15, 60, 80),
       fl(80, 10, 80, 100),
       cutr(72, 48, 16, 14),
-      tx(90, 8, 'たてに おりました'),
+      tx(90, 12, 'たてに おりました', 12),
       tx(80, 68, '✂️', 16),
+      tx(50, 58, 'おもて'),
+      tx(110, 58, 'うら'),
     ].join(''),
     choices: [
       { svg: pr(5, 5, 70, 70) + hr(27, 29, 26, 22) },           // correct: center hole
@@ -71,8 +73,10 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       pr(15, 15, 80, 45),
       fl(10, 60, 110, 60),
       cutr(47, 52, 16, 16),
-      tx(90, 8, 'よこに おりました'),
+      tx(90, 12, 'よこに おりました', 12),
       tx(55, 68, '✂️', 16),
+      tx(55, 42, 'おもて'),
+      tx(30, 82, 'うら'),
     ].join(''),
     choices: [
       { svg: pr(5, 5, 70, 70) + hr(22, 27, 26, 26) },           // correct: center hole
@@ -92,7 +96,9 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       fl(80, 10, 80, 100),
       `<polygon points="68,15 80,15 80,28" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
       `<polygon points="68,95 80,95 80,82" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
-      tx(90, 8, 'たてに おりました'),
+      tx(90, 12, 'たてに おりました', 12),
+      tx(50, 58, 'おもて'),
+      tx(110, 58, 'うら'),
     ].join(''),
     choices: [
       { // correct: 4 corner triangle notches
@@ -125,7 +131,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       fl(55, 25, 55, 85),
       fl(55, 85, 115, 85),
       `<polygon points="107,25 115,25 115,33" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
-      tx(88, 16, '2かい おりました'),
+      tx(88, 18, '2かい おりました', 12),
     ].join(''),
     choices: [
       { svg: pr(5, 5, 70, 70) + hc(15, 15, 9) + hc(55, 15, 9) + hc(15, 55, 9) + hc(55, 55, 9) }, // correct: 4 corner holes
@@ -144,7 +150,9 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       `<polygon points="20,90 90,20 90,90" fill="${P}" stroke="${PS}" stroke-width="2"/>`,
       fl(20, 90, 90, 20),
       `<polygon points="54,54 66,54 54,66" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
-      tx(90, 12, 'かくに おりました'),
+      tx(90, 14, 'かくに おりました', 12),
+      tx(35, 45, 'うら'),
+      tx(72, 82, 'おもて'),
     ].join(''),
     choices: [
       { // correct: 2 symmetric diamond holes along diagonal
