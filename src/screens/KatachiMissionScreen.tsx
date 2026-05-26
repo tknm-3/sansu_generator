@@ -50,7 +50,7 @@ export function KatachiMissionScreen({ onSelectUnit, onExit }: Props) {
   const allUnits = getUnitsByCategory('katachi');
   const missionUnits = todayUnitIds.map((id) => allUnits.find((u) => u.id === id)!);
 
-  const [checks, setChecks] = useState(() => todayUnitIds.map(wasCompletedToday));
+  const [checks] = useState(() => todayUnitIds.map(wasCompletedToday));
   const allDone = checks.every(Boolean);
   const [celebrated, setCelebrated] = useState(false);
 
