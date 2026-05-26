@@ -19,6 +19,7 @@ import { ShapeViewpointUnit } from './screens/ShapeViewpointUnit';
 import { ShapeFoldUnit } from './screens/ShapeFoldUnit';
 import { ShapePatternUnit } from './screens/ShapePatternUnit';
 import { ShapeSpatialUnit } from './screens/ShapeSpatialUnit';
+import { ShapeFitUnit } from './screens/ShapeFitUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
 import { ProblemMakerScreen } from './screens/ProblemMakerScreen';
@@ -134,6 +135,8 @@ export default function App() {
         case 'shape-fold':      return <ShapeFoldUnit       key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-pattern':   return <ShapePatternUnit    key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-spatial':   return <ShapeSpatialUnit    key={refresh} hard={hard} {...sharedProps} />;
+        case 'shape-fit':       return <ShapeFitUnit        key={refresh} variant="fit"     hard={hard} {...sharedProps} />;
+        case 'shape-tangram':   return <ShapeFitUnit        key={refresh} variant="tangram" hard={hard} {...sharedProps} />;
         default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
       }
     }

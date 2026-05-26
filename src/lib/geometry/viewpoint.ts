@@ -1,5 +1,6 @@
 export interface ViewpointProblem {
   id: string;
+  hard: boolean;
   questionLabel: string;
   isoSvg: string;         // 等角投影の3D風SVG
   topViewChoices: string[]; // 4択：真上から見た図のSVG
@@ -80,6 +81,7 @@ function wrongGrid5(): string { return topViewGrid([[0,0],[1,0],[0,1]]); }
 export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
   {
     id: 'vp-line3',
+    hard: false,
     questionLabel: 'うえから みると どれ？',
     isoSvg: [
       isoBlock(0, 0, 0),
@@ -96,6 +98,7 @@ export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
   },
   {
     id: 'vp-l2',
+    hard: false,
     questionLabel: 'うえから みると どれ？',
     isoSvg: [
       isoBlock(0, 0, 0),
@@ -112,6 +115,7 @@ export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
   },
   {
     id: 'vp-stack2',
+    hard: false,
     questionLabel: 'うえから みると どれ？',
     isoSvg: [
       isoBlock(0, 0, 0),
@@ -128,6 +132,7 @@ export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
   },
   {
     id: 'vp-t3',
+    hard: false,
     questionLabel: 'うえから みると どれ？',
     isoSvg: [
       isoBlock(0, 0, 0),
@@ -145,6 +150,7 @@ export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
   },
   {
     id: 'vp-l3',
+    hard: false,
     questionLabel: 'うえから みると どれ？',
     isoSvg: [
       isoBlock(0, 0, 0),
@@ -160,17 +166,86 @@ export const VIEWPOINT_PROBLEMS: ViewpointProblem[] = [
     ],
     answerIndex: 0,
   },
+
+  // ── むずかしい（つみあげ・おおきい かたち） ──
+  {
+    id: 'vp-square-stack',
+    hard: true,
+    questionLabel: 'うえから みると どれ？',
+    isoSvg: [
+      isoBlock(0, 0, 0),
+      isoBlock(1, 0, 0),
+      isoBlock(0, 1, 0),
+      isoBlock(1, 1, 0),
+      isoBlock(0, 0, 1),  // 1マスだけ 2だん
+    ].join(''),
+    topViewChoices: [
+      topViewGrid([[0,0],[1,0],[0,1],[1,1]]),         // 正解: 2×2（つみあげても うえからは おなじ）
+      topViewGrid([[0,0],[1,0],[2,0],[3,0]]),          // 横4
+      topViewGrid([[0,0],[1,0],[0,1]]),                // L字3
+      topViewGrid([[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]]), // 2×3
+    ],
+    answerIndex: 0,
+  },
+  {
+    id: 'vp-plus',
+    hard: true,
+    questionLabel: 'うえから みると どれ？',
+    isoSvg: [
+      isoBlock(1, 0, 0),
+      isoBlock(0, 1, 0),
+      isoBlock(1, 1, 0),
+      isoBlock(2, 1, 0),
+      isoBlock(1, 2, 0),
+      isoBlock(1, 1, 1),  // まんなかが 2だん
+    ].join(''),
+    topViewChoices: [
+      topViewGrid([[1,0],[0,1],[1,1],[2,1],[1,2]]),   // 正解: ＋（じゅうじ）
+      topViewGrid([[0,0],[1,0],[0,1],[1,1]]),          // 2×2
+      topViewGrid([[0,0],[1,0],[2,0],[1,1]]),          // T字
+      topViewGrid([[1,0],[1,1],[1,2],[0,1]]),          // T字（たて）
+    ],
+    answerIndex: 0,
+  },
+  {
+    id: 'vp-rect23',
+    hard: true,
+    questionLabel: 'うえから みると どれ？',
+    isoSvg: [
+      isoBlock(0, 0, 0),
+      isoBlock(1, 0, 0),
+      isoBlock(2, 0, 0),
+      isoBlock(0, 1, 0),
+      isoBlock(1, 1, 0),
+      isoBlock(2, 1, 0),
+    ].join(''),
+    topViewChoices: [
+      topViewGrid([[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]]), // 正解: 2×3
+      topViewGrid([[0,0],[1,0],[0,1],[1,1]]),              // 2×2
+      topViewGrid([[0,0],[1,0],[2,0]]),                     // 横3
+      topViewGrid([[0,0],[1,0],[2,0],[2,1],[2,2]]),         // L字（長）
+    ],
+    answerIndex: 0,
+  },
 ];
 
-let usedIndices: number[] = [];
+let usedEasy: number[] = [];
+let usedHard: number[] = [];
 
-export function generateViewpointProblem(): ViewpointProblem {
-  if (usedIndices.length >= VIEWPOINT_PROBLEMS.length) usedIndices = [];
-  const available = VIEWPOINT_PROBLEMS.map((_, i) => i).filter((i) => !usedIndices.includes(i));
-  const idx = available[Math.floor(Math.random() * available.length)];
-  usedIndices.push(idx);
+export function generateViewpointProblem(hard = false): ViewpointProblem {
+  const pool = VIEWPOINT_PROBLEMS
+    .map((p, i) => ({ p, i }))
+    .filter(({ p }) => p.hard === hard);
+  let used = hard ? usedHard : usedEasy;
+  if (used.length >= pool.length) {
+    used = [];
+    if (hard) usedHard = used; else usedEasy = used;
+  }
+  const available = pool.filter(({ i }) => !used.includes(i));
+  const chosen = available[Math.floor(Math.random() * available.length)];
+  used.push(chosen.i);
 
-  const p = VIEWPOINT_PROBLEMS[idx];
+  const p = chosen.p;
   // 選択肢をシャッフル（正解はanswerIndex=0として定義済み）
   const choicesWithOrigIdx = p.topViewChoices.map((svg, i) => ({ svg, origIdx: i }));
   const shuffled = shuffleArr(choicesWithOrigIdx);

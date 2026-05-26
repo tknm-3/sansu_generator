@@ -24,7 +24,7 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showAnswer, setShowAnswer] = useState(false);
-  const [spinning, setSpinning] = useState(false);
+  const [demoDone, setDemoDone] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
@@ -49,6 +49,7 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         setTimeout(() => {
           setProblem(generateRotationProblem(hard));
           setShowAnswer(false);
+          setDemoDone(false);
           processing.current = false;
         }, 900);
       }
@@ -60,12 +61,11 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
     }
   }
 
-  function handleSpin() {
-    if (spinning) return;
-    setSpinning(true);
+  function handleShowDemo() {
+    if (showAnswer) return;
+    setDemoDone(false);
     setShowAnswer(true);
     playSfx('tap');
-    setTimeout(() => setSpinning(false), 800);
   }
 
   if (cleared) {
@@ -83,8 +83,9 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-emerald-100 to-teal-50 p-6">
-      <div className="self-stretch text-sm text-teal-700 font-bold">
-        といた かず: {solved} / {QUESTIONS_PER_UNIT}
+      <div className="self-stretch flex items-center justify-between">
+        <span className="text-sm text-teal-700 font-bold">といた かず: {solved} / {QUESTIONS_PER_UNIT}</span>
+        {hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
       </div>
 
       <motion.h2
@@ -92,7 +93,7 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="text-xl font-bold text-teal-900 text-center"
       >
-        まわしたら どのかたち？
+        {problem.transform.flipX ? 'うらがえしたら どのかたち？' : 'まわしたら どのかたち？'}
       </motion.h2>
 
       <div className="rounded-3xl bg-white shadow-lg p-6 flex flex-col items-center gap-3 w-full max-w-sm">
@@ -112,26 +113,32 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
 
           <div className="flex flex-col items-center gap-1">
             <p className="text-xs text-teal-600 font-bold">あと</p>
-            <motion.div
-              animate={spinning ? { rotate: [0, problem.transform.rotate] } : {}}
-              transition={{ duration: 0.7, ease: 'easeInOut' }}
-            >
-              {showAnswer ? (
+            {showAnswer ? (
+              demoDone ? (
                 <ShapeSvg shapeId={problem.shapeId} transform={problem.transform} size={90} color="#34d399" />
               ) : (
-                <div className="w-24 h-24 rounded-2xl border-4 border-dashed border-teal-300 flex items-center justify-center text-teal-400 text-3xl">？</div>
-              )}
-            </motion.div>
+                <motion.div
+                  initial={{ rotate: 0, scaleX: 1 }}
+                  animate={{ rotate: problem.transform.rotate, scaleX: problem.transform.flipX ? -1 : 1 }}
+                  transition={{ duration: 0.8, ease: 'easeInOut' }}
+                  onAnimationComplete={() => setDemoDone(true)}
+                >
+                  <ShapeSvg shapeId={problem.shapeId} transform={{ rotate: 0, flipX: false }} size={90} color="#34d399" />
+                </motion.div>
+              )
+            ) : (
+              <div className="w-24 h-24 rounded-2xl border-4 border-dashed border-teal-300 flex items-center justify-center text-teal-400 text-3xl">？</div>
+            )}
           </div>
         </div>
 
         {!showAnswer && (
           <button
             type="button"
-            onClick={handleSpin}
+            onClick={handleShowDemo}
             className="mt-2 rounded-2xl bg-amber-400 px-5 py-2 text-base font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1"
           >
-            🔄 まわして たしかめる
+            {problem.transform.flipX ? '🪞 うらがえして みる（おてほん）' : '🔄 まわして みる（おてほん）'}
           </button>
         )}
       </div>
