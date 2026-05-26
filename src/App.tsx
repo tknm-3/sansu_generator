@@ -127,8 +127,10 @@ export default function App() {
         case 'big-subtraction': return <BigSubtractionUnit  key={refresh} {...sharedProps} />;
         case 'multiplication':  return <MultiplicationUnit  key={refresh} {...sharedProps} />;
         case 'division':        return <DivisionUnit        key={refresh} {...sharedProps} />;
-        case 'word-addition':   return <WordProblemUnit     key={refresh} variant="word-addition"    {...sharedProps} />;
-        case 'word-subtraction':return <WordProblemUnit     key={refresh} variant="word-subtraction" {...sharedProps} />;
+        case 'word-addition':        return <WordProblemUnit key={refresh} variant="word-addition"        {...sharedProps} />;
+        case 'word-subtraction':     return <WordProblemUnit key={refresh} variant="word-subtraction"     {...sharedProps} />;
+        case 'word-multiplication':  return <WordProblemUnit key={refresh} variant="word-multiplication"  {...sharedProps} />;
+        case 'word-division':        return <WordProblemUnit key={refresh} variant="word-division"        {...sharedProps} />;
         case 'shape-rotation':  return <ShapeRotationUnit   key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-compose':   return <ShapeComposeUnit    key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-viewpoint': return <ShapeViewpointUnit  key={refresh} hard={hard} {...sharedProps} />;

@@ -92,6 +92,22 @@ export const UNITS: UnitMeta[] = [
     curriculum: '小1：ひきざんを使った文章題、過不足の比較',
     emoji: '💭',
   },
+  {
+    id: 'word-multiplication',
+    category: 'sansu',
+    title: 'ぴったり？（かけ算）',
+    grade: '小2〜小3',
+    curriculum: '小2：かけ算を使った文章題、グループ×個数と容量の比較',
+    emoji: '🔢',
+  },
+  {
+    id: 'word-division',
+    category: 'sansu',
+    title: 'ぴったり？（わり算）',
+    grade: '小3',
+    curriculum: '小3：わり算を使った文章題、均等分配の過不足比較',
+    emoji: '🔣',
+  },
   // ── 図形カテゴリ ──
   {
     id: 'shape-rotation',
