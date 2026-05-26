@@ -159,16 +159,22 @@ export function KatachiHomeScreen({
               <button
                 type="button"
                 onClick={() => handleModeSelect(false)}
-                className="w-full rounded-2xl bg-teal-400 py-4 text-xl font-bold text-white shadow-[0_4px_0_#0f766e] active:translate-y-1 flex items-center justify-center gap-2"
+                className="w-full rounded-2xl bg-teal-400 py-3 font-bold text-white shadow-[0_4px_0_#0f766e] active:translate-y-1 flex flex-col items-center"
               >
-                🌟 ふつう
+                <span className="text-xl">🌟 ふつう</span>
+                {pendingUnit.modeHint && (
+                  <span className="text-xs font-bold text-teal-50 mt-0.5">{pendingUnit.modeHint.normal}</span>
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => handleModeSelect(true)}
-                className="w-full rounded-2xl bg-orange-400 py-4 text-xl font-bold text-white shadow-[0_4px_0_#c2410c] active:translate-y-1 flex items-center justify-center gap-2"
+                className="w-full rounded-2xl bg-orange-400 py-3 font-bold text-white shadow-[0_4px_0_#c2410c] active:translate-y-1 flex flex-col items-center"
               >
-                🔥 むずかしい
+                <span className="text-xl">🔥 むずかしい</span>
+                {pendingUnit.modeHint && (
+                  <span className="text-xs font-bold text-orange-50 mt-0.5">{pendingUnit.modeHint.hard}</span>
+                )}
               </button>
 
               <button

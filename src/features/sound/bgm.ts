@@ -127,6 +127,8 @@ const TRACKS: Record<string, Track> = {
   'shape-rotation': TRACK_KATACHI_UNIT,
   'shape-compose': TRACK_KATACHI_UNIT,
   'shape-viewpoint': TRACK_KATACHI_UNIT,
+  'shape-fit': TRACK_KATACHI_UNIT,
+  'shape-tangram': TRACK_KATACHI_UNIT,
 };
 
 const LOOKAHEAD = 0.2; // 先読みスケジュール窓（秒）

@@ -29,8 +29,8 @@ function SvgChoice({ svg, size = 120 }: { svg: string; size?: number }) {
   );
 }
 
-export function ShapeComposeUnit({ onExit }: Props) {
-  const [problem, setProblem] = useState<ComposeProblem>(() => generateComposeProblem());
+export function ShapeComposeUnit({ hard = false, onExit }: Props) {
+  const [problem, setProblem] = useState<ComposeProblem>(() => generateComposeProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const processing = useRef(false);
@@ -55,7 +55,7 @@ export function ShapeComposeUnit({ onExit }: Props) {
         speakJa('クリア！ よくできたね！');
       } else {
         setTimeout(() => {
-          setProblem(generateComposeProblem());
+          setProblem(generateComposeProblem(hard));
           processing.current = false;
         }, 900);
       }
@@ -82,8 +82,9 @@ export function ShapeComposeUnit({ onExit }: Props) {
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-emerald-100 to-teal-50 p-6">
-      <div className="self-stretch text-sm text-teal-700 font-bold">
-        といた かず: {solved} / {QUESTIONS_PER_UNIT}
+      <div className="self-stretch flex items-center justify-between">
+        <span className="text-sm text-teal-700 font-bold">といた かず: {solved} / {QUESTIONS_PER_UNIT}</span>
+        {hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
       </div>
 
       <motion.h2

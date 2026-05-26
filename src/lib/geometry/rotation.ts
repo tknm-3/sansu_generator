@@ -16,35 +16,31 @@ export interface ShapeDef {
   viewBox: string;
 }
 
+// すべて「うらがえす（かがみ）」と「まわす」が みわけられる ように
+// 左右・上下の たいしょうじくが ない かたち（キラル）だけを つかう。
 export const SHAPE_DEFS: ShapeDef[] = [
   {
-    id: 'arrow-r',
-    label: 'やじるし',
-    path: 'M10,40 L60,40 L60,20 L90,50 L60,80 L60,60 L10,60 Z',
-    viewBox: '0 0 100 100',
-  },
-  {
     id: 'lshape',
-    label: 'Lのかたち',
-    path: 'M10,10 L40,10 L40,60 L80,60 L80,90 L10,90 Z',
-    viewBox: '0 0 100 100',
-  },
-  {
-    id: 'tshape',
-    label: 'Tのかたち',
-    path: 'M30,10 L70,10 L70,40 L90,40 L90,70 L30,70 Z',
-    viewBox: '0 0 100 100',
-  },
-  {
-    id: 'flag',
-    label: 'はたのかたち',
-    path: 'M15,10 L85,10 L85,50 L50,50 L50,90 L15,90 Z',
+    label: 'L のかたち',
+    path: 'M15,15 L45,15 L45,60 L85,60 L85,90 L15,90 Z',
     viewBox: '0 0 100 100',
   },
   {
     id: 'step',
     label: 'かいだん',
-    path: 'M10,90 L10,55 L40,55 L40,30 L70,30 L70,10 L90,10 L90,30 L70,30 L70,55 L40,55 L40,90 Z',
+    path: 'M12,90 L12,62 L40,62 L40,40 L68,40 L68,18 L90,18 L90,90 Z',
+    viewBox: '0 0 100 100',
+  },
+  {
+    id: 'flag',
+    label: 'はた',
+    path: 'M15,12 L82,12 L82,48 L48,48 L48,90 L15,90 Z',
+    viewBox: '0 0 100 100',
+  },
+  {
+    id: 'bolt',
+    label: 'いなずま',
+    path: 'M52,10 L24,52 L44,52 L34,90 L82,44 L56,44 L70,10 Z',
     viewBox: '0 0 100 100',
   },
 ];
@@ -60,12 +56,14 @@ function shuffle<T>(arr: T[]): T[] {
 
 function getRotationLabel(transform: RotationTransform): string {
   if (transform.flipX) {
-    return 'まわして うらがえします';
+    return transform.rotate === 0
+      ? '🪞 かがみで うらがえし'
+      : '🪞 うらがえして まわす';
   }
   switch (transform.rotate) {
-    case 90:  return 'みぎに まわします ➡️';
-    case 180: return 'くるっと まわします 🔃';
-    case 270: return 'ひだりに まわします ⬅️';
+    case 90:  return 'みぎへ まわす ➡️';
+    case 180: return 'ぐるっと まわす 🔃';
+    case 270: return 'ひだりへ まわす ⬅️';
     default:  return 'そのまま';
   }
 }
