@@ -14,7 +14,7 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
-import { getPuzzles, type FitPiece, type FitShape } from '../lib/geometry/fitPuzzles';
+import { getPuzzles, silhouetteKey, type FitPiece, type FitShape } from '../lib/geometry/fitPuzzles';
 
 const PUZZLES_PER_UNIT = 2;
 const SNAP_THRESHOLD = 52;
@@ -114,7 +114,9 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
   }, [variant, hard]);
 
   const [pIdx, setPIdx] = useState(0);
-  const [placed, setPlaced] = useState<string[]>([]);
+  // スロットID → そこに はまっている ピースID。
+  // 見た目が おなじ（silhouetteKey が おなじ）ピースは どの スロットにも はめられる。
+  const [placement, setPlacement] = useState<Record<string, string>>({});
   const [pieceRotations, setPieceRotations] = useState<Record<string, number>>({});
   const [solvedPuzzles, setSolvedPuzzles] = useState(0);
   const [missed, setMissed] = useState(false);
@@ -122,11 +124,12 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => { setBgmTrack(skillId); }, [skillId]);
-  useEffect(() => { setPieceRotations({}); }, [pIdx]);
+  useEffect(() => { setPieceRotations({}); setPlacement({}); }, [pIdx]);
 
   const puzzle = queue[pIdx];
   const trayOrder = useMemo(() => shuffle(puzzle.pieces.map((p) => p.id)), [puzzle.id]);
   const cleared = solvedPuzzles >= PUZZLES_PER_UNIT;
+  const usedPieceIds = useMemo(() => new Set(Object.values(placement)), [placement]);
 
   function rotatepiece(id: string) {
     setPieceRotations((prev) => ({ ...prev, [id]: ((prev[id] ?? 0) + 90) % 360 }));
@@ -141,15 +144,24 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
 
     const dropCx = r.left + r.width / 2 - board.left;
     const dropCy = r.top + r.height / 2 - board.top;
-    const targetCx = piece.x + piece.w / 2;
-    const targetCy = piece.y + piece.h / 2;
-    const dist = Math.hypot(dropCx - targetCx, dropCy - targetCy);
-
-    const targetRot = ((piece.targetRotation ?? 0) + 360) % 360;
     const currentRot = ((pieceRotations[pieceId] ?? 0) + 360) % 360;
-    const rotOk = currentRot === targetRot;
+    const pieceKey = silhouetteKey(piece.shape, piece.w, piece.h, currentRot);
 
-    if (dist > SNAP_THRESHOLD || !rotOk) {
+    // まだ うまっていない スロットのうち、見た目が おなじで いちばん ちかいものを さがす。
+    let bestSlot: FitPiece | null = null;
+    let bestDist = Infinity;
+    for (const slot of puzzle.pieces) {
+      if (placement[slot.id] !== undefined) continue;
+      const slotKey = silhouetteKey(slot.shape, slot.w, slot.h, slot.targetRotation ?? 0);
+      if (slotKey !== pieceKey) continue;
+      const dist = Math.hypot(dropCx - (slot.x + slot.w / 2), dropCy - (slot.y + slot.h / 2));
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestSlot = slot;
+      }
+    }
+
+    if (!bestSlot || bestDist > SNAP_THRESHOLD) {
       playSfx('wrong');
       setMissed(true);
       setTimeout(() => setMissed(false), 700);
@@ -157,10 +169,10 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
     }
 
     playSfx('correct');
-    const next = [...placed, pieceId];
-    setPlaced(next);
+    const next = { ...placement, [bestSlot.id]: pieceId };
+    setPlacement(next);
 
-    if (next.length === puzzle.pieces.length) {
+    if (Object.keys(next).length === puzzle.pieces.length) {
       confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
       const done = solvedPuzzles + 1;
       setTimeout(() => {
@@ -172,7 +184,7 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
         } else {
           speakJa('できた！ つぎの パズル！');
           setPIdx((i) => i + 1);
-          setPlaced([]);
+          setPlacement({});
           setPieceRotations({});
         }
       }, 750);
@@ -193,7 +205,7 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
   }
 
   const trayPieces = trayOrder
-    .filter((id) => !placed.includes(id))
+    .filter((id) => !usedPieceIds.has(id))
     .map((id) => puzzle.pieces.find((p) => p.id === id)!);
 
   return (
@@ -244,33 +256,45 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
                   );
                 })}
               </svg>
-              {/* はめたピースをカラーで上書き */}
-              {placed.map((id) => {
-                const p = puzzle.pieces.find((pp) => pp.id === id)!;
-                const rot = p.targetRotation ?? 0;
+              {/* はめたピースをカラーで上書き（スロットの いちに、はめた ピースの いろで）*/}
+              {Object.entries(placement).map(([slotId, pieceId]) => {
+                const slot = puzzle.pieces.find((pp) => pp.id === slotId)!;
+                const piece = puzzle.pieces.find((pp) => pp.id === pieceId)!;
+                const rot = pieceRotations[pieceId] ?? 0;
+                const left = slot.x + slot.w / 2 - piece.w / 2;
+                const top = slot.y + slot.h / 2 - piece.h / 2;
                 return (
                   <div
-                    key={p.id}
+                    key={slotId}
                     className="absolute"
                     style={{
-                      left: p.x,
-                      top: p.y,
+                      left,
+                      top,
                       transform: `rotate(${rot}deg)`,
-                      transformOrigin: `${p.w / 2}px ${p.h / 2}px`,
+                      transformOrigin: `${piece.w / 2}px ${piece.h / 2}px`,
                     }}
                   >
-                    <PieceShape piece={p} />
+                    <PieceShape piece={piece} />
                   </div>
                 );
               })}
             </>
           ) : (
             /* ぴったりはめよう：個別スロットを点線で表示 */
-            puzzle.pieces.map((p) => (
-              <div key={p.id} className="absolute" style={{ left: p.x, top: p.y }}>
-                <PieceShape piece={p} gray={!placed.includes(p.id)} />
-              </div>
-            ))
+            puzzle.pieces.map((slot) => {
+              const placedPieceId = placement[slot.id];
+              const placedPiece = placedPieceId
+                ? puzzle.pieces.find((pp) => pp.id === placedPieceId)!
+                : null;
+              return (
+                <div key={slot.id} className="absolute" style={{ left: slot.x, top: slot.y }}>
+                  <PieceShape
+                    piece={placedPiece ? { ...slot, color: placedPiece.color } : slot}
+                    gray={!placedPiece}
+                  />
+                </div>
+              );
+            })
           )}
         </div>
 
