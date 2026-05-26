@@ -16,6 +16,8 @@ export interface FitPiece {
   /** ばんめんでの ばしょ（ローカルボックスの ひだりうえ） */
   x: number;
   y: number;
+  /** はめるときに ひつような かいてんかく（度）。0 のときは かいてん なし */
+  targetRotation?: 0 | 90 | 180 | 270;
 }
 
 export interface FitPuzzle {
@@ -110,9 +112,9 @@ const TANGRAM_EASY: FitPuzzle[] = [
     boardH: 200,
     pieces: [
       { id: 't-top', color: BLUE, w: 180, h: 90, x: 10, y: 10, shape: { type: 'poly', points: '0,0 180,0 90,90' } },
-      { id: 't-bottom', color: GREEN, w: 180, h: 90, x: 10, y: 100, shape: { type: 'poly', points: '0,90 180,90 90,0' } },
+      { id: 't-bottom', color: GREEN, w: 180, h: 90, x: 10, y: 100, shape: { type: 'poly', points: '0,0 180,0 90,90' }, targetRotation: 180 },
       { id: 't-left', color: ORANGE, w: 90, h: 180, x: 10, y: 10, shape: { type: 'poly', points: '0,0 0,180 90,90' } },
-      { id: 't-right', color: PURPLE, w: 90, h: 180, x: 100, y: 10, shape: { type: 'poly', points: '90,0 90,180 0,90' } },
+      { id: 't-right', color: PURPLE, w: 90, h: 180, x: 100, y: 10, shape: { type: 'poly', points: '0,0 0,180 90,90' }, targetRotation: 180 },
     ],
   },
   {
@@ -124,7 +126,7 @@ const TANGRAM_EASY: FitPuzzle[] = [
       { id: 'a-tip', color: ORANGE, w: 90, h: 120, x: 120, y: 30, shape: { type: 'poly', points: '0,0 0,120 90,60' } },
       { id: 'a-up', color: BLUE, w: 60, h: 60, x: 60, y: 30, shape: { type: 'poly', points: '0,0 60,0 60,60' } },
       { id: 'a-stem', color: GREEN, w: 60, h: 40, x: 20, y: 70, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 40 } },
-      { id: 'a-down', color: PURPLE, w: 60, h: 60, x: 60, y: 110, shape: { type: 'poly', points: '0,60 60,60 60,0' } },
+      { id: 'a-down', color: PURPLE, w: 60, h: 60, x: 60, y: 110, shape: { type: 'poly', points: '0,0 60,0 60,60' }, targetRotation: 180 },
     ],
   },
 ];
@@ -142,7 +144,7 @@ const TANGRAM_HARD: FitPuzzle[] = [
       { id: 'r-win', color: YELLOW, w: 36, h: 36, x: 102, y: 96, shape: { type: 'circle', cx: 18, cy: 18, r: 18 } },
       { id: 'r-finL', color: GREEN, w: 45, h: 60, x: 40, y: 104, shape: { type: 'poly', points: '45,0 45,60 0,60' } },
       { id: 'r-finR', color: GREEN, w: 45, h: 60, x: 155, y: 104, shape: { type: 'poly', points: '0,0 0,60 45,60' } },
-      { id: 'r-flame', color: ORANGE, w: 50, h: 42, x: 95, y: 164, shape: { type: 'poly', points: '0,0 50,0 25,42' } },
+      { id: 'r-flame', color: ORANGE, w: 50, h: 42, x: 95, y: 164, shape: { type: 'poly', points: '0,42 25,0 50,42' }, targetRotation: 180 },
     ],
   },
   {
@@ -152,7 +154,7 @@ const TANGRAM_HARD: FitPuzzle[] = [
     boardH: 232,
     pieces: [
       { id: 'b-sailL', color: PINK, w: 70, h: 110, x: 50, y: 20, shape: { type: 'poly', points: '70,0 70,110 0,110' } },
-      { id: 'b-sailR', color: PURPLE, w: 60, h: 110, x: 125, y: 20, shape: { type: 'poly', points: '0,0 0,110 60,110' } },
+      { id: 'b-sailR', color: PURPLE, w: 60, h: 110, x: 125, y: 20, shape: { type: 'poly', points: '0,0 60,0 60,110' }, targetRotation: 180 },
       { id: 'b-hull', color: BLUE, w: 180, h: 50, x: 30, y: 150, shape: { type: 'poly', points: '0,0 180,0 150,50 30,50' } },
       { id: 'b-wave', color: TEAL, w: 200, h: 24, x: 20, y: 200, shape: { type: 'rect', x: 0, y: 0, w: 200, h: 24, rx: 10 } },
     ],
