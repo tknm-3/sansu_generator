@@ -14,10 +14,10 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
-import { getPuzzles, type FitPiece } from '../lib/geometry/fitPuzzles';
+import { getPuzzles, type FitPiece, type FitShape } from '../lib/geometry/fitPuzzles';
 
 const PUZZLES_PER_UNIT = 2;
-const SNAP_THRESHOLD = 52; // この きょりより ちかければ はまる（px）
+const SNAP_THRESHOLD = 52;
 
 interface Props {
   variant: 'fit' | 'tangram';
@@ -61,19 +61,44 @@ function PieceShape({ piece, gray = false }: { piece: FitPiece; gray?: boolean }
   );
 }
 
-function TrayPiece({ piece }: { piece: FitPiece }) {
+function renderSilhouetteShape(s: FitShape) {
+  if (s.type === 'poly') return <polygon points={s.points} fill="#dde3ec" stroke="#dde3ec" strokeWidth={4} strokeLinejoin="round" />;
+  if (s.type === 'circle') return <circle cx={s.cx} cy={s.cy} r={s.r} fill="#dde3ec" stroke="#dde3ec" strokeWidth={4} />;
+  return <rect x={s.x} y={s.y} width={s.w} height={s.h} rx={s.rx ?? 0} fill="#dde3ec" stroke="#dde3ec" strokeWidth={4} />;
+}
+
+function TrayPiece({
+  piece,
+  rotation,
+  onRotate,
+}: {
+  piece: FitPiece;
+  rotation: number;
+  onRotate: () => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: piece.id });
-  const style: CSSProperties = {
+  const outerStyle: CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     touchAction: 'none',
     zIndex: isDragging ? 50 : 1,
     position: 'relative',
     cursor: 'grab',
-    filter: isDragging ? 'drop-shadow(0 8px 8px rgba(0,0,0,0.25))' : undefined,
   };
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <PieceShape piece={piece} />
+    <div ref={setNodeRef} style={outerStyle} {...listeners} {...attributes}>
+      {/* 内側だけ回転。ドラッグ位置の判定はアウター基準なので中心は変わらない */}
+      <div
+        onClick={(e) => { e.stopPropagation(); onRotate(); }}
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: '50% 50%',
+          display: 'inline-block',
+          filter: isDragging ? 'drop-shadow(0 8px 8px rgba(0,0,0,0.25))' : undefined,
+          cursor: 'pointer',
+        }}
+      >
+        <PieceShape piece={piece} />
+      </div>
     </div>
   );
 }
@@ -90,15 +115,22 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
 
   const [pIdx, setPIdx] = useState(0);
   const [placed, setPlaced] = useState<string[]>([]);
+  const [pieceRotations, setPieceRotations] = useState<Record<string, number>>({});
   const [solvedPuzzles, setSolvedPuzzles] = useState(0);
   const [missed, setMissed] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
   useEffect(() => { setBgmTrack(skillId); }, [skillId]);
+  useEffect(() => { setPieceRotations({}); }, [pIdx]);
 
   const puzzle = queue[pIdx];
   const trayOrder = useMemo(() => shuffle(puzzle.pieces.map((p) => p.id)), [puzzle.id]);
   const cleared = solvedPuzzles >= PUZZLES_PER_UNIT;
+
+  function rotatepiece(id: string) {
+    setPieceRotations((prev) => ({ ...prev, [id]: ((prev[id] ?? 0) + 90) % 360 }));
+  }
 
   function handleDragEnd(e: DragEndEvent) {
     const pieceId = String(e.active.id);
@@ -113,7 +145,11 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
     const targetCy = piece.y + piece.h / 2;
     const dist = Math.hypot(dropCx - targetCx, dropCy - targetCy);
 
-    if (dist > SNAP_THRESHOLD) {
+    const targetRot = ((piece.targetRotation ?? 0) + 360) % 360;
+    const currentRot = ((pieceRotations[pieceId] ?? 0) + 360) % 360;
+    const rotOk = currentRot === targetRot;
+
+    if (dist > SNAP_THRESHOLD || !rotOk) {
       playSfx('wrong');
       setMissed(true);
       setTimeout(() => setMissed(false), 700);
@@ -137,6 +173,7 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
           speakJa('できた！ つぎの パズル！');
           setPIdx((i) => i + 1);
           setPlaced([]);
+          setPieceRotations({});
         }
       }, 750);
     }
@@ -173,26 +210,82 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
       >
         {puzzle.title}
       </motion.h2>
-      <p className="text-sm text-teal-600 font-bold">ピースを ドラッグして ぴったり はめよう！</p>
+      <p className="text-sm text-teal-600 font-bold">
+        ドラッグして はめよう！
+        {variant === 'tangram' && <span className="ml-1 text-orange-500">タップで かいてん 🔄</span>}
+      </p>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div
           ref={boardRef}
-          className="relative rounded-3xl bg-white shadow-lg"
+          className="relative rounded-3xl bg-white shadow-lg overflow-hidden"
           style={{ width: puzzle.boardW, height: puzzle.boardH }}
         >
-          {puzzle.pieces.map((p) => (
-            <div key={p.id} className="absolute" style={{ left: p.x, top: p.y }}>
-              <PieceShape piece={p} gray={!placed.includes(p.id)} />
-            </div>
-          ))}
+          {variant === 'tangram' ? (
+            <>
+              {/* シルエット：全ピースを同色で描いて境界線を消す */}
+              <svg
+                className="absolute inset-0 pointer-events-none"
+                width={puzzle.boardW}
+                height={puzzle.boardH}
+                style={{ display: 'block' }}
+              >
+                {puzzle.pieces.map((p) => {
+                  const rot = p.targetRotation ?? 0;
+                  return (
+                    <g
+                      key={p.id}
+                      transform={`rotate(${rot}, ${p.x + p.w / 2}, ${p.y + p.h / 2})`}
+                    >
+                      <g transform={`translate(${p.x}, ${p.y})`}>
+                        {renderSilhouetteShape(p.shape)}
+                      </g>
+                    </g>
+                  );
+                })}
+              </svg>
+              {/* はめたピースをカラーで上書き */}
+              {placed.map((id) => {
+                const p = puzzle.pieces.find((pp) => pp.id === id)!;
+                const rot = p.targetRotation ?? 0;
+                return (
+                  <div
+                    key={p.id}
+                    className="absolute"
+                    style={{
+                      left: p.x,
+                      top: p.y,
+                      transform: `rotate(${rot}deg)`,
+                      transformOrigin: `${p.w / 2}px ${p.h / 2}px`,
+                    }}
+                  >
+                    <PieceShape piece={p} />
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            /* ぴったりはめよう：個別スロットを点線で表示 */
+            puzzle.pieces.map((p) => (
+              <div key={p.id} className="absolute" style={{ left: p.x, top: p.y }}>
+                <PieceShape piece={p} gray={!placed.includes(p.id)} />
+              </div>
+            ))
+          )}
         </div>
 
         <div className="mt-2 flex min-h-[110px] w-full max-w-sm flex-wrap items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-teal-300 bg-white/60 p-4">
           {trayPieces.length === 0 ? (
             <span className="text-teal-500 font-bold">できた！🎉</span>
           ) : (
-            trayPieces.map((p) => <TrayPiece key={p.id} piece={p} />)
+            trayPieces.map((p) => (
+              <TrayPiece
+                key={p.id}
+                piece={p}
+                rotation={pieceRotations[p.id] ?? 0}
+                onRotate={() => rotatepiece(p.id)}
+              />
+            ))
           )}
         </div>
       </DndContext>
