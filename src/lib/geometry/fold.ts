@@ -3,6 +3,8 @@ export interface FoldProblem {
   questionLabel: string;
   /** ① おる まえの かみ（おりめと「どう おるか」の やじるし つき） */
   beforeSvg: string;
+  /** 2かいおりの ばあい、1かいめの あと・2かいめの まえ */
+  intermediarySvg?: string;
   /** ② おって きった ところ */
   foldSvg: string;
   choices: { svg: string }[];
@@ -70,15 +72,23 @@ const BEFORE_HFOLD = [
   tx(90, 108, 'したを うえに おる', 11),
 ].join('');
 
-// 2かい おる（たて → よこ）
-const BEFORE_DOUBLE = [
+// 2かい おる ① たてに おる（1かいめだけ）
+const BEFORE_DOUBLE_STEP1 = [
   arrowDefs,
   flat(50, 14, 80, 80),
   fl(90, 10, 90, 98),
-  fl(46, 54, 134, 54),
   foldArrow('M120 12 Q92 -8 66 12'),
-  foldArrow('M40 84 Q15 56 40 32'),
-  tx(90, 108, '2かい おる', 11),
+  tx(90, 108, 'まず たてに おる', 11),
+].join('');
+
+// 2かい おる ② 1かいめの あと（よこに おる まえ）
+const AFTER_VFOLD_BEFORE_HFOLD = [
+  arrowDefs,
+  fbr(68, 12, 44, 82),    // うしろの かみ（すこし はみだして みせる）
+  flat(72, 16, 40, 78),   // まえの かみ
+  fl(64, 55, 116, 55),    // よこの おりめ（2かいめ）
+  foldArrow('M68 82 Q44 58 68 28'),
+  tx(90, 108, 'つぎに よこに おる', 11),
 ].join('');
 
 // かくに おる（かどを かどへ ななめに）
@@ -232,7 +242,8 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-double',
     hard: true,
-    beforeSvg: BEFORE_DOUBLE,
+    beforeSvg: BEFORE_DOUBLE_STEP1,
+    intermediarySvg: AFTER_VFOLD_BEFORE_HFOLD,
     questionLabel: '2かい おって かどを きったよ。ひらいたら？',
     foldSvg: [
       pr(55, 25, 60, 60),
@@ -248,7 +259,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       { svg: pr(5, 5, 70, 70) + hc(15, 15, 9) + hc(55, 55, 9) },                                   // wrong: diagonal 2 holes
     ],
   },
-  // Hard 2: diagonal fold, cut from hypotenuse midpoint → 2 symmetric diamond holes
+  // Hard 2: diagonal fold, cut on fold edge center → 1 diamond hole at fold center
   {
     id: 'fold-diag',
     hard: true,
@@ -258,20 +269,20 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
       `<polygon points="20,90 90,90 20,20" fill="${FB}" stroke="${FBS}" stroke-width="1.5" stroke-dasharray="4,3"/>`,
       `<polygon points="20,90 90,20 90,90" fill="${P}" stroke="${PS}" stroke-width="2"/>`,
       fl(20, 90, 90, 20),
-      `<polygon points="54,54 66,54 54,66" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
+      `<polygon points="55,55 67,55 55,67" fill="${CUT}" stroke="${CUTS}" stroke-width="1.5"/>`,
       tx(90, 14, 'かくに おりました', 12),
       tx(35, 45, 'うら'),
       tx(72, 82, 'おもて'),
     ].join(''),
     choices: [
-      { // correct: 2 symmetric diamond holes along diagonal
+      { // correct: 1 diamond hole at diagonal center
+        svg: pr(5, 5, 70, 70)
+          + `<polygon points="25,40 40,25 55,40 40,55" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
+      },
+      { // wrong: 2 separate diamond holes along diagonal
         svg: pr(5, 5, 70, 70)
           + `<polygon points="20,35 35,20 50,35 35,50" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`
           + `<polygon points="35,50 50,35 65,50 50,65" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
-      },
-      { // wrong: 1 diamond hole
-        svg: pr(5, 5, 70, 70)
-          + `<polygon points="20,35 35,20 50,35 35,50" fill="${HL}" stroke="${HLS}" stroke-width="1.5" stroke-dasharray="4,2"/>`,
       },
       { svg: pr(5, 5, 70, 70) + hr(23, 23, 34, 34) }, // wrong: center square hole
       { // wrong: corner triangle hole
@@ -284,7 +295,8 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-quarter-center',
     hard: true,
-    beforeSvg: BEFORE_DOUBLE,
+    beforeSvg: BEFORE_DOUBLE_STEP1,
+    intermediarySvg: AFTER_VFOLD_BEFORE_HFOLD,
     questionLabel: '2かい おって まんなかの かどを きったよ。ひらいたら？',
     foldSvg: [
       pr(55, 25, 60, 60),

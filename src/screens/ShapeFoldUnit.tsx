@@ -74,6 +74,8 @@ export function ShapeFoldUnit({ hard = false, onExit }: Props) {
     );
   }
 
+  const isDouble = !!problem.intermediarySvg;
+
   return (
     <div className="flex min-h-screen flex-col items-center gap-5 bg-gradient-to-b from-amber-50 to-yellow-50 p-6">
       <div className="self-stretch flex items-center justify-between text-sm text-teal-700 font-bold">
@@ -91,17 +93,38 @@ export function ShapeFoldUnit({ hard = false, onExit }: Props) {
       </motion.h2>
 
       <div className="rounded-3xl bg-white shadow-lg px-4 py-4 flex flex-col items-center gap-3">
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-emerald-600 font-bold">① こう おる</p>
-            <SvgView svg={problem.beforeSvg} viewBox="0 0 180 110" w={150} h={92} />
+        {isDouble ? (
+          // 2かいおり: たてに ならべる
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-emerald-600 font-bold">① まず おる</p>
+              <SvgView svg={problem.beforeSvg} viewBox="0 0 180 110" w={150} h={92} />
+            </div>
+            <div className="text-2xl text-amber-400 font-bold">▼</div>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-blue-500 font-bold">② つぎに おる</p>
+              <SvgView svg={problem.intermediarySvg!} viewBox="0 0 180 110" w={150} h={92} />
+            </div>
+            <div className="text-2xl text-amber-400 font-bold">▼</div>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-amber-500 font-bold">③ おって きった</p>
+              <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={150} h={92} />
+            </div>
           </div>
-          <div className="text-2xl text-amber-400 font-bold">▶</div>
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-amber-500 font-bold">② おって きった</p>
-            <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={150} h={92} />
+        ) : (
+          // 1かいおり: よこに ならべる
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-emerald-600 font-bold">① こう おる</p>
+              <SvgView svg={problem.beforeSvg} viewBox="0 0 180 110" w={150} h={92} />
+            </div>
+            <div className="text-2xl text-amber-400 font-bold">▶</div>
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-xs text-amber-500 font-bold">② おって きった</p>
+              <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={150} h={92} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center text-xs text-slate-600 bg-white/70 rounded-2xl px-4 py-2 border border-amber-100">
