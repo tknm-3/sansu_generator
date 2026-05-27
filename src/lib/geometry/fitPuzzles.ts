@@ -106,6 +106,50 @@ const FIT_EASY: FitPuzzle[] = [
       { id: 'dk-beak', color: ORANGE, w: 34, h: 24, x: 196, y: 68, shape: { type: 'poly', points: '0,0 34,12 0,24' } },
     ],
   },
+  {
+    id: 'snowman',
+    title: 'ゆきだるまを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'sn-bottom', color: '#e0f2fe', w: 96, h: 96, x: 72, y: 130, shape: { type: 'circle', cx: 48, cy: 48, r: 47 } },
+      { id: 'sn-top', color: '#e0f2fe', w: 70, h: 70, x: 85, y: 64, shape: { type: 'circle', cx: 35, cy: 35, r: 34 } },
+      { id: 'sn-hat', color: PURPLE, w: 54, h: 24, x: 93, y: 44, shape: { type: 'rect', x: 0, y: 0, w: 54, h: 24, rx: 4 } },
+    ],
+  },
+  {
+    id: 'icecream',
+    title: 'アイスを つくろう',
+    boardW: 200,
+    boardH: 240,
+    pieces: [
+      { id: 'ic-cone', color: ORANGE, w: 72, h: 84, x: 64, y: 120, shape: { type: 'poly', points: '0,0 72,0 36,84' } },
+      { id: 'ic-scoop', color: PINK, w: 72, h: 72, x: 64, y: 50, shape: { type: 'circle', cx: 36, cy: 36, r: 35 } },
+      { id: 'ic-cherry', color: RED, w: 26, h: 26, x: 87, y: 34, shape: { type: 'circle', cx: 13, cy: 13, r: 13 } },
+    ],
+  },
+  {
+    id: 'cat',
+    title: 'ねこを つくろう',
+    boardW: 240,
+    boardH: 220,
+    pieces: [
+      { id: 'ct-head', color: ORANGE, w: 120, h: 120, x: 60, y: 72, shape: { type: 'circle', cx: 60, cy: 60, r: 58 } },
+      { id: 'ct-earL', color: ORANGE, w: 52, h: 50, x: 64, y: 40, shape: { type: 'poly', points: '0,50 52,50 26,0' } },
+      { id: 'ct-earR', color: ORANGE, w: 52, h: 50, x: 124, y: 40, shape: { type: 'poly', points: '0,50 52,50 26,0' } },
+    ],
+  },
+  {
+    id: 'sailboat',
+    title: 'ヨットを つくろう',
+    boardW: 240,
+    boardH: 200,
+    pieces: [
+      { id: 'sb-hull', color: BLUE, w: 160, h: 40, x: 40, y: 132, shape: { type: 'poly', points: '0,0 160,0 130,40 30,40' } },
+      { id: 'sb-sail', color: RED, w: 90, h: 104, x: 96, y: 28, shape: { type: 'poly', points: '0,104 90,104 90,0' } },
+      { id: 'sb-flag', color: YELLOW, w: 40, h: 22, x: 96, y: 8, shape: { type: 'poly', points: '0,0 0,22 40,11' } },
+    ],
+  },
 ];
 
 // ── 「ぴったりはめよう」むずかしい（4〜5ピース） ──
@@ -160,6 +204,45 @@ const FIT_HARD: FitPuzzle[] = [
       { id: 'rb-armR', color: PURPLE, w: 24, h: 70, x: 180, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 24, h: 70, rx: 8 } },
     ],
   },
+  {
+    id: 'train',
+    title: 'でんしゃを つくろう',
+    boardW: 240,
+    boardH: 200,
+    pieces: [
+      { id: 'tr-body', color: RED, w: 180, h: 70, x: 30, y: 80, shape: { type: 'rect', x: 0, y: 0, w: 180, h: 70, rx: 8 } },
+      { id: 'tr-winL', color: YELLOW, w: 40, h: 30, x: 50, y: 95, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 30, rx: 4 } },
+      { id: 'tr-winR', color: YELLOW, w: 40, h: 30, x: 110, y: 95, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 30, rx: 4 } },
+      { id: 'tr-wheelL', color: '#374151', w: 40, h: 40, x: 55, y: 150, shape: { type: 'circle', cx: 20, cy: 20, r: 20 } },
+      { id: 'tr-wheelR', color: '#374151', w: 40, h: 40, x: 145, y: 150, shape: { type: 'circle', cx: 20, cy: 20, r: 20 } },
+    ],
+  },
+  {
+    id: 'truck',
+    title: 'トラックを つくろう',
+    boardW: 240,
+    boardH: 200,
+    pieces: [
+      { id: 'tk-cargo', color: BLUE, w: 110, h: 60, x: 20, y: 75, shape: { type: 'rect', x: 0, y: 0, w: 110, h: 60, rx: 6 } },
+      { id: 'tk-cab', color: ORANGE, w: 60, h: 45, x: 130, y: 90, shape: { type: 'rect', x: 0, y: 0, w: 60, h: 45, rx: 6 } },
+      { id: 'tk-win', color: YELLOW, w: 34, h: 24, x: 143, y: 97, shape: { type: 'rect', x: 0, y: 0, w: 34, h: 24, rx: 3 } },
+      { id: 'tk-wheelL', color: '#374151', w: 40, h: 40, x: 45, y: 140, shape: { type: 'circle', cx: 20, cy: 20, r: 20 } },
+      { id: 'tk-wheelR', color: '#374151', w: 40, h: 40, x: 150, y: 140, shape: { type: 'circle', cx: 20, cy: 20, r: 20 } },
+    ],
+  },
+  {
+    id: 'rabbit',
+    title: 'うさぎを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'rb2-body', color: PINK, w: 120, h: 110, x: 60, y: 118, shape: { type: 'circle', cx: 60, cy: 55, r: 54 } },
+      { id: 'rb2-head', color: PINK, w: 88, h: 88, x: 76, y: 62, shape: { type: 'circle', cx: 44, cy: 44, r: 43 } },
+      { id: 'rb2-earL', color: PINK, w: 22, h: 58, x: 94, y: 14, shape: { type: 'rect', x: 0, y: 0, w: 22, h: 58, rx: 11 } },
+      { id: 'rb2-earR', color: PINK, w: 22, h: 58, x: 126, y: 14, shape: { type: 'rect', x: 0, y: 0, w: 22, h: 58, rx: 11 } },
+      { id: 'rb2-nose', color: RED, w: 18, h: 18, x: 111, y: 100, shape: { type: 'circle', cx: 9, cy: 9, r: 9 } },
+    ],
+  },
 ];
 
 // ── 「タングラム」やさしい（4ピース） ──
@@ -210,6 +293,42 @@ const TANGRAM_EASY: FitPuzzle[] = [
       { id: 'dm-br', color: GREEN, w: 90, h: 90, x: 100, y: 100, shape: { type: 'poly', points: '90,0 0,90 0,0' } },
       { id: 'dm-bl', color: ORANGE, w: 90, h: 90, x: 10, y: 100, shape: { type: 'poly', points: '90,90 0,0 90,0' } },
       { id: 'dm-tl', color: PURPLE, w: 90, h: 90, x: 10, y: 10, shape: { type: 'poly', points: '90,0 0,90 90,90' } },
+    ],
+  },
+  {
+    id: 'pinwheel',
+    title: 'かざぐるまを つくろう',
+    boardW: 200,
+    boardH: 200,
+    pieces: [
+      { id: 'pw-tl', color: BLUE, w: 100, h: 100, x: 0, y: 0, shape: { type: 'poly', points: '0,0 100,0 0,100' } },
+      { id: 'pw-tr', color: GREEN, w: 100, h: 100, x: 100, y: 0, shape: { type: 'poly', points: '0,0 100,0 100,100' } },
+      { id: 'pw-br', color: ORANGE, w: 100, h: 100, x: 100, y: 100, shape: { type: 'poly', points: '100,0 100,100 0,100' } },
+      { id: 'pw-bl', color: PURPLE, w: 100, h: 100, x: 0, y: 100, shape: { type: 'poly', points: '0,0 0,100 100,100' } },
+    ],
+  },
+  {
+    id: 'trapezoid',
+    title: 'だいけいを つくろう',
+    boardW: 200,
+    boardH: 120,
+    pieces: [
+      { id: 'tz-left', color: BLUE, w: 60, h: 100, x: 0, y: 10, shape: { type: 'poly', points: '60,0 60,100 0,100' } },
+      { id: 'tz-midL', color: GREEN, w: 40, h: 100, x: 60, y: 10, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 100 } },
+      { id: 'tz-midR', color: ORANGE, w: 40, h: 100, x: 100, y: 10, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 100 } },
+      { id: 'tz-right', color: PURPLE, w: 60, h: 100, x: 140, y: 10, shape: { type: 'poly', points: '0,0 0,100 60,100' } },
+    ],
+  },
+  {
+    id: 'window',
+    title: 'まどを つくろう',
+    boardW: 200,
+    boardH: 200,
+    pieces: [
+      { id: 'wd-tl', color: BLUE, w: 90, h: 90, x: 10, y: 10, shape: { type: 'rect', x: 0, y: 0, w: 90, h: 90 } },
+      { id: 'wd-tr', color: GREEN, w: 90, h: 90, x: 100, y: 10, shape: { type: 'rect', x: 0, y: 0, w: 90, h: 90 } },
+      { id: 'wd-bl', color: ORANGE, w: 90, h: 90, x: 10, y: 100, shape: { type: 'rect', x: 0, y: 0, w: 90, h: 90 } },
+      { id: 'wd-br', color: PURPLE, w: 90, h: 90, x: 100, y: 100, shape: { type: 'rect', x: 0, y: 0, w: 90, h: 90 } },
     ],
   },
 ];
@@ -266,6 +385,47 @@ const TANGRAM_HARD: FitPuzzle[] = [
       { id: 'cw-spikeM', color: RED, w: 80, h: 70, x: 80, y: 20, shape: { type: 'poly', points: '0,70 40,0 80,70' } },
       { id: 'cw-spikeR', color: ORANGE, w: 80, h: 60, x: 130, y: 30, shape: { type: 'poly', points: '0,60 40,0 80,60' } },
       { id: 'cw-jewel', color: PINK, w: 28, h: 28, x: 106, y: 101, shape: { type: 'circle', cx: 14, cy: 14, r: 14 } },
+    ],
+  },
+  {
+    id: 'cat-tangram',
+    title: 'ねこを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'ctt-head', color: ORANGE, w: 100, h: 100, x: 70, y: 80, shape: { type: 'rect', x: 0, y: 0, w: 100, h: 100, rx: 6 } },
+      { id: 'ctt-earL', color: ORANGE, w: 52, h: 46, x: 70, y: 40, shape: { type: 'poly', points: '0,46 52,46 26,0' } },
+      { id: 'ctt-earR', color: ORANGE, w: 52, h: 46, x: 118, y: 40, shape: { type: 'poly', points: '0,46 52,46 26,0' } },
+      { id: 'ctt-eyeL', color: '#374151', w: 22, h: 22, x: 95, y: 105, shape: { type: 'rect', x: 0, y: 0, w: 22, h: 22, rx: 4 } },
+      { id: 'ctt-eyeR', color: '#374151', w: 22, h: 22, x: 123, y: 105, shape: { type: 'rect', x: 0, y: 0, w: 22, h: 22, rx: 4 } },
+      { id: 'ctt-nose', color: RED, w: 26, h: 20, x: 107, y: 140, shape: { type: 'poly', points: '0,0 26,0 13,20' } },
+    ],
+  },
+  {
+    id: 'house-tangram',
+    title: 'おうちを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'ht-roof', color: RED, w: 160, h: 70, x: 40, y: 30, shape: { type: 'poly', points: '0,70 80,0 160,70' } },
+      { id: 'ht-wallL', color: BLUE, w: 80, h: 90, x: 40, y: 100, shape: { type: 'rect', x: 0, y: 0, w: 80, h: 90 } },
+      { id: 'ht-wallR', color: GREEN, w: 80, h: 90, x: 120, y: 100, shape: { type: 'rect', x: 0, y: 0, w: 80, h: 90 } },
+      { id: 'ht-door', color: BROWN, w: 36, h: 50, x: 102, y: 140, shape: { type: 'rect', x: 0, y: 0, w: 36, h: 50, rx: 4 } },
+      { id: 'ht-winL', color: YELLOW, w: 28, h: 28, x: 55, y: 115, shape: { type: 'rect', x: 0, y: 0, w: 28, h: 28 } },
+      { id: 'ht-winR', color: YELLOW, w: 28, h: 28, x: 157, y: 115, shape: { type: 'rect', x: 0, y: 0, w: 28, h: 28 } },
+    ],
+  },
+  {
+    id: 'star-tangram',
+    title: 'ほしを つくろう',
+    boardW: 240,
+    boardH: 240,
+    pieces: [
+      { id: 'st-center', color: YELLOW, w: 80, h: 80, x: 80, y: 80, shape: { type: 'rect', x: 0, y: 0, w: 80, h: 80 } },
+      { id: 'st-top', color: ORANGE, w: 80, h: 60, x: 80, y: 20, shape: { type: 'poly', points: '0,60 40,0 80,60' } },
+      { id: 'st-bottom', color: ORANGE, w: 80, h: 60, x: 80, y: 160, shape: { type: 'poly', points: '0,0 80,0 40,60' } },
+      { id: 'st-left', color: RED, w: 60, h: 80, x: 20, y: 80, shape: { type: 'poly', points: '60,0 60,80 0,40' } },
+      { id: 'st-right', color: RED, w: 60, h: 80, x: 160, y: 80, shape: { type: 'poly', points: '0,0 0,80 60,40' } },
     ],
   },
 ];

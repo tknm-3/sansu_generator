@@ -1,6 +1,9 @@
 export interface FoldProblem {
   id: string;
   questionLabel: string;
+  /** ① おる まえの かみ（おりめと「どう おるか」の やじるし つき） */
+  beforeSvg: string;
+  /** ② おって きった ところ */
   foldSvg: string;
   choices: { svg: string }[];
   answerIndex: number;
@@ -37,6 +40,56 @@ const hc = (cx: number, cy: number, r: number) =>
 const tx = (x: number, y: number, t: string, size = 10) =>
   `<text x="${x}" y="${y}" font-size="${size}" fill="#475569" text-anchor="middle" font-family="sans-serif">${t}</text>`;
 
+// ── おる まえの ず（「どう おるか」の やじるし つき）────────────────
+const ARROW = '#16a34a';
+// やじるしの あたまを えがく marker（おなじ ずに 1つだけ ひつよう）
+const arrowDefs =
+  `<defs><marker id="fa" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto">` +
+  `<path d="M0.5,0.5 L8.5,4.5 L0.5,8.5 L3,4.5 z" fill="${ARROW}"/></marker></defs>`;
+const foldArrow = (d: string) =>
+  `<path d="${d}" fill="none" stroke="${ARROW}" stroke-width="2.5" stroke-linecap="round" marker-end="url(#fa)"/>`;
+// たいらな（おる まえの）かみ
+const flat = (x: number, y: number, w: number, h: number) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${P}" stroke="${PS}" stroke-width="2" rx="2"/>`;
+
+// たてに おる（みぎを ひだりへ）
+const BEFORE_VFOLD = [
+  arrowDefs,
+  flat(48, 24, 90, 66),
+  fl(93, 18, 93, 96),
+  foldArrow('M120 16 Q93 -6 66 16'),
+  tx(90, 108, 'みぎを ひだりに おる', 11),
+].join('');
+
+// よこに おる（したを うえへ）
+const BEFORE_HFOLD = [
+  arrowDefs,
+  flat(50, 16, 80, 76),
+  fl(45, 54, 135, 54),
+  foldArrow('M40 80 Q15 47 40 24'),
+  tx(90, 108, 'したを うえに おる', 11),
+].join('');
+
+// 2かい おる（たて → よこ）
+const BEFORE_DOUBLE = [
+  arrowDefs,
+  flat(50, 14, 80, 80),
+  fl(90, 10, 90, 98),
+  fl(46, 54, 134, 54),
+  foldArrow('M120 12 Q92 -8 66 12'),
+  foldArrow('M40 84 Q15 56 40 32'),
+  tx(90, 108, '2かい おる', 11),
+].join('');
+
+// かくに おる（かどを かどへ ななめに）
+const BEFORE_DIAG = [
+  arrowDefs,
+  `<polygon points="50,22 122,22 122,94 50,94" fill="${P}" stroke="${PS}" stroke-width="2"/>`,
+  fl(50, 94, 122, 22),
+  foldArrow('M64 33 Q98 52 110 80'),
+  tx(90, 108, 'かくを かくに おる', 11),
+].join('');
+
 // Question SVG viewBox: "0 0 180 110"
 // Choice SVG viewBox:   "0 0 80 80"
 
@@ -45,6 +98,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-v-center',
     hard: false,
+    beforeSvg: BEFORE_VFOLD,
     questionLabel: 'おって きったよ。ひらいたら どんな あな？',
     foldSvg: [
       fbr(80, 15, 60, 80),
@@ -67,6 +121,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-h-center',
     hard: false,
+    beforeSvg: BEFORE_HFOLD,
     questionLabel: 'おって きったよ。ひらいたら どんな あな？',
     foldSvg: [
       fbr(15, 60, 80, 45),
@@ -89,6 +144,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-v-corner',
     hard: false,
+    beforeSvg: BEFORE_VFOLD,
     questionLabel: 'おって かどを きったよ。ひらいたら？',
     foldSvg: [
       fbr(80, 15, 60, 80),
@@ -125,6 +181,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-v-edge',
     hard: false,
+    beforeSvg: BEFORE_VFOLD,
     questionLabel: 'おって きったよ。ひらいたら どんな あな？',
     foldSvg: [
       fbr(80, 15, 60, 80),
@@ -147,6 +204,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-v-tri',
     hard: false,
+    beforeSvg: BEFORE_VFOLD,
     questionLabel: 'おって おりめを きったよ。ひらいたら どんな あな？',
     foldSvg: [
       fbr(80, 15, 60, 80),
@@ -174,6 +232,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-double',
     hard: true,
+    beforeSvg: BEFORE_DOUBLE,
     questionLabel: '2かい おって かどを きったよ。ひらいたら？',
     foldSvg: [
       pr(55, 25, 60, 60),
@@ -193,6 +252,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-diag',
     hard: true,
+    beforeSvg: BEFORE_DIAG,
     questionLabel: 'かくに おって まんなかを きったよ。ひらいたら？',
     foldSvg: [
       `<polygon points="20,90 90,90 20,20" fill="${FB}" stroke="${FBS}" stroke-width="1.5" stroke-dasharray="4,3"/>`,
@@ -224,6 +284,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-quarter-center',
     hard: true,
+    beforeSvg: BEFORE_DOUBLE,
     questionLabel: '2かい おって まんなかの かどを きったよ。ひらいたら？',
     foldSvg: [
       pr(55, 25, 60, 60),
@@ -246,6 +307,7 @@ const RAW: Omit<FoldProblem, 'answerIndex'>[] = [
   {
     id: 'fold-diag-edge',
     hard: true,
+    beforeSvg: BEFORE_DIAG,
     questionLabel: 'かくに おって おりめの ちかくを きったよ。ひらいたら？',
     foldSvg: [
       `<polygon points="20,90 90,90 20,20" fill="${FB}" stroke="${FBS}" stroke-width="1.5" stroke-dasharray="4,3"/>`,
