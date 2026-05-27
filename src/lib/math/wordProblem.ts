@@ -14,6 +14,7 @@ export interface WordProblem {
   diff: number; // 0 for ぴったり
   text: string;
   emoji: string;
+  verdictLabels: Record<WordVerdict, string>; // 主語つきの判定ラベル（step1ボタン用）
   step2Question: string; // empty string when verdict is ぴったり
   diffChoices: number[]; // empty when verdict is ぴったり
 }
@@ -22,6 +23,7 @@ interface AddScenario {
   emoji: string;
   // a, b: items in two groups; c: capacity
   build: (a: number, b: number, c: number) => string;
+  labels: Record<WordVerdict, string>;
   step2: (v: 'たりない' | 'あまる') => string;
 }
 
@@ -29,90 +31,103 @@ interface SubScenario {
   emoji: string;
   // a: supply; b: demand
   build: (a: number, b: number) => string;
+  labels: Record<WordVerdict, string>;
   step2: (v: 'たりない' | 'あまる') => string;
 }
 
 // Addition scenarios: (a + b) items trying to fit into c capacity
-// あまる: c > a+b → capacity あまる (empty slots left)
-// たりない: c < a+b → capacity たりない (not enough room)
+// あまる: c > a+b → 入れ物に空きが あく（容器が主語）
+// たりない: c < a+b → 中身が はいらない（アイテムが主語）
 const ADD_SCENARIOS: AddScenario[] = [
   {
     emoji: '🍪',
     build: (a, b, c) =>
       `🍪クッキーが ${a}まい あります。\n${b}まい もらいました。\nおさらに ${c}まい のせられます。\nぜんぶ のせられる？`,
-    step2: (v) => v === 'たりない' ? 'クッキーが なんまい のれない？' : 'おさらに なんまい あく？',
+    labels: { ぴったり: 'ちょうど のる', あまる: 'おさらが あく', たりない: 'クッキーが のらない' },
+    step2: (v) => v === 'たりない' ? 'クッキーは なんまい のらない？' : 'おさらは なんまい あく？',
   },
   {
     emoji: '🍎',
     build: (a, b, c) =>
       `🍎りんごが ${a}こ あります。\n${b}こ もらいました。\n🧺かごに ${c}こ はいります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'りんごが なんこ はいりきれない？' : 'かごに なんこ あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'かごが あく', たりない: 'りんごが はいらない' },
+    step2: (v) => v === 'たりない' ? 'りんごは なんこ はいらない？' : 'かごは なんこ あく？',
   },
   {
     emoji: '🐱',
     build: (a, b, c) =>
       `こどもが ${a}にん います。\nあとから ${b}にん きました。\nいすが ${c}こ あります。\nみんな すわれる？`,
-    step2: (v) => v === 'たりない' ? 'いすが なんこ たりない？' : 'いすが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど すわれる', あまる: 'いすが あまる', たりない: 'いすが たりない' },
+    step2: (v) => v === 'たりない' ? 'いすは なんこ たりない？' : 'いすは なんこ あまる？',
   },
   {
     emoji: '🌸',
     build: (a, b, c) =>
       `🌸おはなが ${a}ほん あります。\n${b}ほん つみました。\nはなびんに ${c}ほん はいります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'おはなが なんぼん はいりきれない？' : 'はなびんに なんぼん あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'はなびんが あく', たりない: 'おはなが はいらない' },
+    step2: (v) => v === 'たりない' ? 'おはなは なんぼん はいらない？' : 'はなびんは なんぼん あく？',
   },
   {
     emoji: '🍩',
     build: (a, b, c) =>
       `🍩ドーナツが ${a}こ あります。\n${b}こ つくりました。\nはこに ${c}こ はいります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'ドーナツが なんこ はいりきれない？' : 'はこに なんこ あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'はこが あく', たりない: 'ドーナツが はいらない' },
+    step2: (v) => v === 'たりない' ? 'ドーナツは なんこ はいらない？' : 'はこは なんこ あく？',
   },
   {
     emoji: '🎈',
     build: (a, b, c) =>
       `🎈ふうせんが ${a}こ あります。\nおともだちが ${b}こ くれました。\nふくろに ${c}こ はいります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'ふうせんが なんこ はいりきれない？' : 'ふくろに なんこ あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'ふくろが あく', たりない: 'ふうせんが はいらない' },
+    step2: (v) => v === 'たりない' ? 'ふうせんは なんこ はいらない？' : 'ふくろは なんこ あく？',
   },
 ];
 
 // Subtraction scenarios: a supply vs b demand
-// あまる: a > b → supply あまる (leftover items)
-// たりない: a < b → supply たりない (not enough for everyone)
+// あまる: a > b → 中身が あまる（アイテムが主語）
+// たりない: a < b → 中身が たりない（アイテムが主語）
 const SUB_SCENARIOS: SubScenario[] = [
   {
     emoji: '🍎',
     build: (a, b) =>
       `🍎りんごが ${a}こ あります。\n${b}にんに ひとつずつ あげます。\nぜんぶ くばれる？`,
-    step2: (v) => v === 'たりない' ? 'りんごが なんこ たりない？' : 'りんごが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど くばれる', あまる: 'りんごが あまる', たりない: 'りんごが たりない' },
+    step2: (v) => v === 'たりない' ? 'りんごは なんこ たりない？' : 'りんごは なんこ あまる？',
   },
   {
     emoji: '🍪',
     build: (a, b) =>
       `🍪クッキーが ${a}まい あります。\n${b}にんに ひとつずつ くばります。\nぜんぶ くばれる？`,
-    step2: (v) => v === 'たりない' ? 'クッキーが なんまい たりない？' : 'クッキーが なんまい あまる？',
+    labels: { ぴったり: 'ちょうど くばれる', あまる: 'クッキーが あまる', たりない: 'クッキーが たりない' },
+    step2: (v) => v === 'たりない' ? 'クッキーは なんまい たりない？' : 'クッキーは なんまい あまる？',
   },
   {
     emoji: '🎈',
     build: (a, b) =>
       `🎈ふうせんが ${a}こ あります。\n${b}にんに ひとつずつ あげます。\nぜんぶ あげられる？`,
-    step2: (v) => v === 'たりない' ? 'ふうせんが なんこ たりない？' : 'ふうせんが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど あげられる', あまる: 'ふうせんが あまる', たりない: 'ふうせんが たりない' },
+    step2: (v) => v === 'たりない' ? 'ふうせんは なんこ たりない？' : 'ふうせんは なんこ あまる？',
   },
   {
     emoji: '🐶',
     build: (a, b) =>
       `いすが ${a}こ あります。\nこどもが ${b}にん います。\nみんな すわれる？`,
-    step2: (v) => v === 'たりない' ? 'いすが なんこ たりない？' : 'いすが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど すわれる', あまる: 'いすが あまる', たりない: 'いすが たりない' },
+    step2: (v) => v === 'たりない' ? 'いすは なんこ たりない？' : 'いすは なんこ あまる？',
   },
   {
     emoji: '⭐',
     build: (a, b) =>
       `⭐シールが ${a}まい あります。\n${b}にんに ひとつずつ あげます。\nぜんぶ あげられる？`,
-    step2: (v) => v === 'たりない' ? 'シールが なんまい たりない？' : 'シールが なんまい あまる？',
+    labels: { ぴったり: 'ちょうど あげられる', あまる: 'シールが あまる', たりない: 'シールが たりない' },
+    step2: (v) => v === 'たりない' ? 'シールは なんまい たりない？' : 'シールは なんまい あまる？',
   },
   {
     emoji: '🌸',
     build: (a, b) =>
       `🌸おはなが ${a}ほん あります。\n${b}にんに ひとつずつ あげます。\nぜんぶ あげられる？`,
-    step2: (v) => v === 'たりない' ? 'おはなが なんぼん たりない？' : 'おはなが なんぼん あまる？',
+    labels: { ぴったり: 'ちょうど あげられる', あまる: 'おはなが あまる', たりない: 'おはなが たりない' },
+    step2: (v) => v === 'たりない' ? 'おはなは なんぼん たりない？' : 'おはなは なんぼん あまる？',
   },
 ];
 
@@ -129,6 +144,7 @@ interface MulScenario {
   emoji: string;
   // a: items per group/box, b: numGroups, c: totalItems to fit
   build: (a: number, b: number, c: number) => string;
+  labels: Record<WordVerdict, string>;
   step2: (v: 'たりない' | 'あまる') => string;
 }
 
@@ -136,78 +152,89 @@ interface DivScenario {
   emoji: string;
   // a: totalItems, b: numPeople, c: amountPerPerson asked
   build: (a: number, b: number, c: number) => string;
+  labels: Record<WordVerdict, string>;
   step2: (v: 'たりない' | 'あまる') => string;
 }
 
 // Multiplication scenarios: capacity = a × b groups, c = totalItems to store
-// あまる: capacity > c (empty slots remain)
-// たりない: capacity < c (not enough room)
+// あまる: capacity > c → 入れ物に空きが あく（容器が主語）
+// たりない: capacity < c → 中身が はいらない（アイテムが主語）
 const MUL_SCENARIOS: MulScenario[] = [
   {
     emoji: '📦',
     build: (a, b, c) =>
       `📦はこに ${a}こずつ はいります。\nはこが ${b}つ あります。\nりんごが ${c}こ あります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'りんごが なんこ はいりきれない？' : 'はこに なんこ あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'はこが あく', たりない: 'りんごが はいらない' },
+    step2: (v) => v === 'たりない' ? 'りんごは なんこ はいらない？' : 'はこは なんこ あく？',
   },
   {
     emoji: '🍡',
     build: (a, b, c) =>
       `🍡1ふくろに あめが ${a}こ はいります。\nふくろが ${b}つ あります。\nあめが ${c}こ あります。\nぜんぶ はいる？`,
-    step2: (v) => v === 'たりない' ? 'あめが なんこ はいりきれない？' : 'ふくろに なんこ あく？',
+    labels: { ぴったり: 'ちょうど はいる', あまる: 'ふくろが あく', たりない: 'あめが はいらない' },
+    step2: (v) => v === 'たりない' ? 'あめは なんこ はいらない？' : 'ふくろは なんこ あく？',
   },
   {
     emoji: '🪑',
     build: (a, b, c) =>
       `つくえに いすが ${a}こずつ つきます。\nつくえが ${b}つ あります。\nこどもが ${c}にん います。\nみんな すわれる？`,
-    step2: (v) => v === 'たりない' ? 'いすが なんこ たりない？' : 'いすが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど すわれる', あまる: 'いすが あまる', たりない: 'こどもが すわれない' },
+    step2: (v) => v === 'たりない' ? 'こどもは なんにん すわれない？' : 'いすは なんこ あまる？',
   },
   {
     emoji: '🌺',
     build: (a, b, c) =>
       `🌺はなびんに おはなを ${a}ほんずつ かざります。\nはなびんが ${b}つ あります。\nおはなが ${c}ほん あります。\nぜんぶ かざれる？`,
-    step2: (v) => v === 'たりない' ? 'おはなが なんぼん たりない？' : 'はなびんに なんぼん あく？',
+    labels: { ぴったり: 'ちょうど かざれる', あまる: 'はなびんが あく', たりない: 'おはなが かざれない' },
+    step2: (v) => v === 'たりない' ? 'おはなは なんぼん かざれない？' : 'はなびんは なんぼん あく？',
   },
   {
     emoji: '🎠',
     build: (a, b, c) =>
       `のりものに ${a}にん ずつ のれます。\nのりものが ${b}だい あります。\nこどもが ${c}にん います。\nみんな のれる？`,
-    step2: (v) => v === 'たりない' ? 'こどもが なんにん のれない？' : 'のりものに なんにん あく？',
+    labels: { ぴったり: 'ちょうど のれる', あまる: 'のりものが あく', たりない: 'こどもが のれない' },
+    step2: (v) => v === 'たりない' ? 'こどもは なんにん のれない？' : 'のりものは なんにん あく？',
   },
 ];
 
 // Division scenarios: a total ÷ b people, c items/person asked
-// あまる: a > b×c (leftover items)
-// たりない: a < b×c (not enough items)
+// あまる: a > b×c → 中身が あまる（アイテムが主語）
+// たりない: a < b×c → 中身が たりない（アイテムが主語）
 const DIV_SCENARIOS: DivScenario[] = [
   {
     emoji: '🍎',
     build: (a, b, c) =>
       `🍎りんごが ${a}こ あります。\n${b}にんで おなじかずずつ わけます。\n1にん ${c}こ もらえる？`,
-    step2: (v) => v === 'たりない' ? 'りんごが なんこ たりない？' : 'りんごが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど わけられる', あまる: 'りんごが あまる', たりない: 'りんごが たりない' },
+    step2: (v) => v === 'たりない' ? 'りんごは なんこ たりない？' : 'りんごは なんこ あまる？',
   },
   {
     emoji: '🍪',
     build: (a, b, c) =>
       `🍪クッキーが ${a}まい あります。\n${b}にんで おなじかずずつ わけます。\n1にん ${c}まい もらえる？`,
-    step2: (v) => v === 'たりない' ? 'クッキーが なんまい たりない？' : 'クッキーが なんまい あまる？',
+    labels: { ぴったり: 'ちょうど わけられる', あまる: 'クッキーが あまる', たりない: 'クッキーが たりない' },
+    step2: (v) => v === 'たりない' ? 'クッキーは なんまい たりない？' : 'クッキーは なんまい あまる？',
   },
   {
     emoji: '🎈',
     build: (a, b, c) =>
       `🎈ふうせんが ${a}こ あります。\n${b}にんに ${c}こずつ あげます。\nぜんぶ あげられる？`,
-    step2: (v) => v === 'たりない' ? 'ふうせんが なんこ たりない？' : 'ふうせんが なんこ あまる？',
+    labels: { ぴったり: 'ちょうど あげられる', あまる: 'ふうせんが あまる', たりない: 'ふうせんが たりない' },
+    step2: (v) => v === 'たりない' ? 'ふうせんは なんこ たりない？' : 'ふうせんは なんこ あまる？',
   },
   {
     emoji: '🌸',
     build: (a, b, c) =>
       `🌸おはなが ${a}ほん あります。\n${b}にんに ${c}ほんずつ あげます。\nぜんぶ あげられる？`,
-    step2: (v) => v === 'たりない' ? 'おはなが なんぼん たりない？' : 'おはなが なんぼん あまる？',
+    labels: { ぴったり: 'ちょうど あげられる', あまる: 'おはなが あまる', たりない: 'おはなが たりない' },
+    step2: (v) => v === 'たりない' ? 'おはなは なんぼん たりない？' : 'おはなは なんぼん あまる？',
   },
   {
     emoji: '⭐',
     build: (a, b, c) =>
       `⭐シールが ${a}まい あります。\n${b}にんに ${c}まいずつ くばります。\nぜんぶ くばれる？`,
-    step2: (v) => v === 'たりない' ? 'シールが なんまい たりない？' : 'シールが なんまい あまる？',
+    labels: { ぴったり: 'ちょうど くばれる', あまる: 'シールが あまる', たりない: 'シールが たりない' },
+    step2: (v) => v === 'たりない' ? 'シールは なんまい たりない？' : 'シールは なんまい あまる？',
   },
 ];
 
@@ -252,6 +279,7 @@ function generateAddWord(rng: () => number): WordProblem {
     diff,
     text: sc.build(a, b, c),
     emoji: sc.emoji,
+    verdictLabels: sc.labels,
     step2Question: verdict !== 'ぴったり' ? sc.step2(verdict) : '',
     diffChoices: verdict !== 'ぴったり' ? makeDiffChoices(diff, rng) : [],
   };
@@ -286,6 +314,7 @@ function generateSubWord(rng: () => number): WordProblem {
     diff,
     text: sc.build(a, b),
     emoji: sc.emoji,
+    verdictLabels: sc.labels,
     step2Question: verdict !== 'ぴったり' ? sc.step2(verdict) : '',
     diffChoices: verdict !== 'ぴったり' ? makeDiffChoices(diff, rng) : [],
   };
@@ -320,6 +349,7 @@ function generateMulWord(rng: () => number): WordProblem {
     diff,
     text: sc.build(a, b, c),
     emoji: sc.emoji,
+    verdictLabels: sc.labels,
     step2Question: verdict !== 'ぴったり' ? sc.step2(verdict) : '',
     diffChoices: verdict !== 'ぴったり' ? makeDiffChoices(diff, rng) : [],
   };
@@ -354,6 +384,7 @@ function generateDivWord(rng: () => number): WordProblem {
     diff,
     text: sc.build(a, b, c),
     emoji: sc.emoji,
+    verdictLabels: sc.labels,
     step2Question: verdict !== 'ぴったり' ? sc.step2(verdict) : '',
     diffChoices: verdict !== 'ぴったり' ? makeDiffChoices(diff, rng) : [],
   };

@@ -150,8 +150,8 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
 
       {step === 'verdict' && (
         <div className="flex flex-col items-center gap-4 w-full">
-          <p className="text-xl font-bold text-amber-800">どれかな？</p>
-          <div className="flex gap-3 flex-wrap justify-center">
+          <p className="text-xl font-bold text-amber-800">どうなる？</p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
             {VERDICT_BUTTONS.map(({ value, emoji, bg }) => (
               <motion.button
                 key={value}
@@ -161,9 +161,9 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
                 whileTap={{ scale: 0.93, y: 3 }}
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                className={`rounded-2xl px-6 py-4 text-xl font-bold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${bg}`}
+                className={`w-full rounded-2xl px-6 py-4 text-xl font-bold text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${bg}`}
               >
-                {emoji} {value}
+                {emoji} {problem.verdictLabels[value]}
               </motion.button>
             ))}
           </div>
