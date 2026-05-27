@@ -90,9 +90,18 @@ export function ShapeFoldUnit({ hard = false, onExit }: Props) {
         {problem.questionLabel}
       </motion.h2>
 
-      <div className="rounded-3xl bg-white shadow-lg px-6 py-5 flex flex-col items-center gap-2">
-        <p className="text-xs text-amber-500 font-bold">おりがみ（おって きった ところ）</p>
-        <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={180} h={110} />
+      <div className="rounded-3xl bg-white shadow-lg px-4 py-4 flex flex-col items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-xs text-emerald-600 font-bold">① こう おる</p>
+            <SvgView svg={problem.beforeSvg} viewBox="0 0 180 110" w={150} h={92} />
+          </div>
+          <div className="text-2xl text-amber-400 font-bold">▶</div>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-xs text-amber-500 font-bold">② おって きった</p>
+            <SvgView svg={problem.foldSvg} viewBox="0 0 180 110" w={150} h={92} />
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center text-xs text-slate-600 bg-white/70 rounded-2xl px-4 py-2 border border-amber-100">
@@ -113,6 +122,13 @@ export function ShapeFoldUnit({ hard = false, onExit }: Props) {
             <line x1="0" y1="5" x2="20" y2="5" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,3" />
           </svg>
           おりめ
+        </span>
+        <span className="flex items-center gap-1.5">
+          <svg width="22" height="10" viewBox="0 0 22 10">
+            <line x1="0" y1="5" x2="16" y2="5" stroke="#16a34a" strokeWidth="2" />
+            <polygon points="14,1 22,5 14,9 16,5" fill="#16a34a" />
+          </svg>
+          おる むき
         </span>
       </div>
 
