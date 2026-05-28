@@ -126,6 +126,7 @@ describe('checkVerdict', () => {
     verdict: 'あまる',
     diff: 2,
     text: 'test', emoji: '🍎',
+    verdictLabels: { ぴったり: 'ちょうど くばれる', あまる: 'りんごが あまる', たりない: 'りんごが たりない' },
     step2Question: 'なんこ あまる？',
     diffChoices: [1, 2, 3],
   };
@@ -147,6 +148,7 @@ describe('checkDiff', () => {
     verdict: 'あまる',
     diff: 2,
     text: 'test', emoji: '🍎',
+    verdictLabels: { ぴったり: 'ちょうど くばれる', あまる: 'りんごが あまる', たりない: 'りんごが たりない' },
     step2Question: 'なんこ あまる？',
     diffChoices: [1, 2, 3],
   };
