@@ -12,9 +12,16 @@ import {
   pittariVerdict,
   buildMultiplication,
   buildDivision,
+  randomChoice,
+  ADD_GOALS,
+  SUB_GOALS,
+  MUL_GOALS,
+  DIV_GOALS,
+  BIGADD_GOALS,
   type BuilderDef,
   type BuilderKind,
   type PittariVerdict,
+  type GoalSpec,
 } from '../lib/problemBuilder';
 import type { TemplateFilled } from '../lib/problemTemplates';
 import { speakJa } from '../features/speech/tts';
@@ -77,16 +84,20 @@ function BackLink({ onClick }: { onClick: () => void }) {
   );
 }
 
-function randomTarget(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+/**
+ * お題（GoalSpec）と、それに紐づく目標値を1つだけ保持するフック。
+ * 「ほかの おだいに する」を押すと、別のお題＋新しい目標値に切り替わる。
+ */
+function useGoal<S>(goals: GoalSpec<S>[]) {
+  const [goal, setGoal] = useState(() => randomChoice(goals));
+  const [target, setTarget] = useState(() => goal.pickTarget());
+  const shuffle = () => {
+    const next = randomChoice(goals);
+    setGoal(next);
+    setTarget(next.pickTarget());
+  };
+  return { goal, target, shuffle };
 }
-
-function randomChoice<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-/** かけ算のお題に使う「2〜6 のかけ算で作れる」答え */
-const MUL_TARGETS = [6, 8, 9, 10, 12, 15, 16, 20, 24] as const;
 
 const PITTARI_GOALS: { verdict: PittariVerdict; text: string }[] = [
   { verdict: 'ぴったり', text: 'ぴったり はいるように つくろう！' },
@@ -137,18 +148,20 @@ function AddBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [a, setA] = useState(3);
   const [b, setB] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
-  const [target, setTarget] = useState(() => randomTarget(5, 10));
+  const { goal, target, shuffle } = useGoal(ADD_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
+  const state = { a, b };
 
   return (
     <div className={SCREEN_BG}>
-      <GoalBanner text={`ぜんぶで ${target}こ に なるように つくろう！`} onShuffle={() => setTarget(randomTarget(5, 10))} />
+      <GoalBanner text={goal.text(target)} onShuffle={shuffle} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <div className="flex flex-wrap items-center justify-center gap-3">
         <ItemTray emoji={emoji} count={a} max={9} onChange={setA} accent="border-sky-300 bg-sky-50" />
         <span className="text-4xl font-bold text-amber-700">＋</span>
         <ItemTray emoji={emoji} count={b} max={9} onChange={setB} accent="border-orange-300 bg-orange-50" />
       </div>
+      <GoalStatus reached={goal.reached(state, target)} text={goal.status(state, target)} />
       <CompleteButton onClick={() => onComplete(buildAddition(a, b, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -159,13 +172,14 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [total, setTotal] = useState(5);
   const [remove, setRemove] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
-  const [target, setTarget] = useState(() => randomTarget(1, 5));
+  const { goal, target, shuffle } = useGoal(SUB_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
   const safeRemove = Math.min(remove, total);
+  const state = { total, remove: safeRemove };
 
   return (
     <div className={SCREEN_BG}>
-      <GoalBanner text={`${target}こ のこるように バイバイしよう！`} onShuffle={() => setTarget(randomTarget(1, 5))} />
+      <GoalBanner text={goal.text(target)} onShuffle={shuffle} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <ItemTray
         emoji={emoji}
@@ -181,6 +195,7 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setRemove((v) => Math.max(0, v - 1))}
         onPlus={() => setRemove((v) => Math.min(total, v + 1))}
       />
+      <GoalStatus reached={goal.reached(state, target)} text={goal.status(state, target)} />
       <CompleteButton onClick={() => onComplete(buildSubtraction(total, safeRemove, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -192,12 +207,12 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
   const [onesA, setOnesA] = useState(2);
   const [tensB, setTensB] = useState(1);
   const [onesB, setOnesB] = useState(3);
-  const [target, setTarget] = useState(() => randomTarget(4, 8) * 10);
+  const { goal, target, shuffle } = useGoal(BIGADD_GOALS);
   const total = (tensA * 10 + onesA) + (tensB * 10 + onesB);
 
   return (
     <div className={SCREEN_BG}>
-      <GoalBanner text={`こたえが ${target}より おおきく なるように つくろう！`} onShuffle={() => setTarget(randomTarget(4, 8) * 10)} />
+      <GoalBanner text={goal.text(target)} onShuffle={shuffle} />
       <p className="text-xs text-amber-600">🟧＝10のまとまり ／ 🟦＝ばら</p>
       <div className="flex flex-col items-center gap-2">
         <span className="text-lg font-bold text-sky-700">かず①</span>
@@ -214,7 +229,7 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
           <ItemTray emoji="🟦" count={onesB} max={9} onChange={setOnesB} accent="border-orange-200 bg-white" />
         </div>
       </div>
-      <GoalStatus reached={total > target} text={`いまは こたえが ${total}`} />
+      <GoalStatus reached={goal.reached({ total }, target)} text={goal.status({ total }, target)} />
       <CompleteButton onClick={() => onComplete(buildBigAddition(tensA, onesA, tensB, onesB))} />
       <BackLink onClick={onBack} />
     </div>
@@ -225,13 +240,12 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [groups, setGroups] = useState(3);
   const [perGroup, setPerGroup] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
-  const [target, setTarget] = useState(() => randomChoice(MUL_TARGETS));
+  const { goal, target, shuffle } = useGoal(MUL_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
-  const total = groups * perGroup;
 
   return (
     <div className={SCREEN_BG}>
-      <GoalBanner text={`ぜんぶで ${target}こ に なるように つくろう！`} onShuffle={() => setTarget(randomChoice(MUL_TARGETS))} />
+      <GoalBanner text={goal.text(target)} onShuffle={shuffle} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <p className="text-sm font-bold text-amber-700">1さらに のせる かず</p>
       <ItemTray emoji={emoji} count={perGroup} max={6} onChange={setPerGroup} accent="border-pink-300 bg-pink-50" />
@@ -250,7 +264,7 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
           </div>
         ))}
       </div>
-      <GoalStatus reached={total === target} text={`いまは ぜんぶで ${total}こ`} />
+      <GoalStatus reached={goal.reached({ groups, perGroup }, target)} text={goal.status({ groups, perGroup }, target)} />
       <CompleteButton onClick={() => onComplete(buildMultiplication(groups, perGroup, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -261,14 +275,12 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [total, setTotal] = useState(7);
   const [groups, setGroups] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
-  const [target, setTarget] = useState(() => randomTarget(1, 2));
+  const { goal, target, shuffle } = useGoal(DIV_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
-  const per = Math.floor(total / groups);
-  const remainder = total % groups;
 
   return (
     <div className={SCREEN_BG}>
-      <GoalBanner text={`あまりが ${target}こ に なるように つくろう！`} onShuffle={() => setTarget(randomTarget(1, 2))} />
+      <GoalBanner text={goal.text(target)} onShuffle={shuffle} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <p className="text-sm font-bold text-amber-700">ぜんぶの かず</p>
       <ItemTray emoji={emoji} count={total} max={12} onChange={setTotal} accent="border-teal-300 bg-teal-50" />
@@ -278,7 +290,7 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setGroups((v) => Math.max(1, v - 1))}
         onPlus={() => setGroups((v) => Math.min(6, v + 1))}
       />
-      <GoalStatus reached={remainder === target} text={`いまは 1にん ${per}こ、あまり ${remainder}こ`} />
+      <GoalStatus reached={goal.reached({ total, groups }, target)} text={goal.status({ total, groups }, target)} />
       <CompleteButton onClick={() => onComplete(buildDivision(total, groups, emoji))} />
       <BackLink onClick={onBack} />
     </div>

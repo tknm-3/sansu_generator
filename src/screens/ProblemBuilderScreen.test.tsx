@@ -19,7 +19,7 @@ describe('ProblemBuilderScreen', () => {
     expect(screen.getByText('どんな もんだいを つくる？')).toBeInTheDocument();
     fireEvent.click(screen.getByText('たしざん'));
 
-    expect(screen.getByText(/なるように つくろう/)).toBeInTheDocument();
+    expect(screen.getByText('これで かんせい！')).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
 
     expect(screen.getByText('もんだい できたよ！')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('ProblemBuilderScreen', () => {
     const onMake = vi.fn();
     render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
     fireEvent.click(screen.getByText('かけざん'));
-    expect(screen.getByText(/なるように つくろう/)).toBeInTheDocument();
+    expect(screen.getByText('これで かんせい！')).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
     fireEvent.click(screen.getByText('ちょうせん！'));
     expect(onMake.mock.calls[0][0].type).toBe('multiplication');
@@ -50,7 +50,7 @@ describe('ProblemBuilderScreen', () => {
     const onMake = vi.fn();
     render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
     fireEvent.click(screen.getByText('わりざん'));
-    expect(screen.getByText(/あまりが/)).toBeInTheDocument();
+    expect(screen.getByText('これで かんせい！')).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
     fireEvent.click(screen.getByText('ちょうせん！'));
     expect(onMake.mock.calls[0][0].type).toBe('division');
