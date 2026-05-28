@@ -4,6 +4,7 @@ import { ProblemBuilderScreen } from './ProblemBuilderScreen';
 
 vi.mock('../features/sound/sfx', () => ({ playSfx: vi.fn() }));
 vi.mock('../features/speech/tts', () => ({ speakJa: vi.fn() }));
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 
 describe('ProblemBuilderScreen', () => {
   beforeEach(() => {
@@ -30,7 +31,7 @@ describe('ProblemBuilderScreen', () => {
   it('ぴったり も かごの作業台で作れる', () => {
     render(<ProblemBuilderScreen characterName="テスト" onMake={() => {}} onExit={() => {}} />);
     fireEvent.click(screen.getByText('ぴったり？'));
-    expect(screen.getByText(/かごに いれて/)).toBeInTheDocument();
+    expect(screen.getByText(/つくろう！/)).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
     expect(screen.getByText('もんだい できたよ！')).toBeInTheDocument();
   });
@@ -39,7 +40,7 @@ describe('ProblemBuilderScreen', () => {
     const onMake = vi.fn();
     render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
     fireEvent.click(screen.getByText('かけざん'));
-    expect(screen.getByText(/おさらに のせて/)).toBeInTheDocument();
+    expect(screen.getByText(/なるように つくろう/)).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
     fireEvent.click(screen.getByText('ちょうせん！'));
     expect(onMake.mock.calls[0][0].type).toBe('multiplication');
@@ -49,7 +50,7 @@ describe('ProblemBuilderScreen', () => {
     const onMake = vi.fn();
     render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
     fireEvent.click(screen.getByText('わりざん'));
-    expect(screen.getByText(/みんなで わけよう/)).toBeInTheDocument();
+    expect(screen.getByText(/あまりが/)).toBeInTheDocument();
     fireEvent.click(screen.getByText('これで かんせい！'));
     fireEvent.click(screen.getByText('ちょうせん！'));
     expect(onMake.mock.calls[0][0].type).toBe('division');

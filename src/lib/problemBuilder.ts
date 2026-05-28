@@ -154,16 +154,27 @@ export function buildMultiplication(groups: number, perGroup: number, emoji: str
 }
 
 export function buildDivision(total: number, groups: number, emoji: string): TemplateFilled {
+  const per = Math.floor(total / groups);
+  const remainder = total % groups;
+  const questionText =
+    remainder === 0
+      ? `${emoji}が ${total}こ。${groups}にんで わけると 1にん なんこ？`
+      : `${emoji}が ${total}こ。${groups}にんで わけると 1にん なんこで、なんこ あまる？`;
+  const hint =
+    remainder === 0
+      ? `${total}こを ${groups}つに おなじだけ くばってみよう。`
+      : `${total}こを ${groups}にんに 1こずつ くばっていくよ。もう くばれない ぶんが「あまり」！`;
   return {
     templateId: 'builder-div',
     type: 'division',
-    questionText: `${emoji}が ${total}こ。${groups}にんで わけると 1にん なんこ？`,
-    answer: Math.floor(total / groups),
+    questionText,
+    answer: per,
+    remainder,
     emoji,
     a: total,
     b: groups,
     scene: { kind: 'shareOut', emoji, total, groups },
-    hint: `${total}こを ${groups}つに おなじだけ くばってみよう。`,
+    hint,
   };
 }
 

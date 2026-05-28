@@ -23,23 +23,40 @@ function makeChoices(answer: number): number[] {
 }
 
 export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
-  const [choices] = useState(() => makeChoices(problem.answer));
+  const needRemainder = (problem.remainder ?? 0) > 0;
+  const [perChoices] = useState(() => makeChoices(problem.answer));
+  const [remChoices] = useState(() => (needRemainder ? makeChoices(problem.remainder!) : []));
+  const [stage, setStage] = useState<'per' | 'rem'>('per');
   const [result, setResult] = useState<'none' | 'correct' | 'wrong'>('none');
+
+  const answerSummary = needRemainder
+    ? `1にん ${problem.answer}こ、あまり ${problem.remainder}こ`
+    : `${problem.answer}`;
 
   function handlePick(value: number) {
     if (result !== 'none') return;
     playSfx('tap');
-    if (value === problem.answer) {
-      playSfx('correct');
-      confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
-      speakJa('せいかい！ すごい！');
-      setResult('correct');
-    } else {
+    const expected = stage === 'per' ? problem.answer : problem.remainder!;
+    if (value !== expected) {
       playSfx('wrong');
       speakJa('ざんねん！ こたえは…');
       setResult('wrong');
+      return;
     }
+    if (needRemainder && stage === 'per') {
+      playSfx('correct');
+      speakJa('いいね！ つぎは あまりは なんこ？');
+      setStage('rem');
+      return;
+    }
+    playSfx('correct');
+    confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+    speakJa('せいかい！ すごい！');
+    setResult('correct');
   }
+
+  const choices = stage === 'per' ? perChoices : remChoices;
+  const subLabel = !needRemainder ? null : stage === 'per' ? '① 1にん なんこ？' : '② あまりは なんこ？';
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-b from-orange-100 to-amber-50 p-8">
@@ -51,6 +68,9 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
         {problem.questionText}
       </div>
       <button type="button" onClick={() => speakJa(problem.questionText)} className="rounded-xl bg-blue-100 px-4 py-2 text-blue-700">🔊 よみあげ</button>
+      {result === 'none' && subLabel && (
+        <div className="rounded-xl bg-teal-100 px-5 py-2 text-xl font-bold text-teal-800">{subLabel}</div>
+      )}
       {result === 'none' && problem.hint && (
         <button type="button" onClick={() => speakJa(problem.hint!)} className="rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-700">💡 ヒント</button>
       )}
@@ -58,13 +78,13 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
       {result === 'correct' && (
         <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} className="text-center">
           <div className="text-5xl">⭕</div>
-          <p className="text-2xl font-bold text-green-700">せいかい！ {problem.answer}！</p>
+          <p className="text-2xl font-bold text-green-700">せいかい！ {answerSummary}！</p>
         </motion.div>
       )}
       {result === 'wrong' && (
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
           <div className="text-5xl">❌</div>
-          <p className="text-2xl font-bold text-red-600">こたえは {problem.answer} だったよ！</p>
+          <p className="text-2xl font-bold text-red-600">こたえは {answerSummary} だったよ！</p>
         </motion.div>
       )}
       {result !== 'none' && (

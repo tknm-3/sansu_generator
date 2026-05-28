@@ -48,14 +48,19 @@ describe('buildMultiplication', () => {
 });
 
 describe('buildDivision', () => {
-  it('わり切れる: floor と shareOut scene を返す', () => {
+  it('わり切れる: floor と shareOut scene、あまり 0 を返す', () => {
     const p = buildDivision(12, 3, '🍪');
     expect(p.type).toBe('division');
     expect(p.answer).toBe(4);
+    expect(p.remainder).toBe(0);
     expect(p.scene).toEqual({ kind: 'shareOut', emoji: '🍪', total: 12, groups: 3 });
+    expect(p.questionText).not.toContain('あまる');
   });
-  it('あまりがある場合は floor を返す', () => {
-    expect(buildDivision(7, 2, '🍪').answer).toBe(3);
+  it('あまりがある場合は floor と あまりを返し、問題文で あまりを問う', () => {
+    const p = buildDivision(7, 2, '🍪');
+    expect(p.answer).toBe(3);
+    expect(p.remainder).toBe(1);
+    expect(p.questionText).toContain('あまる');
   });
 });
 
