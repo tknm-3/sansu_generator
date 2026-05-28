@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { ItemTray } from '../components/ItemTray';
 import { ProblemVisual } from '../components/ProblemVisual';
 import {
@@ -93,17 +94,27 @@ const PITTARI_GOALS: { verdict: PittariVerdict; text: string }[] = [
   { verdict: 'たりない', text: 'かごに はいりきらないように つくろう！' },
 ];
 
-/** 目標を達成できているかを示す小さなフィードバック帯 */
+/** 目標を達成できているかを示す小さなフィードバック帯。達成した瞬間に演出を出す */
 function GoalStatus({ reached, text }: { reached: boolean; text: string }) {
+  const wasReached = useRef(reached);
+  useEffect(() => {
+    if (reached && !wasReached.current) {
+      playSfx('correct');
+      confetti({ particleCount: 50, spread: 55, startVelocity: 28, origin: { y: 0.75 } });
+    }
+    wasReached.current = reached;
+  }, [reached]);
   return (
-    <div
+    <motion.div
+      animate={reached ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+      transition={{ duration: 0.45 }}
       className={`rounded-xl px-4 py-2 text-sm font-bold ${
         reached ? 'bg-green-100 text-green-700 ring-2 ring-green-300' : 'bg-white text-amber-700'
       }`}
     >
-      {reached ? '✓ ' : ''}
+      {reached ? '🎉 できた！ ' : ''}
       {text}
-    </div>
+    </motion.div>
   );
 }
 

@@ -4,6 +4,7 @@ import { ProblemBuilderScreen } from './ProblemBuilderScreen';
 
 vi.mock('../features/sound/sfx', () => ({ playSfx: vi.fn() }));
 vi.mock('../features/speech/tts', () => ({ speakJa: vi.fn() }));
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }));
 
 describe('ProblemBuilderScreen', () => {
   beforeEach(() => {
