@@ -20,6 +20,8 @@ export interface TemplateFilled {
   type: ProblemType;
   questionText: string;
   answer: number;
+  /** わり算で「あまり」も問う場合のあまりの数。0 や undefined なら あまりを問わない */
+  remainder?: number;
   emoji: string;
   a: number;
   b: number;
