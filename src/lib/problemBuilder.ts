@@ -1,6 +1,6 @@
 import type { TemplateFilled } from './problemTemplates';
 
-export type BuilderKind = 'add' | 'sub' | 'big-add';
+export type BuilderKind = 'add' | 'sub' | 'big-add' | 'pittari';
 
 export interface BuilderDef {
   kind: BuilderKind;
@@ -40,6 +40,15 @@ export const BUILDERS: BuilderDef[] = [
     grade: '小2',
     desc: '10のまとまりを おく',
   },
+  {
+    kind: 'pittari',
+    label: 'ぴったり？',
+    mark: '🧺',
+    color: 'bg-green-500 shadow-[0_4px_0_#15803d]',
+    emojiOptions: ['🍎', '🍪', '🍊', '⭐', '🐟', '🍩'],
+    grade: '年長〜小1',
+    desc: 'かごに ぴったり？ あまる？ たりない？',
+  },
 ];
 
 export function builderFor(kind: BuilderKind): BuilderDef {
@@ -71,6 +80,44 @@ export function buildSubtraction(total: number, remove: number, emoji: string): 
     b: remove,
     scene: { kind: 'takeAway', emoji, total, remove },
     hint: `${total}こ から ${remove}こ とると、のこりは いくつ？`,
+  };
+}
+
+export type PittariVerdict = 'ぴったり' | 'あまる' | 'たりない';
+
+export function pittariVerdict(items: number, capacity: number): PittariVerdict {
+  if (items === capacity) return 'ぴったり';
+  return items > capacity ? 'たりない' : 'あまる';
+}
+
+export function buildPittari(items: number, capacity: number, emoji: string): TemplateFilled {
+  const verdict = pittariVerdict(items, capacity);
+  let questionText: string;
+  let answer: number;
+  let hint: string;
+  if (verdict === 'ぴったり') {
+    questionText = `🧺かごに ${emoji}が ${capacity}こ はいるよ。\n${emoji}を ${items}こ いれた。\nなんこ あまる？`;
+    answer = 0;
+    hint = 'ちょうど はいったね。あまりは いくつかな？';
+  } else if (verdict === 'あまる') {
+    questionText = `🧺かごに ${emoji}が ${capacity}こ はいるよ。\n${emoji}を ${items}こ いれた。\nあと なんこ はいる？`;
+    answer = capacity - items;
+    hint = `${capacity}こ から ${items}こ ひくと いくつ？`;
+  } else {
+    questionText = `🧺かごに ${emoji}が ${capacity}こ はいるよ。\n${emoji}が ${items}こ ある。\nなんこ はいらない？`;
+    answer = items - capacity;
+    hint = `${items}こ から ${capacity}こ ひくと いくつ？`;
+  }
+  return {
+    templateId: 'builder-pittari',
+    type: 'subtraction',
+    questionText,
+    answer,
+    emoji,
+    a: items,
+    b: capacity,
+    scene: { kind: 'container', emoji, items, capacity },
+    hint,
   };
 }
 

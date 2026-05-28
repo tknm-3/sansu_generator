@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildAddition, buildSubtraction, buildBigAddition } from './problemBuilder';
+import { buildAddition, buildSubtraction, buildBigAddition, buildPittari, pittariVerdict } from './problemBuilder';
 
 describe('buildAddition', () => {
   it('こたえと scene を combine で返す', () => {
@@ -27,5 +27,22 @@ describe('buildBigAddition', () => {
     expect(p.b).toBe(14);
     expect(p.answer).toBe(37);
     expect(p.scene).toEqual({ kind: 'placeValue', aTens: 2, aOnes: 3, bTens: 1, bOnes: 4 });
+  });
+});
+
+describe('pittariVerdict / buildPittari', () => {
+  it('items === capacity は ぴったり、こたえ 0', () => {
+    expect(pittariVerdict(5, 5)).toBe('ぴったり');
+    expect(buildPittari(5, 5, '🍎').answer).toBe(0);
+  });
+  it('items < capacity は あまる、こたえ = capacity - items', () => {
+    expect(pittariVerdict(3, 5)).toBe('あまる');
+    const p = buildPittari(3, 5, '🍎');
+    expect(p.answer).toBe(2);
+    expect(p.scene).toEqual({ kind: 'container', emoji: '🍎', items: 3, capacity: 5 });
+  });
+  it('items > capacity は たりない、こたえ = items - capacity', () => {
+    expect(pittariVerdict(7, 4)).toBe('たりない');
+    expect(buildPittari(7, 4, '🍎').answer).toBe(3);
   });
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AnswerButtons } from '../components/AnswerButtons';
-import { SceneView } from '../components/SceneView';
+import { ProblemVisual } from '../components/ProblemVisual';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import type { TemplateFilled } from '../lib/problemTemplates';
@@ -46,7 +46,7 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
       <div className="text-3xl font-bold text-orange-800">
         {characterName} から ちょうせんじょう！ 📩
       </div>
-      {problem.scene && <SceneView scene={problem.scene} />}
+      {problem.scene && <ProblemVisual scene={problem.scene} />}
       <div className="rounded-2xl bg-white p-6 text-2xl font-bold text-amber-900 shadow-lg text-center whitespace-pre-line">
         {problem.questionText}
       </div>

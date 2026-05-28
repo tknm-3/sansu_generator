@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ItemTray } from '../components/ItemTray';
-import { SceneView } from '../components/SceneView';
+import { ProblemVisual } from '../components/ProblemVisual';
 import {
   BUILDERS,
   buildAddition,
   buildSubtraction,
   buildBigAddition,
+  buildPittari,
+  pittariVerdict,
   type BuilderDef,
   type BuilderKind,
 } from '../lib/problemBuilder';
@@ -165,6 +167,36 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
   );
 }
 
+function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: (p: TemplateFilled) => void; onBack: () => void }) {
+  const [items, setItems] = useState(4);
+  const [capacity, setCapacity] = useState(5);
+  const [emojiIdx, setEmojiIdx] = useState(0);
+  const emoji = def.emojiOptions[emojiIdx];
+  const verdict = pittariVerdict(items, capacity);
+  const badge =
+    verdict === 'ぴったり' ? { text: '🎯 ぴったり！', color: 'bg-green-100 text-green-700' }
+    : verdict === 'あまる' ? { text: `🫙 あと ${capacity - items}こ はいる`, color: 'bg-sky-100 text-sky-700' }
+    : { text: `🚫 ${items - capacity}こ はいらない`, color: 'bg-orange-100 text-orange-700' };
+
+  return (
+    <div className={SCREEN_BG}>
+      <h1 className="text-2xl font-bold text-green-800">かごに ぴったり？</h1>
+      <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
+      <p className="text-sm font-bold text-amber-700">{emoji}を かごに おいてみよう</p>
+      <ItemTray emoji={emoji} count={items} max={12} onChange={setItems} accent="border-green-300 bg-green-50" />
+      <Stepper
+        label="かごの 大きさ"
+        value={capacity}
+        onMinus={() => setCapacity((v) => Math.max(1, v - 1))}
+        onPlus={() => setCapacity((v) => Math.min(12, v + 1))}
+      />
+      <div className={`rounded-2xl px-6 py-2 text-xl font-bold ${badge.color}`}>{badge.text}</div>
+      <CompleteButton onClick={() => onComplete(buildPittari(items, capacity, emoji))} />
+      <BackLink onClick={onBack} />
+    </div>
+  );
+}
+
 export function ProblemBuilderScreen({ characterName: _characterName, onMake, onExit }: Props) {
   const [step, setStep] = useState<'pick' | 'build' | 'preview'>('pick');
   const [kind, setKind] = useState<BuilderKind | null>(null);
@@ -217,6 +249,7 @@ export function ProblemBuilderScreen({ characterName: _characterName, onMake, on
     const back = () => setStep('pick');
     if (kind === 'add') return <AddBuilder def={def} onComplete={handleComplete} onBack={back} />;
     if (kind === 'sub') return <SubBuilder def={def} onComplete={handleComplete} onBack={back} />;
+    if (kind === 'pittari') return <PittariBuilder def={def} onComplete={handleComplete} onBack={back} />;
     return <BigAddBuilder onComplete={handleComplete} onBack={back} />;
   }
 
@@ -225,7 +258,7 @@ export function ProblemBuilderScreen({ characterName: _characterName, onMake, on
       <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-gradient-to-b from-green-100 to-amber-50 p-8">
         <div className="text-5xl">📝</div>
         <p className="text-xl font-bold text-green-800">もんだい できたよ！</p>
-        {draft.scene && <SceneView scene={draft.scene} />}
+        {draft.scene && <ProblemVisual scene={draft.scene} />}
         <div className="rounded-2xl bg-white p-5 text-2xl font-bold text-amber-900 shadow-lg text-center whitespace-pre-line">
           {draft.questionText}
         </div>

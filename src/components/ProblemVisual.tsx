@@ -63,6 +63,42 @@ export function ProblemVisual({ scene }: Props) {
     );
   }
 
+  if (scene.kind === 'container') {
+    const inside = Math.min(scene.items, scene.capacity);
+    const overflow = Math.max(0, scene.items - scene.capacity);
+    return (
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col items-center gap-2 max-w-xs">
+        <div className="grid grid-cols-5 gap-1 rounded-xl border-4 border-amber-400 bg-amber-50 p-2">
+          {Array.from({ length: scene.capacity }).map((_, i) => (
+            <div key={i} className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/80">
+              {i < inside ? (
+                <motion.span key="on" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.04, type: 'spring' }} className="text-2xl">
+                  {scene.emoji}
+                </motion.span>
+              ) : (
+                <span className="text-base text-amber-300">·</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <span className="text-xs font-bold text-amber-600">🧺 かごには {scene.capacity}こ はいる</span>
+        {overflow > 0 && (
+          <>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {Array.from({ length: overflow }).map((_, i) => (
+                <span key={i} className="relative text-2xl">
+                  <span className="opacity-40">{scene.emoji}</span>
+                  <span className="absolute inset-0 flex items-center justify-center font-bold text-red-500">✕</span>
+                </span>
+              ))}
+            </div>
+            <span className="text-xs font-bold text-red-500">🚫 はいらない</span>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // placeValue
   return (
     <div className="flex flex-col items-center gap-2">
