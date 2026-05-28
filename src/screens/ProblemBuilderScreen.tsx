@@ -10,7 +10,6 @@ import {
   buildPittari,
   buildMultiplication,
   buildDivision,
-  pittariVerdict,
   type BuilderDef,
   type BuilderKind,
 } from '../lib/problemBuilder';
@@ -75,23 +74,40 @@ function BackLink({ onClick }: { onClick: () => void }) {
   );
 }
 
+function randomTarget(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function GoalBanner({ icon = '🎯', text, onShuffle }: { icon?: string; text: string; onShuffle?: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="rounded-2xl bg-amber-100 px-6 py-3 text-center text-2xl font-bold text-amber-900 shadow ring-2 ring-amber-300">
+        {icon} {text}
+      </div>
+      {onShuffle && (
+        <button type="button" onClick={onShuffle} className="text-sm font-bold text-amber-600 underline">
+          ほかの おだいに する 🔀
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AddBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: (p: TemplateFilled) => void; onBack: () => void }) {
   const [a, setA] = useState(3);
   const [b, setB] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
+  const [target, setTarget] = useState(() => randomTarget(5, 10));
   const emoji = def.emojiOptions[emojiIdx];
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">{emoji}を おいて つくろう！</h1>
+      <GoalBanner text={`ぜんぶで ${target}こ に なるように つくろう！`} onShuffle={() => setTarget(randomTarget(5, 10))} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <div className="flex flex-wrap items-center justify-center gap-3">
         <ItemTray emoji={emoji} count={a} max={9} onChange={setA} accent="border-sky-300 bg-sky-50" />
         <span className="text-4xl font-bold text-amber-700">＋</span>
         <ItemTray emoji={emoji} count={b} max={9} onChange={setB} accent="border-orange-300 bg-orange-50" />
-      </div>
-      <div className="rounded-2xl bg-white px-6 py-3 text-3xl font-bold text-amber-900 shadow">
-        {a} ＋ {b} ＝ {a + b}
       </div>
       <CompleteButton onClick={() => onComplete(buildAddition(a, b, emoji))} />
       <BackLink onClick={onBack} />
@@ -103,12 +119,13 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [total, setTotal] = useState(5);
   const [remove, setRemove] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
+  const [target, setTarget] = useState(() => randomTarget(1, 5));
   const emoji = def.emojiOptions[emojiIdx];
   const safeRemove = Math.min(remove, total);
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">{emoji}を おいて バイバイ！</h1>
+      <GoalBanner text={`${target}こ のこるように バイバイしよう！`} onShuffle={() => setTarget(randomTarget(1, 5))} />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <ItemTray
         emoji={emoji}
@@ -124,9 +141,6 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setRemove((v) => Math.max(0, v - 1))}
         onPlus={() => setRemove((v) => Math.min(total, v + 1))}
       />
-      <div className="rounded-2xl bg-white px-6 py-3 text-3xl font-bold text-amber-900 shadow">
-        {total} − {safeRemove} ＝ {total - safeRemove}
-      </div>
       <CompleteButton onClick={() => onComplete(buildSubtraction(total, safeRemove, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -138,15 +152,13 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
   const [onesA, setOnesA] = useState(2);
   const [tensB, setTensB] = useState(1);
   const [onesB, setOnesB] = useState(3);
-  const a = tensA * 10 + onesA;
-  const b = tensB * 10 + onesB;
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">10のまとまりを おこう！</h1>
+      <GoalBanner icon="💭" text="あわせて いくつ？ 10のまとまりを おこう！" />
       <p className="text-xs text-amber-600">🟧＝10のまとまり ／ 🟦＝ばら</p>
       <div className="flex flex-col items-center gap-2">
-        <span className="text-lg font-bold text-sky-700">かず① ＝ {a}</span>
+        <span className="text-lg font-bold text-sky-700">かず①</span>
         <div className="flex items-start gap-2">
           <ItemTray emoji="🟧" count={tensA} max={9} onChange={setTensA} accent="border-sky-300 bg-sky-50" />
           <ItemTray emoji="🟦" count={onesA} max={9} onChange={setOnesA} accent="border-sky-200 bg-white" />
@@ -154,14 +166,11 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
       </div>
       <span className="text-3xl font-bold text-amber-700">＋</span>
       <div className="flex flex-col items-center gap-2">
-        <span className="text-lg font-bold text-orange-700">かず② ＝ {b}</span>
+        <span className="text-lg font-bold text-orange-700">かず②</span>
         <div className="flex items-start gap-2">
           <ItemTray emoji="🟧" count={tensB} max={9} onChange={setTensB} accent="border-orange-300 bg-orange-50" />
           <ItemTray emoji="🟦" count={onesB} max={9} onChange={setOnesB} accent="border-orange-200 bg-white" />
         </div>
-      </div>
-      <div className="rounded-2xl bg-white px-6 py-3 text-2xl font-bold text-amber-900 shadow">
-        {a} ＋ {b} ＝ {a + b}
       </div>
       <CompleteButton onClick={() => onComplete(buildBigAddition(tensA, onesA, tensB, onesB))} />
       <BackLink onClick={onBack} />
@@ -177,7 +186,7 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">おさらに のせて かけざん！</h1>
+      <GoalBanner icon="💭" text="ぜんぶで いくつ？ おさらに のせて つくろう！" />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <p className="text-sm font-bold text-amber-700">1さらに のせる かず</p>
       <ItemTray emoji={emoji} count={perGroup} max={6} onChange={setPerGroup} accent="border-pink-300 bg-pink-50" />
@@ -196,9 +205,6 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
           </div>
         ))}
       </div>
-      <div className="rounded-2xl bg-white px-6 py-3 text-3xl font-bold text-amber-900 shadow">
-        {perGroup} × {groups} ＝ {perGroup * groups}
-      </div>
       <CompleteButton onClick={() => onComplete(buildMultiplication(groups, perGroup, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -210,12 +216,10 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [groups, setGroups] = useState(2);
   const [emojiIdx, setEmojiIdx] = useState(0);
   const emoji = def.emojiOptions[emojiIdx];
-  const per = Math.floor(total / groups);
-  const remainder = total - per * groups;
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">みんなで わけよう！</h1>
+      <GoalBanner icon="💭" text="1にん いくつ？ みんなで わけよう！" />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
       <p className="text-sm font-bold text-amber-700">ぜんぶの かず</p>
       <ItemTray emoji={emoji} count={total} max={12} onChange={setTotal} accent="border-teal-300 bg-teal-50" />
@@ -225,9 +229,6 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setGroups((v) => Math.max(1, v - 1))}
         onPlus={() => setGroups((v) => Math.min(6, v + 1))}
       />
-      <div className="rounded-2xl bg-white px-6 py-3 text-2xl font-bold text-amber-900 shadow">
-        1にん {per}こ{remainder > 0 ? `（あまり ${remainder}）` : ''}
-      </div>
       <CompleteButton onClick={() => onComplete(buildDivision(total, groups, emoji))} />
       <BackLink onClick={onBack} />
     </div>
@@ -239,17 +240,12 @@ function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComple
   const [capacity, setCapacity] = useState(5);
   const [emojiIdx, setEmojiIdx] = useState(0);
   const emoji = def.emojiOptions[emojiIdx];
-  const verdict = pittariVerdict(items, capacity);
-  const badge =
-    verdict === 'ぴったり' ? { text: '🎯 ぴったり！', color: 'bg-green-100 text-green-700' }
-    : verdict === 'あまる' ? { text: `🫙 あと ${capacity - items}こ はいる`, color: 'bg-sky-100 text-sky-700' }
-    : { text: `🚫 ${items - capacity}こ はいらない`, color: 'bg-orange-100 text-orange-700' };
 
   return (
     <div className={SCREEN_BG}>
-      <h1 className="text-2xl font-bold text-green-800">かごに ぴったり？</h1>
+      <GoalBanner icon="🧺" text="かごに いれて みよう！ ぴったり？ あまる？" />
       <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
-      <p className="text-sm font-bold text-amber-700">{emoji}を かごに おいてみよう</p>
+      <p className="text-sm font-bold text-amber-700">かごの 大きさを きめて、{emoji}を いれよう</p>
       <ItemTray emoji={emoji} count={items} max={12} onChange={setItems} accent="border-green-300 bg-green-50" />
       <Stepper
         label="かごの 大きさ"
@@ -257,7 +253,6 @@ function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComple
         onMinus={() => setCapacity((v) => Math.max(1, v - 1))}
         onPlus={() => setCapacity((v) => Math.min(12, v + 1))}
       />
-      <div className={`rounded-2xl px-6 py-2 text-xl font-bold ${badge.color}`}>{badge.text}</div>
       <CompleteButton onClick={() => onComplete(buildPittari(items, capacity, emoji))} />
       <BackLink onClick={onBack} />
     </div>
