@@ -63,6 +63,95 @@ export function ProblemVisual({ scene }: Props) {
     );
   }
 
+  if (scene.kind === 'container') {
+    const inside = Math.min(scene.items, scene.capacity);
+    const overflow = Math.max(0, scene.items - scene.capacity);
+    return (
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col items-center gap-2 max-w-xs">
+        <div className="grid grid-cols-5 gap-1 rounded-xl border-4 border-amber-400 bg-amber-50 p-2">
+          {Array.from({ length: scene.capacity }).map((_, i) => (
+            <div key={i} className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/80">
+              {i < inside ? (
+                <motion.span key="on" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.04, type: 'spring' }} className="text-2xl">
+                  {scene.emoji}
+                </motion.span>
+              ) : (
+                <span className="text-base text-amber-300">·</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <span className="text-xs font-bold text-amber-600">🧺 かごには {scene.capacity}こ はいる</span>
+        {overflow > 0 && (
+          <>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {Array.from({ length: overflow }).map((_, i) => (
+                <span key={i} className="relative text-2xl">
+                  <span className="opacity-40">{scene.emoji}</span>
+                  <span className="absolute inset-0 flex items-center justify-center font-bold text-red-500">✕</span>
+                </span>
+              ))}
+            </div>
+            <span className="text-xs font-bold text-red-500">🚫 はいらない</span>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (scene.kind === 'groups') {
+    return (
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-wrap gap-2 justify-center max-w-md">
+        {Array.from({ length: scene.groups }).map((_, g) => (
+          <div key={g} className="flex flex-wrap gap-0.5 justify-center rounded-full border-2 border-amber-300 bg-amber-50 p-2 max-w-[6rem]">
+            {Array.from({ length: scene.perGroup }).map((_, i) => (
+              <motion.span
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: (g * scene.perGroup + i) * 0.03, type: 'spring' }}
+                className="text-xl"
+              >
+                {scene.emoji}
+              </motion.span>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (scene.kind === 'shareOut') {
+    const per = Math.floor(scene.total / scene.groups);
+    const remainder = scene.total - per * scene.groups;
+    return (
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col items-center gap-2 max-w-md">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {Array.from({ length: scene.groups }).map((_, g) => (
+            <div key={g} className="flex flex-col items-center gap-0.5 rounded-xl border-2 border-sky-300 bg-sky-50 p-2 min-w-[3rem]">
+              <span className="text-xs text-sky-500">🙂</span>
+              <div className="flex flex-wrap gap-0.5 justify-center max-w-[4rem]">
+                {Array.from({ length: per }).map((_, i) => (
+                  <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: (g + i) * 0.04, type: 'spring' }} className="text-lg">
+                    {scene.emoji}
+                  </motion.span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        {remainder > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-bold text-amber-600">あまり</span>
+            {Array.from({ length: remainder }).map((_, i) => (
+              <span key={i} className="text-lg opacity-60">{scene.emoji}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // placeValue
   return (
     <div className="flex flex-col items-center gap-2">

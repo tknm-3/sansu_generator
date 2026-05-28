@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AnswerButtons } from '../components/AnswerButtons';
+import { ProblemVisual } from '../components/ProblemVisual';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import type { TemplateFilled } from '../lib/problemTemplates';
@@ -45,10 +46,14 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
       <div className="text-3xl font-bold text-orange-800">
         {characterName} から ちょうせんじょう！ 📩
       </div>
-      <div className="rounded-2xl bg-white p-6 text-2xl font-bold text-amber-900 shadow-lg text-center">
+      {problem.scene && <ProblemVisual scene={problem.scene} />}
+      <div className="rounded-2xl bg-white p-6 text-2xl font-bold text-amber-900 shadow-lg text-center whitespace-pre-line">
         {problem.questionText}
       </div>
       <button type="button" onClick={() => speakJa(problem.questionText)} className="rounded-xl bg-blue-100 px-4 py-2 text-blue-700">🔊 よみあげ</button>
+      {result === 'none' && problem.hint && (
+        <button type="button" onClick={() => speakJa(problem.hint!)} className="rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-700">💡 ヒント</button>
+      )}
       {result === 'none' && <AnswerButtons choices={choices} onPick={handlePick} />}
       {result === 'correct' && (
         <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} className="text-center">

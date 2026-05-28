@@ -1,3 +1,5 @@
+import type { ProblemScene } from './problemScene';
+
 export type ProblemType = 'addition' | 'subtraction' | 'multiplication' | 'division';
 
 export interface Template {
@@ -21,6 +23,10 @@ export interface TemplateFilled {
   emoji: string;
   a: number;
   b: number;
+  /** 出題画面で絵を出すためのシーン情報（物を動かして作った問題で使う） */
+  scene?: ProblemScene;
+  /** 解く人へのヒント */
+  hint?: string;
 }
 
 function fillText(pattern: string, vars: { emoji: string; a: number; b: number }): string {

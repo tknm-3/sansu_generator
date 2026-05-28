@@ -10,7 +10,6 @@ interface Props {
   onSelectUnit: (unitId: string) => void;
   onStartChallenge: () => void;
   onStartMission: () => void;
-  onStartMaker: () => void;
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
   onOpenProgress: () => void;
@@ -35,7 +34,6 @@ export function HomeScreen({
   onSelectUnit,
   onStartChallenge,
   onStartMission,
-  onStartMaker,
   onOpenCollection,
   onOpenStampBook,
   onOpenProgress,
@@ -106,16 +104,6 @@ export function HomeScreen({
         >
           <div className="text-2xl">⚔️</div>
           <div>チャレンジ</div>
-        </motion.button>
-        <motion.button
-          type="button"
-          onClick={onStartMaker}
-          whileTap={{ scale: 0.95 }}
-          whileHover={{ scale: 1.04 }}
-          className="flex-1 rounded-2xl bg-green-500 p-4 text-center text-white font-bold shadow-[0_4px_0_#2e7d32]"
-        >
-          <div className="text-2xl">✏️</div>
-          <div>もんだいづくり</div>
         </motion.button>
       </div>
 

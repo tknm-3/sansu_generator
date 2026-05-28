@@ -1,7 +1,10 @@
 export type ProblemScene =
   | { kind: 'combine'; emoji: string; a: number; b: number }
   | { kind: 'takeAway'; emoji: string; total: number; remove: number }
-  | { kind: 'placeValue'; aTens: number; aOnes: number; bTens: number; bOnes: number };
+  | { kind: 'placeValue'; aTens: number; aOnes: number; bTens: number; bOnes: number }
+  | { kind: 'container'; emoji: string; items: number; capacity: number }
+  | { kind: 'groups'; emoji: string; groups: number; perGroup: number }
+  | { kind: 'shareOut'; emoji: string; total: number; groups: number };
 
 export function sceneFor(
   unitId: string,

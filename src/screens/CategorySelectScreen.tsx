@@ -3,6 +3,7 @@ import type { Category } from '../data/units';
 
 interface Props {
   onSelect: (category: Category) => void;
+  onMaker: () => void;
 }
 
 const CATEGORIES = [
@@ -26,7 +27,7 @@ const CATEGORIES = [
   },
 ] as const;
 
-export function CategorySelectScreen({ onSelect }: Props) {
+export function CategorySelectScreen({ onSelect, onMaker }: Props) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-gradient-to-b from-violet-100 to-amber-50 p-8">
       <motion.h1
@@ -57,6 +58,22 @@ export function CategorySelectScreen({ onSelect }: Props) {
             <div className="mt-1 text-sm text-white/80">{cat.description}</div>
           </motion.button>
         ))}
+
+        <motion.button
+          type="button"
+          onClick={onMaker}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: CATEGORIES.length * 0.12, type: 'spring', stiffness: 220 }}
+          whileHover={{ scale: 1.04, y: -3 }}
+          whileTap={{ scale: 0.96 }}
+          className="rounded-3xl bg-gradient-to-br from-amber-300 to-orange-200 p-6 text-left shadow-lg"
+          style={{ boxShadow: '0 5px 0 #c2410c' }}
+        >
+          <div className="text-5xl mb-2">✏️</div>
+          <div className="text-2xl font-bold text-white drop-shadow">もんだいづくり</div>
+          <div className="mt-1 text-sm text-white/80">じぶんで もんだいを つくろう…</div>
+        </motion.button>
       </div>
     </div>
   );
