@@ -1,6 +1,6 @@
 import type { TemplateFilled } from './problemTemplates';
 
-export type BuilderKind = 'add' | 'sub' | 'big-add' | 'pittari';
+export type BuilderKind = 'add' | 'sub' | 'big-add' | 'pittari' | 'mul' | 'div';
 
 export interface BuilderDef {
   kind: BuilderKind;
@@ -39,6 +39,24 @@ export const BUILDERS: BuilderDef[] = [
     emojiOptions: [],
     grade: '小2',
     desc: '10のまとまりを おく',
+  },
+  {
+    kind: 'mul',
+    label: 'かけざん',
+    mark: '✖️',
+    color: 'bg-pink-400 shadow-[0_4px_0_#be185d]',
+    emojiOptions: ['🍩', '⭐', '🍓', '🐟', '🌸', '🍬'],
+    grade: '小2',
+    desc: 'おさらに ○○ずつ のせる',
+  },
+  {
+    kind: 'div',
+    label: 'わりざん',
+    mark: '➗',
+    color: 'bg-teal-500 shadow-[0_4px_0_#0f766e]',
+    emojiOptions: ['🍪', '🍬', '🍎', '⭐', '🍩'],
+    grade: '小3',
+    desc: 'みんなで おなじだけ わける',
   },
   {
     kind: 'pittari',
@@ -118,6 +136,34 @@ export function buildPittari(items: number, capacity: number, emoji: string): Te
     b: capacity,
     scene: { kind: 'container', emoji, items, capacity },
     hint,
+  };
+}
+
+export function buildMultiplication(groups: number, perGroup: number, emoji: string): TemplateFilled {
+  return {
+    templateId: 'builder-mul',
+    type: 'multiplication',
+    questionText: `${emoji}が ${perGroup}こずつ。おさらが ${groups}まい。ぜんぶで なんこ？`,
+    answer: groups * perGroup,
+    emoji,
+    a: groups,
+    b: perGroup,
+    scene: { kind: 'groups', emoji, groups, perGroup },
+    hint: `${perGroup}この かたまりが ${groups}つ。${perGroup}ずつ かぞえてみよう。`,
+  };
+}
+
+export function buildDivision(total: number, groups: number, emoji: string): TemplateFilled {
+  return {
+    templateId: 'builder-div',
+    type: 'division',
+    questionText: `${emoji}が ${total}こ。${groups}にんで わけると 1にん なんこ？`,
+    answer: Math.floor(total / groups),
+    emoji,
+    a: total,
+    b: groups,
+    scene: { kind: 'shareOut', emoji, total, groups },
+    hint: `${total}こを ${groups}つに おなじだけ くばってみよう。`,
   };
 }
 

@@ -8,6 +8,8 @@ import {
   buildSubtraction,
   buildBigAddition,
   buildPittari,
+  buildMultiplication,
+  buildDivision,
   pittariVerdict,
   type BuilderDef,
   type BuilderKind,
@@ -167,6 +169,71 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
   );
 }
 
+function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: (p: TemplateFilled) => void; onBack: () => void }) {
+  const [groups, setGroups] = useState(3);
+  const [perGroup, setPerGroup] = useState(2);
+  const [emojiIdx, setEmojiIdx] = useState(0);
+  const emoji = def.emojiOptions[emojiIdx];
+
+  return (
+    <div className={SCREEN_BG}>
+      <h1 className="text-2xl font-bold text-green-800">おさらに のせて かけざん！</h1>
+      <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
+      <p className="text-sm font-bold text-amber-700">1さらに のせる かず</p>
+      <ItemTray emoji={emoji} count={perGroup} max={6} onChange={setPerGroup} accent="border-pink-300 bg-pink-50" />
+      <Stepper
+        label="おさらの かず"
+        value={groups}
+        onMinus={() => setGroups((v) => Math.max(1, v - 1))}
+        onPlus={() => setGroups((v) => Math.min(6, v + 1))}
+      />
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {Array.from({ length: groups }).map((_, g) => (
+          <div key={g} className="flex flex-wrap justify-center gap-0.5 rounded-full border-2 border-pink-200 bg-white p-1.5 max-w-[5rem]">
+            {Array.from({ length: perGroup }).map((_, i) => (
+              <span key={i} className="text-base">{emoji}</span>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="rounded-2xl bg-white px-6 py-3 text-3xl font-bold text-amber-900 shadow">
+        {perGroup} × {groups} ＝ {perGroup * groups}
+      </div>
+      <CompleteButton onClick={() => onComplete(buildMultiplication(groups, perGroup, emoji))} />
+      <BackLink onClick={onBack} />
+    </div>
+  );
+}
+
+function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: (p: TemplateFilled) => void; onBack: () => void }) {
+  const [total, setTotal] = useState(6);
+  const [groups, setGroups] = useState(2);
+  const [emojiIdx, setEmojiIdx] = useState(0);
+  const emoji = def.emojiOptions[emojiIdx];
+  const per = Math.floor(total / groups);
+  const remainder = total - per * groups;
+
+  return (
+    <div className={SCREEN_BG}>
+      <h1 className="text-2xl font-bold text-green-800">みんなで わけよう！</h1>
+      <EmojiPalette options={def.emojiOptions} idx={emojiIdx} onPick={setEmojiIdx} />
+      <p className="text-sm font-bold text-amber-700">ぜんぶの かず</p>
+      <ItemTray emoji={emoji} count={total} max={12} onChange={setTotal} accent="border-teal-300 bg-teal-50" />
+      <Stepper
+        label="なんにんで"
+        value={groups}
+        onMinus={() => setGroups((v) => Math.max(1, v - 1))}
+        onPlus={() => setGroups((v) => Math.min(6, v + 1))}
+      />
+      <div className="rounded-2xl bg-white px-6 py-3 text-2xl font-bold text-amber-900 shadow">
+        1にん {per}こ{remainder > 0 ? `（あまり ${remainder}）` : ''}
+      </div>
+      <CompleteButton onClick={() => onComplete(buildDivision(total, groups, emoji))} />
+      <BackLink onClick={onBack} />
+    </div>
+  );
+}
+
 function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: (p: TemplateFilled) => void; onBack: () => void }) {
   const [items, setItems] = useState(4);
   const [capacity, setCapacity] = useState(5);
@@ -249,6 +316,8 @@ export function ProblemBuilderScreen({ characterName: _characterName, onMake, on
     const back = () => setStep('pick');
     if (kind === 'add') return <AddBuilder def={def} onComplete={handleComplete} onBack={back} />;
     if (kind === 'sub') return <SubBuilder def={def} onComplete={handleComplete} onBack={back} />;
+    if (kind === 'mul') return <MulBuilder def={def} onComplete={handleComplete} onBack={back} />;
+    if (kind === 'div') return <DivBuilder def={def} onComplete={handleComplete} onBack={back} />;
     if (kind === 'pittari') return <PittariBuilder def={def} onComplete={handleComplete} onBack={back} />;
     return <BigAddBuilder onComplete={handleComplete} onBack={back} />;
   }

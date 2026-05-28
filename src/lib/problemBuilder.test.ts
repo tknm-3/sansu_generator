@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { buildAddition, buildSubtraction, buildBigAddition, buildPittari, pittariVerdict } from './problemBuilder';
+import {
+  buildAddition,
+  buildSubtraction,
+  buildBigAddition,
+  buildPittari,
+  pittariVerdict,
+  buildMultiplication,
+  buildDivision,
+} from './problemBuilder';
 
 describe('buildAddition', () => {
   it('こたえと scene を combine で返す', () => {
@@ -27,6 +35,27 @@ describe('buildBigAddition', () => {
     expect(p.b).toBe(14);
     expect(p.answer).toBe(37);
     expect(p.scene).toEqual({ kind: 'placeValue', aTens: 2, aOnes: 3, bTens: 1, bOnes: 4 });
+  });
+});
+
+describe('buildMultiplication', () => {
+  it('groups × perGroup と groups scene を返す', () => {
+    const p = buildMultiplication(3, 4, '🍩');
+    expect(p.type).toBe('multiplication');
+    expect(p.answer).toBe(12);
+    expect(p.scene).toEqual({ kind: 'groups', emoji: '🍩', groups: 3, perGroup: 4 });
+  });
+});
+
+describe('buildDivision', () => {
+  it('わり切れる: floor と shareOut scene を返す', () => {
+    const p = buildDivision(12, 3, '🍪');
+    expect(p.type).toBe('division');
+    expect(p.answer).toBe(4);
+    expect(p.scene).toEqual({ kind: 'shareOut', emoji: '🍪', total: 12, groups: 3 });
+  });
+  it('あまりがある場合は floor を返す', () => {
+    expect(buildDivision(7, 2, '🍪').answer).toBe(3);
   });
 });
 

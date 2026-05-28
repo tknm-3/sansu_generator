@@ -35,6 +35,26 @@ describe('ProblemBuilderScreen', () => {
     expect(screen.getByText('もんだい できたよ！')).toBeInTheDocument();
   });
 
+  it('かけざんを作れる', () => {
+    const onMake = vi.fn();
+    render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
+    fireEvent.click(screen.getByText('かけざん'));
+    expect(screen.getByText('おさらに のせて かけざん！')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('これで かんせい！'));
+    fireEvent.click(screen.getByText('ちょうせん！'));
+    expect(onMake.mock.calls[0][0].type).toBe('multiplication');
+  });
+
+  it('わりざんを作れる', () => {
+    const onMake = vi.fn();
+    render(<ProblemBuilderScreen characterName="テスト" onMake={onMake} onExit={() => {}} />);
+    fireEvent.click(screen.getByText('わりざん'));
+    expect(screen.getByText('みんなで わけよう！')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('これで かんせい！'));
+    fireEvent.click(screen.getByText('ちょうせん！'));
+    expect(onMake.mock.calls[0][0].type).toBe('division');
+  });
+
   it('もどるで 種類選びに戻れる', () => {
     const onExit = vi.fn();
     render(<ProblemBuilderScreen characterName="テスト" onMake={() => {}} onExit={onExit} />);
