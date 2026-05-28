@@ -22,7 +22,7 @@ import { ShapeSpatialUnit } from './screens/ShapeSpatialUnit';
 import { ShapeFitUnit } from './screens/ShapeFitUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
-import { ProblemMakerScreen } from './screens/ProblemMakerScreen';
+import { ProblemBuilderScreen } from './screens/ProblemBuilderScreen';
 import { ParentSolveScreen } from './screens/ParentSolveScreen';
 import { StampBook } from './screens/StampBook';
 import { ProgressCalendar } from './screens/ProgressCalendar';
@@ -113,7 +113,7 @@ export default function App() {
 
   function renderScreen() {
     if (screen.kind === 'categorySelect') {
-      return <CategorySelectScreen onSelect={handleSelectCategory} />;
+      return <CategorySelectScreen onSelect={handleSelectCategory} onMaker={() => setScreen({ kind: 'maker' })} />;
     }
 
     if (screen.kind === 'unit') {
@@ -168,11 +168,11 @@ export default function App() {
 
     if (screen.kind === 'maker') {
       return (
-        <ProblemMakerScreen
+        <ProblemBuilderScreen
           key={refresh}
           characterName={character.name}
           onMake={(problem) => setScreen({ kind: 'parentSolve', problem })}
-          onExit={handleExit}
+          onExit={() => setScreen({ kind: 'categorySelect' })}
         />
       );
     }
@@ -182,7 +182,7 @@ export default function App() {
         <ParentSolveScreen
           problem={screen.problem}
           characterName={character.name}
-          onDone={handleExit}
+          onDone={() => setScreen({ kind: 'categorySelect' })}
         />
       );
     }
@@ -258,7 +258,6 @@ export default function App() {
         onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
         onStartChallenge={() => setScreen({ kind: 'challenge' })}
         onStartMission={() => setScreen({ kind: 'mission' })}
-        onStartMaker={() => setScreen({ kind: 'maker' })}
         onOpenCollection={() => setScreen({ kind: 'collection' })}
         onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
         onOpenProgress={() => setScreen({ kind: 'progress' })}
