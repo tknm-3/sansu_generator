@@ -13,8 +13,16 @@ const STEP_MS = 420;
  * 矢印プログラムの 再生（アニメーション）を あつかう共通フック。
  * スタートで いっき再生、1コマずつ も できる。
  * デバッグ・矢印ならべ・自分で作る の どの単元からも使う。
+ *
+ * 命令の 実行は 既定で runProgram（矢印エンジン）だが、第3引数で
+ * べつの 実行関数（例：分岐単元の runBranch）を わたせる。命令の 型 C も
+ * それに あわせて さしかえられる。
  */
-export function useProgramRunner(level: Level, onFinish?: (result: RunResult) => void) {
+export function useProgramRunner<C = Command>(
+  level: Level,
+  onFinish?: (result: RunResult) => void,
+  run: (level: Level, commands: C[]) => RunResult = runProgram as unknown as (level: Level, commands: C[]) => RunResult,
+) {
   const [charPos, setCharPos] = useState<Pos>(level.start);
   const [trail, setTrail] = useState<Pos[]>([]);
   const [collected, setCollected] = useState<Pos[]>([]);
@@ -60,9 +68,9 @@ export function useProgramRunner(level: Level, onFinish?: (result: RunResult) =>
 
   /** いっき再生 */
   const play = useCallback(
-    (commands: Command[]) => {
+    (commands: C[]) => {
       clearTimer();
-      const result = runProgram(level, commands);
+      const result = run(level, commands);
       plan.current = { result, index: 0 };
       setBlockedCell(null);
       setFinished(false);
@@ -103,10 +111,10 @@ export function useProgramRunner(level: Level, onFinish?: (result: RunResult) =>
 
   /** 1コマだけ すすめる */
   const step = useCallback(
-    (commands: Command[]) => {
+    (commands: C[]) => {
       clearTimer();
       if (!plan.current) {
-        plan.current = { result: runProgram(level, commands), index: 0 };
+        plan.current = { result: run(level, commands), index: 0 };
         setBlockedCell(null);
         setFinished(false);
       }
