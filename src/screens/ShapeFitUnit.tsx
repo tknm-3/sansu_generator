@@ -13,11 +13,14 @@ import { setBgmTrack } from '../features/sound/bgm';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
-import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
+import { addStamp, EMPTY_STAMPS, getUnitStampCount, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { getPuzzles, silhouetteKey, type FitPiece, type FitShape } from '../lib/geometry/fitPuzzles';
+import { pickPuzzles, rememberPuzzles, puzzleRank } from '../lib/geometry/fitSession';
 
-const PUZZLES_PER_UNIT = 2;
+const PUZZLES_PER_UNIT = 3;
 const SNAP_THRESHOLD = 52;
+// さいきん だした パズルIDを おぼえておく localStorage キーの あたま（skillId・なんいど ごと）
+const RECENT_KEY_PREFIX = 'math-app:fit-recent:';
 
 interface Props {
   variant: 'fit' | 'tangram';
@@ -106,12 +109,22 @@ function TrayPiece({
 export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
   const skillId = variant === 'fit' ? 'shape-fit' : 'shape-tangram';
 
+  // なんいど ごとに りれきを わけて、さいきん だしていない パズルを ゆうせんして だす。
+  const recentKey = `${RECENT_KEY_PREFIX}${skillId}${hard ? ':hard' : ''}`;
   const queue = useMemo(() => {
-    const list = shuffle(getPuzzles(variant, hard));
-    const out = [...list];
-    while (out.length < PUZZLES_PER_UNIT && list.length > 0) out.push(list[out.length % list.length]);
-    return out.slice(0, PUZZLES_PER_UNIT);
-  }, [variant, hard]);
+    const all = getPuzzles(variant, hard);
+    const recent = loadJson<string[]>(recentKey, []);
+    return pickPuzzles(all, recent, PUZZLES_PER_UNIT);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant, hard, recentKey]);
+
+  // この セットで だした パズルを りれきに きろく（ぜんたいの だいたい はんぶんを おぼえる）。
+  useEffect(() => {
+    const all = getPuzzles(variant, hard);
+    const recent = loadJson<string[]>(recentKey, []);
+    const keep = Math.max(PUZZLES_PER_UNIT, Math.floor(all.length / 2));
+    saveJson(recentKey, rememberPuzzles(recent, queue.map((p) => p.id), keep));
+  }, [queue, recentKey, variant, hard]);
 
   const [pIdx, setPIdx] = useState(0);
   // スロットID → そこに はまっている ピースID。
@@ -130,6 +143,12 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
   const trayOrder = useMemo(() => shuffle(puzzle.pieces.map((p) => p.id)), [puzzle.id]);
   const cleared = solvedPuzzles >= PUZZLES_PER_UNIT;
   const usedPieceIds = useMemo(() => new Set(Object.values(placement)), [placement]);
+
+  // これまでの クリアかいすう から「ランク（しょうごう）」を だして、すすんでる かんじを みせる。
+  const rank = useMemo(() => {
+    const clears = getUnitStampCount(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS).history, skillId);
+    return { clears, ...puzzleRank(clears) };
+  }, [skillId, solvedPuzzles]);
 
   function rotatepiece(id: string) {
     setPieceRotations((prev) => ({ ...prev, [id]: ((prev[id] ?? 0) + 90) % 360 }));
@@ -197,6 +216,18 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
         <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} className="text-7xl">🎉</motion.div>
         <p className="text-2xl font-bold text-teal-700">クリア！ スタンプ ゲット！</p>
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring', stiffness: 300 }} className="text-5xl">⭐</motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="flex flex-col items-center gap-1 rounded-2xl bg-white/70 px-6 py-3"
+        >
+          <span className="text-xl font-bold text-teal-800">{rank.emoji} {rank.label}</span>
+          <span className="text-sm font-bold text-teal-600">これまで {rank.clears} かい クリア！</span>
+          {rank.toNext > 0 && (
+            <span className="text-xs font-bold text-orange-500">あと {rank.toNext} かいで つぎの ランク！</span>
+          )}
+        </motion.div>
         <button type="button" onClick={onExit} className="rounded-2xl bg-teal-500 px-8 py-4 text-2xl font-bold text-white shadow-[0_5px_0_#00695c] active:translate-y-1 transition-all">
           ホームに もどる
         </button>
@@ -212,7 +243,12 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
     <div className="flex min-h-screen flex-col items-center gap-4 bg-gradient-to-b from-emerald-100 to-teal-50 p-6">
       <div className="self-stretch flex items-center justify-between">
         <span className="text-sm text-teal-700 font-bold">パズル: {solvedPuzzles} / {PUZZLES_PER_UNIT}</span>
-        {hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-teal-700" title={`これまで ${rank.clears} かい クリア`}>
+            {rank.emoji} {rank.label}
+          </span>
+          {hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
+        </div>
       </div>
 
       <motion.h2
