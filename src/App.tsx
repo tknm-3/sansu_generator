@@ -20,6 +20,10 @@ import { ShapeFoldUnit } from './screens/ShapeFoldUnit';
 import { ShapePatternUnit } from './screens/ShapePatternUnit';
 import { ShapeSpatialUnit } from './screens/ShapeSpatialUnit';
 import { ShapeFitUnit } from './screens/ShapeFitUnit';
+import { ProgrammingHomeScreen } from './screens/ProgrammingHomeScreen';
+import { ArrowSequenceUnit } from './screens/ArrowSequenceUnit';
+import { ArrowDebugUnit } from './screens/ArrowDebugUnit';
+import { ArrowMakerUnit } from './screens/ArrowMakerUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
 import { ProblemBuilderScreen } from './screens/ProblemBuilderScreen';
@@ -38,6 +42,7 @@ import { EMPTY_STAMPS, STAMP_KEY, type StampState } from './features/rewards/sta
 import type { Character } from './features/character/character';
 import type { TemplateFilled } from './lib/problemTemplates';
 import type { Category } from './data/units';
+import type { Difficulty } from './lib/programming/progress';
 
 const PROFILE_KEY = 'math-app:profile';
 
@@ -45,6 +50,9 @@ type Screen =
   | { kind: 'categorySelect' }
   | { kind: 'home' }
   | { kind: 'katachiHome' }
+  | { kind: 'programmingHome' }
+  | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
+  | { kind: 'progMaker' }
   | { kind: 'unit'; unitId: string; hard?: boolean; returnTo?: 'katachi-mission' | 'katachi-challenge' }
   | { kind: 'challenge' }
   | { kind: 'mission' }
@@ -62,6 +70,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'categorySelect' });
   const [category, setCategory] = useState<Category>('sansu');
   const [refresh, setRefresh] = useState(0);
+  const [progReplay, setProgReplay] = useState(0);
 
   useEffect(() => {
     if (screen.kind === 'home' || screen.kind === 'progress' || screen.kind === 'stampBook' || screen.kind === 'collection' || screen.kind === 'characterDetail') {
@@ -71,6 +80,9 @@ export default function App() {
       setBgmTrack('katachi-home');
     }
     if (screen.kind === 'categorySelect') {
+      setBgmTrack('home');
+    }
+    if (screen.kind === 'programmingHome') {
       setBgmTrack('home');
     }
   }, [screen.kind]);
@@ -106,9 +118,17 @@ export default function App() {
 
   const sharedProps = { characterName: character.name, characterId: character.id, onExit: handleExit };
 
+  function homeScreenForCategory(): Screen {
+    if (category === 'katachi') return { kind: 'katachiHome' };
+    if (category === 'programming') return { kind: 'programmingHome' };
+    return { kind: 'home' };
+  }
+
   function handleSelectCategory(cat: Category) {
     setCategory(cat);
-    setScreen(cat === 'katachi' ? { kind: 'katachiHome' } : { kind: 'home' });
+    if (cat === 'katachi') setScreen({ kind: 'katachiHome' });
+    else if (cat === 'programming') setScreen({ kind: 'programmingHome' });
+    else setScreen({ kind: 'home' });
   }
 
   function renderScreen() {
@@ -141,6 +161,44 @@ export default function App() {
         case 'shape-tangram':   return <ShapeFitUnit        key={refresh} variant="tangram" hard={hard} {...sharedProps} />;
         default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
       }
+    }
+
+    if (screen.kind === 'programmingHome') {
+      return (
+        <ProgrammingHomeScreen
+          key={refresh}
+          characterName={character.name}
+          characterId={character.id}
+          onPlay={(unitId, difficulty) => { setProgReplay(0); setScreen({ kind: 'progUnit', unitId, difficulty }); }}
+          onMaker={() => setScreen({ kind: 'progMaker' })}
+          onOpenCollection={() => setScreen({ kind: 'collection' })}
+          onBack={() => setScreen({ kind: 'categorySelect' })}
+        />
+      );
+    }
+
+    if (screen.kind === 'progUnit') {
+      const progProps = {
+        characterName: character.name,
+        characterId: character.id,
+        difficulty: screen.difficulty,
+        onExit: () => setScreen({ kind: 'programmingHome' }),
+        onAgain: () => setProgReplay((r) => r + 1),
+      };
+      const replayKey = `${screen.unitId}-${screen.difficulty}-${progReplay}`;
+      if (screen.unitId === 'arrow-debug') return <ArrowDebugUnit key={replayKey} {...progProps} />;
+      return <ArrowSequenceUnit key={replayKey} {...progProps} />;
+    }
+
+    if (screen.kind === 'progMaker') {
+      return (
+        <ArrowMakerUnit
+          key={refresh}
+          characterName={character.name}
+          characterId={character.id}
+          onExit={() => setScreen({ kind: 'programmingHome' })}
+        />
+      );
     }
 
     if (screen.kind === 'challenge') return <ChallengeMode key={refresh} {...sharedProps} />;
@@ -194,7 +252,7 @@ export default function App() {
           activeCharId={character.id}
           characterNames={character.characterNames}
           onOpenDetail={(charId) => setScreen({ kind: 'characterDetail', charId })}
-          onClose={() => setScreen(category === 'katachi' ? { kind: 'katachiHome' } : { kind: 'home' })}
+          onClose={() => setScreen(homeScreenForCategory())}
         />
       );
     }
