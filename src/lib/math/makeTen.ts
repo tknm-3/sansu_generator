@@ -1,4 +1,5 @@
 import type { ExplainStep } from './explain';
+import { quizChoices } from './explain';
 
 /** 10にするために あと何個必要か（0..10にクランプ） */
 export function missingToTen(current: number): number {
@@ -42,6 +43,11 @@ export function explainMakeTen(current: number, emoji: string): ExplainStep[] {
       caption: `いま ${current}こ`,
       narration: `いま ${current}こ あるよ`,
       data: { emoji, count: current },
+      quiz: {
+        prompt: 'あと なんこで 10に なる？',
+        choices: quizChoices(missing),
+        answer: missing,
+      },
     },
     {
       kind: 'objects',

@@ -34,6 +34,7 @@ export function MakeTenUnit({ characterName, characterId, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [flash, setFlash] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   useEffect(() => { setBgmTrack('make-ten'); }, []);
   const choices = useMemo(() => makeAnswerChoices(current), [current]);
   const cleared = solved >= QUESTIONS_PER_UNIT;
@@ -69,7 +70,8 @@ export function MakeTenUnit({ characterName, characterId, onExit }: Props) {
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど やってみよう');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -132,7 +134,7 @@ export function MakeTenUnit({ characterName, characterId, onExit }: Props) {
       >
         💡 ヒント
       </button>
-      <AnswerButtons choices={choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnswerButtons choices={choices} onPick={handlePick} disabled={expression === 'happy' || reviewing} />
       <AnimatePresence>
         {feedback === 'wrong' && (
           <motion.p
@@ -151,6 +153,7 @@ export function MakeTenUnit({ characterName, characterId, onExit }: Props) {
         やめる
       </button>
       {showHint && (<StepExplainer steps={explainMakeTen(current, fruit)} problem={`${current} ＋ ？ ＝ 10`} onClose={() => setShowHint(false)} />)}
+      {reviewing && (<StepExplainer gate steps={explainMakeTen(current, fruit)} problem={`${current} ＋ ？ ＝ 10`} onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }} />)}
     </div>
   );
 }

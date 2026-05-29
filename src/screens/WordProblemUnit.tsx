@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
+import { StepExplainer } from '../components/StepExplainer';
 import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
@@ -13,6 +14,7 @@ import {
   generateWordProblem,
   checkVerdict,
   checkDiff,
+  explainWordProblem,
   type WordProblem,
   type WordVerdict,
   type WordVariant,
@@ -39,6 +41,7 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
   const [solved, setSolved] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   const skillId = variant;
 
@@ -50,6 +53,7 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
     setProblem(generateWordProblem(variant));
     setStep('verdict');
     setFeedback('none');
+    setReviewing(false);
     setExpression('normal');
     processing.current = false;
   }
@@ -93,7 +97,8 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど かんがえてみよう');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -110,7 +115,8 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど！');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -157,7 +163,7 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
                 key={value}
                 type="button"
                 onClick={() => handleVerdictPick(value)}
-                disabled={expression === 'happy'}
+                disabled={expression === 'happy' || reviewing}
                 whileTap={{ scale: 0.93, y: 3 }}
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 15 }}
@@ -176,7 +182,7 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
           <AnswerButtons
             choices={problem.diffChoices}
             onPick={handleDiffPick}
-            disabled={expression === 'happy'}
+            disabled={expression === 'happy' || reviewing}
           />
         </div>
       )}
@@ -198,6 +204,14 @@ export function WordProblemUnit({ variant, characterName, characterId, onExit }:
       <button type="button" onClick={onExit} className="mt-auto text-sm text-amber-600 underline">
         やめる
       </button>
+      {reviewing && (
+        <StepExplainer
+          gate
+          steps={explainWordProblem(problem)}
+          problem="くらべてみよう"
+          onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }}
+        />
+      )}
     </div>
   );
 }

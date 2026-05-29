@@ -59,7 +59,12 @@ export function explainCherry(p: CarryProblem): ExplainStep[] {
       kind: 'equation',
       caption: '10と のこりで…',
       narration: `10たす${dec.carry}で ${dec.answer}`,
-      data: { text: `10 ＋ ${dec.carry} ＝ ${dec.answer}` },
+      data: { text: `10 ＋ ${dec.carry} ＝ ？` },
+      quiz: {
+        prompt: `10と のこり ${dec.carry}で いくつ？`,
+        choices: p.choices,
+        answer: dec.answer,
+      },
     },
   ];
 }

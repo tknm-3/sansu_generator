@@ -34,6 +34,7 @@ export function AdditionUnit({ characterName, characterId, onExit }: Props) {
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
   const [showVisual, setShowVisual] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   useEffect(() => { setBgmTrack('addition'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
@@ -62,7 +63,8 @@ export function AdditionUnit({ characterName, characterId, onExit }: Props) {
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど やってみよう');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -117,7 +119,7 @@ export function AdditionUnit({ characterName, characterId, onExit }: Props) {
       {(showVisual || expression === 'happy') && (
         <ProblemVisual scene={sceneFor(SKILL_ID, problem as unknown as Record<string, unknown>, animal)} />
       )}
-      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy' || reviewing} />
       <AnimatePresence>
         {feedback === 'wrong' && (
           <motion.p key="w" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: [0, -8, 8, -4, 0] }} exit={{ opacity: 0 }} className="text-lg font-bold text-orange-600">
@@ -127,6 +129,7 @@ export function AdditionUnit({ characterName, characterId, onExit }: Props) {
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (<StepExplainer steps={explainAddition(problem, animal)} problem={formula} onClose={() => setShowHint(false)} />)}
+      {reviewing && (<StepExplainer gate steps={explainAddition(problem, animal)} problem={formula} onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }} />)}
     </div>
   );
 }

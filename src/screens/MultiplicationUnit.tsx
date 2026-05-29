@@ -53,6 +53,7 @@ export function MultiplicationUnit({ characterName, characterId, onExit }: Props
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   useEffect(() => { setBgmTrack('multiplication'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
@@ -81,7 +82,8 @@ export function MultiplicationUnit({ characterName, characterId, onExit }: Props
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど やってみよう');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -131,7 +133,7 @@ export function MultiplicationUnit({ characterName, characterId, onExit }: Props
         💡 ヒント
       </button>
       <GroupVisual problem={problem} emoji={emoji} />
-      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy' || reviewing} />
       <AnimatePresence>
         {feedback === 'wrong' && (
           <motion.p key="w" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: [0, -8, 8, -4, 0] }} exit={{ opacity: 0 }} className="text-lg font-bold text-orange-600">
@@ -142,6 +144,9 @@ export function MultiplicationUnit({ characterName, characterId, onExit }: Props
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (
         <StepExplainer steps={explainMultiplication(problem, emoji)} problem={formula} onClose={() => setShowHint(false)} />
+      )}
+      {reviewing && (
+        <StepExplainer gate steps={explainMultiplication(problem, emoji)} problem={formula} onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }} />
       )}
     </div>
   );

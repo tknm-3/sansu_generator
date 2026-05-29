@@ -1,11 +1,12 @@
-import { generateAddition } from '../math/addition';
-import { generateSubtraction } from '../math/subtraction';
-import { missingToTen, makeAnswerChoices } from '../math/makeTen';
-import { generateCarryProblem } from '../math/cherryCalc';
-import { generateBigAddition } from '../math/bigAddition';
-import { generateBigSubtraction } from '../math/bigSubtraction';
-import { generateMultiplication } from '../math/multiplication';
-import { generateDivision } from '../math/division';
+import type { ExplainStep } from '../math/explain';
+import { generateAddition, explainAddition } from '../math/addition';
+import { generateSubtraction, explainSubtraction } from '../math/subtraction';
+import { missingToTen, makeAnswerChoices, explainMakeTen } from '../math/makeTen';
+import { generateCarryProblem, explainCherry } from '../math/cherryCalc';
+import { generateBigAddition, explainBigAddition } from '../math/bigAddition';
+import { generateBigSubtraction, explainBigSubtraction } from '../math/bigSubtraction';
+import { generateMultiplication, explainMultiplication } from '../math/multiplication';
+import { generateDivision, explainDivision } from '../math/division';
 
 export const ALL_SKILL_IDS = [
   'make-ten',
@@ -26,6 +27,8 @@ export interface Problem {
   answer: number;
   choices: number[];
   emoji?: string;
+  /** 間違えたときの「考え方ヒント」手順（quiz 入り）。 */
+  explain?: ExplainStep[];
 }
 
 const FLAVOR_ANIMALS = ['🐱', '🐶', '🐸', '🐼', '🦊', '🐨', '🦁', '🐯'];
@@ -93,6 +96,7 @@ export function generateProblem(skillId: string): Problem {
         answer,
         choices,
         emoji: food,
+        explain: explainMakeTen(current, food),
       };
     }
     case 'addition': {
@@ -104,6 +108,7 @@ export function generateProblem(skillId: string): Problem {
         answer: p.a + p.b,
         choices: p.choices,
         emoji: animal,
+        explain: explainAddition(p, animal),
       };
     }
     case 'subtraction': {
@@ -115,6 +120,7 @@ export function generateProblem(skillId: string): Problem {
         answer: p.a - p.b,
         choices: p.choices,
         emoji: food,
+        explain: explainSubtraction(p, food),
       };
     }
     case 'cherry-calc': {
@@ -125,6 +131,7 @@ export function generateProblem(skillId: string): Problem {
         answer: p.a + p.b,
         choices: p.choices,
         emoji: '🍒',
+        explain: explainCherry(p),
       };
     }
     case 'big-addition': {
@@ -134,6 +141,7 @@ export function generateProblem(skillId: string): Problem {
         questionText: rndFrom(BIG_ADD_TEMPLATES)(p.a, p.b),
         answer: p.a + p.b,
         choices: p.choices,
+        explain: explainBigAddition(p),
       };
     }
     case 'big-subtraction': {
@@ -143,26 +151,31 @@ export function generateProblem(skillId: string): Problem {
         questionText: rndFrom(BIG_SUB_TEMPLATES)(p.a, p.b),
         answer: p.a - p.b,
         choices: p.choices,
+        explain: explainBigSubtraction(p),
       };
     }
     case 'multiplication': {
       const p = generateMultiplication();
+      const food = rndFrom(FLAVOR_FOODS);
       return {
         skillId,
         questionText: rndFrom(MUL_TEMPLATES)(p.a, p.b),
         answer: p.a * p.b,
         choices: p.choices,
         emoji: '✖️',
+        explain: explainMultiplication(p, food),
       };
     }
     case 'division': {
       const p = generateDivision();
+      const food = rndFrom(FLAVOR_FOODS);
       return {
         skillId,
         questionText: rndFrom(DIV_TEMPLATES)(p.dividend, p.divisor),
         answer: p.quotient,
         choices: p.choices,
         emoji: '➗',
+        explain: explainDivision(p, food),
       };
     }
     default: {

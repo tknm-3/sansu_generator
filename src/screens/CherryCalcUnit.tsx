@@ -42,6 +42,7 @@ export function CherryCalcUnit({ characterName, characterId, onExit }: Props) {
   const [hintStep, setHintStep] = useState<HintStep>(0);
   const [showHint, setShowHint] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   useEffect(() => { setBgmTrack('cherry-calc'); }, []);
   const cleared = solved >= QUESTIONS_PER_UNIT;
   const processing = useRef(false);
@@ -83,7 +84,8 @@ export function CherryCalcUnit({ characterName, characterId, onExit }: Props) {
       setFeedback('wrong');
       setExpression('hint');
       if (hintStep < 1) setHintStep((h) => (h + 1) as HintStep);
-      speakJa('おしい！ さくらんぼを みてみよう');
+      speakJa('おしい！ さくらんぼで かんがえてみよう');
+      setReviewing(true);
       processing.current = false;
     }
   }
@@ -151,7 +153,7 @@ export function CherryCalcUnit({ characterName, characterId, onExit }: Props) {
         )}
       </AnimatePresence>
 
-      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy' || reviewing} />
 
       <AnimatePresence>
         {feedback === 'wrong' && (
@@ -163,6 +165,7 @@ export function CherryCalcUnit({ characterName, characterId, onExit }: Props) {
 
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
       {showHint && (<StepExplainer steps={explainCherry(problem)} problem={formula} onClose={() => setShowHint(false)} />)}
+      {reviewing && (<StepExplainer gate steps={explainCherry(problem)} problem={formula} onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }} />)}
     </div>
   );
 }

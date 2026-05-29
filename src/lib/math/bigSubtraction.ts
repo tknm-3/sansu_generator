@@ -52,6 +52,11 @@ export function explainBigSubtraction(p: BigSubtractionProblem): ExplainStep[] {
         : `じゅうの くらい: ${p.tensA}－${p.tensB}＝${tensResult}`,
       narration: `じゅうのくらいは ${tensResult}`,
       data: { tens: tensResult, ones: 0 },
+      quiz: {
+        prompt: `のこりは ぜんぶで いくつ？`,
+        choices: p.choices,
+        answer: p.a - p.b,
+      },
     },
     {
       kind: 'equation',

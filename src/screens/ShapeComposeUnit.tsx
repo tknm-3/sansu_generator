@@ -6,6 +6,7 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
+import { ShapeHintGate } from '../components/ShapeHintGate';
 import { generateComposeProblem, type ComposeProblem } from '../lib/geometry/compose';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -33,36 +34,44 @@ export function ShapeComposeUnit({ hard = false, onExit }: Props) {
   const [problem, setProblem] = useState<ComposeProblem>(() => generateComposeProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
 
+  // 正解時の共通処理（本問・ヒントの両方から呼ぶ）
+  function registerCorrect() {
+    processing.current = true;
+    playSfx('correct');
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    const next = solved + 1;
+    setSolved(next);
+    setFeedback('none');
+    setReviewing(false);
+    if (next >= QUESTIONS_PER_UNIT) {
+      saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
+      playSfx('fanfare');
+      speakJa('クリア！ よくできたね！');
+    } else {
+      setTimeout(() => {
+        setProblem(generateComposeProblem(hard));
+        processing.current = false;
+      }, 900);
+    }
+  }
+
   function handlePick(idx: number) {
     if (processing.current) return;
     processing.current = true;
     playSfx('tap');
-    const correct = idx === problem.answerIndex;
-    if (correct) {
-      playSfx('correct');
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-      const next = solved + 1;
-      setSolved(next);
-      setFeedback('none');
-      if (next >= QUESTIONS_PER_UNIT) {
-        saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
-        playSfx('fanfare');
-        speakJa('クリア！ よくできたね！');
-      } else {
-        setTimeout(() => {
-          setProblem(generateComposeProblem(hard));
-          processing.current = false;
-        }, 900);
-      }
+    if (idx === problem.answerIndex) {
+      registerCorrect();
     } else {
       playSfx('wrong');
       setFeedback('wrong');
-      speakJa('おしい！ もういちど やってみよう');
+      setReviewing(true);
+      speakJa('おしい！ いっしょに かんがえてみよう');
       processing.current = false;
     }
   }
@@ -134,6 +143,22 @@ export function ShapeComposeUnit({ hard = false, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-2 text-sm text-teal-600 underline">やめる</button>
+
+      {reviewing && (
+        <ShapeHintGate
+          message={'おだいの かたちを よく みてね。\n2つの かたちを あわせると どの かたちに なるかな？'}
+          context={<div className="rounded-3xl bg-white shadow px-6 py-4"><SvgChoice svg={problem.questionSvg} size={150} /></div>}
+          count={problem.choices.length}
+          answerIndex={problem.answerIndex}
+          renderChoice={(idx) => (
+            <div className="flex flex-col items-center gap-1">
+              <SvgChoice svg={problem.choices[idx].svg} size={96} />
+              <span className="text-xs text-teal-700 font-bold">{problem.choices[idx].label}</span>
+            </div>
+          )}
+          onSolved={registerCorrect}
+        />
+      )}
     </div>
   );
 }
