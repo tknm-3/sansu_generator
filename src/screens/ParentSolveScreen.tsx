@@ -27,22 +27,26 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
   const [perChoices] = useState(() => makeChoices(problem.answer));
   const [remChoices] = useState(() => (needRemainder ? makeChoices(problem.remainder!) : []));
   const [stage, setStage] = useState<'per' | 'rem'>('per');
-  const [result, setResult] = useState<'none' | 'correct' | 'wrong'>('none');
+  const [result, setResult] = useState<'none' | 'correct'>('none');
+  // まちがえた回数。0より大きいときヒントと「もういちど」を表示する
+  const [misses, setMisses] = useState(0);
 
   const answerSummary = needRemainder
     ? `1にん ${problem.answer}こ、あまり ${problem.remainder}こ`
     : `${problem.answer}`;
 
   function handlePick(value: number) {
-    if (result !== 'none') return;
+    if (result === 'correct') return;
     playSfx('tap');
     const expected = stage === 'per' ? problem.answer : problem.remainder!;
     if (value !== expected) {
+      // まちがえても 終わりにせず、ヒントを みせて もういちど チャレンジできるようにする
       playSfx('wrong');
-      speakJa('ざんねん！ こたえは…');
-      setResult('wrong');
+      setMisses((m) => m + 1);
+      speakJa(problem.hint ? `おしい！ ヒントを みてね。 ${problem.hint}` : 'おしい！ もういちど かんがえてみよう。');
       return;
     }
+    setMisses(0);
     if (needRemainder && stage === 'per') {
       playSfx('correct');
       speakJa('いいね！ つぎは あまりは なんこ？');
@@ -71,6 +75,17 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
       {result === 'none' && subLabel && (
         <div className="rounded-xl bg-teal-100 px-5 py-2 text-xl font-bold text-teal-800">{subLabel}</div>
       )}
+      {result === 'none' && misses > 0 && (
+        <motion.div
+          key={misses}
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          className="flex max-w-md flex-col items-center gap-2 rounded-2xl bg-amber-50 px-5 py-3 text-center ring-2 ring-amber-200"
+        >
+          <p className="text-lg font-bold text-orange-600">おしい！ もういちど チャレンジ！ 💪</p>
+          {problem.hint && <p className="text-base font-bold text-amber-800">💡 {problem.hint}</p>}
+        </motion.div>
+      )}
       {result === 'none' && problem.hint && (
         <button type="button" onClick={() => speakJa(problem.hint!)} className="rounded-xl bg-amber-100 px-4 py-2 text-sm text-amber-700">💡 ヒント</button>
       )}
@@ -81,13 +96,7 @@ export function ParentSolveScreen({ problem, characterName, onDone }: Props) {
           <p className="text-2xl font-bold text-green-700">せいかい！ {answerSummary}！</p>
         </motion.div>
       )}
-      {result === 'wrong' && (
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
-          <div className="text-5xl">❌</div>
-          <p className="text-2xl font-bold text-red-600">こたえは {answerSummary} だったよ！</p>
-        </motion.div>
-      )}
-      {result !== 'none' && (
+      {result === 'correct' && (
         <button type="button" onClick={onDone}
           className="rounded-2xl bg-blue-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#1565c0]">
           ホームに もどる
