@@ -44,9 +44,14 @@ export function explainDivision(p: DivisionProblem, emoji: string): ExplainStep[
     },
     {
       kind: 'groups',
-      caption: `${p.divisor}人に おなじ かずずつ。\nひとり ${p.quotient}こ`,
-      narration: `${p.divisor}人に わけると ひとり ${p.quotient}こ`,
+      caption: `${p.divisor}人に おなじ かずずつ\nわけてみよう`,
+      narration: `${p.divisor}人に おなじ かずずつ わけるよ`,
       data: { emoji, perGroup: p.quotient, groups: p.divisor },
+      quiz: {
+        prompt: 'ひとり なんこ もらえる？',
+        choices: p.choices,
+        answer: p.quotient,
+      },
     },
     {
       kind: 'equation',

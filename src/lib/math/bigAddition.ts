@@ -50,6 +50,11 @@ export function explainBigAddition(p: BigAdditionProblem): ExplainStep[] {
         : `じゅうの くらい: ${p.tensA}＋${p.tensB}＝${tensSum}`,
       narration: `じゅうのくらいは あわせて ${tensSum}`,
       data: { tens: tensSum, ones: 0 },
+      quiz: {
+        prompt: `ぜんぶ あわせると いくつ？`,
+        choices: p.choices,
+        answer: p.a + p.b,
+      },
     },
     {
       kind: 'equation',

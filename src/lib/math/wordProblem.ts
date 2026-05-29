@@ -1,3 +1,6 @@
+import type { ExplainStep } from './explain';
+import { quizChoices } from './explain';
+
 export type WordVerdict = 'ぴったり' | 'たりない' | 'あまる';
 export type WordVariant = 'word-addition' | 'word-subtraction' | 'word-multiplication' | 'word-division';
 
@@ -388,6 +391,52 @@ function generateDivWord(rng: () => number): WordProblem {
     step2Question: verdict !== 'ぴったり' ? sc.step2(verdict) : '',
     diffChoices: verdict !== 'ぴったり' ? makeDiffChoices(diff, rng) : [],
   };
+}
+
+/**
+ * 文章題の「考え方」ヒント。
+ * もっている かず と くらべる かず を ならべて、
+ * その「ちがい」を こどもに かぞえさせる（quiz）。
+ * ちがいが わかれば「ぴったり／あまる／たりない」が じぶんで はんだんできる。
+ */
+export function explainWordProblem(p: WordProblem): ExplainStep[] {
+  // have = もっている／ある かず、need = いる／はいる かず
+  let have: number;
+  let need: number;
+  switch (p.variant) {
+    case 'word-addition':       have = p.a + p.b; need = p.c; break;       // もの vs いれもの
+    case 'word-subtraction':    have = p.a;       need = p.b; break;       // ある vs くばるかず
+    case 'word-multiplication': have = p.c;       need = p.a * p.b; break; // もの vs はいるかず
+    case 'word-division':       have = p.a;       need = p.b * p.c; break; // ある vs ひつよう
+  }
+  const moreThanNeed = have >= need; // あまる側か たりない側か
+  return [
+    {
+      kind: 'objects',
+      caption: `ある かずは ${have}こ`,
+      narration: `ある かずを かぞえると ${have}こ`,
+      data: { emoji: p.emoji, count: have },
+    },
+    {
+      kind: 'objects',
+      caption: `いる かずは ${need}こ`,
+      narration: `いる かずは ${need}こ`,
+      data: { emoji: '⬜', count: need },
+    },
+    {
+      kind: 'equation',
+      caption: moreThanNeed
+        ? 'ある ほうが おおいね。\nちがいは いくつ？'
+        : 'いる ほうが おおいね。\nちがいは いくつ？',
+      narration: 'ちがいは いくつかな',
+      data: { text: `${Math.max(have, need)} と ${Math.min(have, need)}` },
+      quiz: {
+        prompt: 'おおきい かずと ちいさい かず。ちがいは いくつ？',
+        choices: p.verdict === 'ぴったり' ? quizChoices(0) : p.diffChoices,
+        answer: p.diff,
+      },
+    },
+  ];
 }
 
 export function checkVerdict(problem: WordProblem, chosen: WordVerdict): boolean {

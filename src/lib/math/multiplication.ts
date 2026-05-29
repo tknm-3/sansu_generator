@@ -42,6 +42,11 @@ export function explainMultiplication(p: MultiplicationProblem, emoji: string): 
       caption: `それが ${p.a}つ。\n${repeated} だね`,
       narration: `${p.b}こが ${p.a}つ。${repeated}`,
       data: { emoji, perGroup: p.b, groups: p.a },
+      quiz: {
+        prompt: `${p.b}こが ${p.a}つ。ぜんぶで なんこ？`,
+        choices: p.choices,
+        answer: p.a * p.b,
+      },
     },
     {
       kind: 'equation',

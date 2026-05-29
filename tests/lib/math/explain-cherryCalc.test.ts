@@ -15,8 +15,10 @@ describe('explainCherry', () => {
     expect(steps[0].data).toMatchObject({ b: 5, split: 2, carry: 3 });
   });
 
-  it('equation text contains the answer', () => {
+  it('equation step asks the answer as a quiz (考え方の小問題)', () => {
     const steps = explainCherry(p);
-    expect((steps[1].data as { text: string }).text).toContain('13');
+    // 答えはステップ上で先に見せず、quiz で解かせる
+    expect(steps[1].quiz?.answer).toBe(13);
+    expect(steps[1].quiz?.choices).toContain(13);
   });
 });

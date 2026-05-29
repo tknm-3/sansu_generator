@@ -32,9 +32,14 @@ export function explainSubtraction(p: SubtractionProblem, emoji: string): Explai
     },
     {
       kind: 'objects',
-      caption: `${p.b}こ へると…\nのこりは ${p.a - p.b}こ`,
-      narration: `${p.b}こ へって のこりは ${p.a - p.b}こ`,
+      caption: `${p.b}こ たべちゃった！\nのこりを かぞえてみよう`,
+      narration: `${p.b}こ へったよ。のこりは なんこかな`,
       data: { emoji, count: p.a - p.b },
+      quiz: {
+        prompt: 'のこりは なんこ？',
+        choices: p.choices,
+        answer: p.a - p.b,
+      },
     },
     {
       kind: 'equation',

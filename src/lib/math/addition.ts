@@ -35,6 +35,11 @@ export function explainAddition(p: AdditionProblem, emoji: string): ExplainStep[
       caption: `${p.b}こ ふえた`,
       narration: `${p.b}こ ふえたよ`,
       data: { emoji, count: p.b },
+      quiz: {
+        prompt: `${p.a}こと ${p.b}こ。あわせて なんこ？`,
+        choices: p.choices,
+        answer: p.a + p.b,
+      },
     },
     {
       kind: 'equation',
