@@ -24,6 +24,7 @@ interface Props {
 const UNITS = [
   { id: 'arrow-sequence', title: 'やじるしロボット', emoji: '🤖', desc: 'やじるしを ならべて すすもう', hasDifficulty: true },
   { id: 'arrow-debug', title: 'まちがいを なおそう', emoji: '🔧', desc: 'へんな やじるしを なおそう', hasDifficulty: true },
+  { id: 'arrow-branch', title: 'もしも ロボット', emoji: '🔀', desc: 'もし〜なら で みちを えらぼう', hasDifficulty: true },
   { id: 'arrow-maker', title: 'めいろを つくろう', emoji: '🧩', desc: 'じぶんで めいろを つくる', hasDifficulty: false },
 ];
 
