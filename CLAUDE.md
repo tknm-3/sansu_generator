@@ -26,9 +26,19 @@ src/
     sound/sfx.ts                   # 効果音
   lib/
     math/makeTen.ts                # さくらんぼ計算ロジック
+    programming/                   # プログラミング単元
+      engine.ts                    # 矢印実行エンジン・BFSソルバー・前向きヒント生成
+      levels.ts                    # 矢印ならべ/デバッグの難易度別レベル
+      progress.ts                  # 難易度アンロック（かんたん→ふつう→むずかしい）
     storage.ts                     # localStorage
   data/units.ts                    # ユニット定義
 ```
+
+## カテゴリ
+- `sansu`（さんすう）/ `katachi`（かたち）/ `programming`（プログラミング）
+- プログラミングは 3単元: 矢印ならべ(arrow-sequence)・デバッグ(arrow-debug)・自分で作る(arrow-maker)
+- 難易度は 単元×難易度ごとに クリア回数を記録し、規定回数で 次の難易度を解放（`lib/programming/progress.ts`）
+- ヒントは「まちがい」と言わず こどもの思考を後押しする文言にする（`buildHint`）
 
 ## 現在のフェーズ
 `phase1-foundation-mvp` ブランチ。実装済み: 命名画面・ホーム・さくらんぼ計算ユニット。

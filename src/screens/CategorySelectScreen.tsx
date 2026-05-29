@@ -25,6 +25,15 @@ const CATEGORIES = [
     shadow: '#00695c',
     button: 'bg-teal-500',
   },
+  {
+    id: 'programming' as Category,
+    label: 'プログラミング',
+    emoji: '🤖',
+    description: 'やじるしで キャラを うごかそう…',
+    bg: 'from-indigo-300 to-violet-200',
+    shadow: '#3730a3',
+    button: 'bg-indigo-500',
+  },
 ] as const;
 
 export function CategorySelectScreen({ onSelect, onMaker }: Props) {
