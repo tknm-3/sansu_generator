@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Companion } from '../features/character/Companion';
 import { AnswerButtons } from '../components/AnswerButtons';
+import { StepExplainer } from '../components/StepExplainer';
 import { generateProblem, checkAnswer, ALL_SKILL_IDS, type Problem } from '../lib/challenge/problemGen';
 import { pickNextSkill, type SkillWeight } from '../lib/challenge/spacedRepetition';
 import { loadMastery, saveMastery, recordAnswer } from '../lib/mastery';
@@ -33,6 +34,7 @@ export function ChallengeMode({ characterName, characterId, onExit }: Props) {
   const [correct, setCorrect] = useState(0);
   const [expression, setExpression] = useState<'normal' | 'happy' | 'hint'>('normal');
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const cleared = answered >= QUESTIONS_PER_SESSION;
   const processing = useRef(false);
 
@@ -66,7 +68,8 @@ export function ChallengeMode({ characterName, characterId, onExit }: Props) {
       playSfx('wrong');
       setFeedback('wrong');
       setExpression('hint');
-      speakJa('おしい！ もういちど！');
+      speakJa('おしい！ いっしょに かんがえてみよう');
+      if (problem.explain) setReviewing(true);
       processing.current = false;
     }
   }
@@ -95,7 +98,7 @@ export function ChallengeMode({ characterName, characterId, onExit }: Props) {
       <div className="rounded-3xl bg-white shadow-lg px-10 py-6 text-3xl font-bold text-amber-900 text-center">
         {problem.questionText}
       </div>
-      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy'} />
+      <AnswerButtons choices={problem.choices} onPick={handlePick} disabled={expression === 'happy' || reviewing} />
       <AnimatePresence>
         {feedback === 'wrong' && (
           <motion.p key="w" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-lg font-bold text-orange-600">
@@ -104,6 +107,14 @@ export function ChallengeMode({ characterName, characterId, onExit }: Props) {
         )}
       </AnimatePresence>
       <button type="button" onClick={onExit} className="mt-4 text-sm text-amber-600 underline">やめる</button>
+      {reviewing && problem.explain && (
+        <StepExplainer
+          gate
+          steps={problem.explain}
+          problem={problem.questionText}
+          onClose={() => { setReviewing(false); setFeedback('none'); setExpression('normal'); }}
+        />
+      )}
     </div>
   );
 }
