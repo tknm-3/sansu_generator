@@ -7,6 +7,7 @@ import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { ShapeSvg } from '../components/shapes/ShapeSvg';
+import { ShapeHintGate } from '../components/ShapeHintGate';
 import { generateRotationProblem, type RotationProblem } from '../lib/geometry/rotation';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -25,38 +26,45 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
   const [showAnswer, setShowAnswer] = useState(false);
   const [demoDone, setDemoDone] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
 
+  function registerCorrect() {
+    processing.current = true;
+    playSfx('correct');
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    const next = solved + 1;
+    setSolved(next);
+    setFeedback('none');
+    setReviewing(false);
+    if (next >= QUESTIONS_PER_UNIT) {
+      saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
+      playSfx('fanfare');
+      speakJa('クリア！ よくできたね！');
+    } else {
+      setTimeout(() => {
+        setProblem(generateRotationProblem(hard));
+        setShowAnswer(false);
+        setDemoDone(false);
+        processing.current = false;
+      }, 900);
+    }
+  }
+
   function handlePick(idx: number) {
     if (processing.current || showAnswer) return;
     processing.current = true;
     playSfx('tap');
-    const correct = idx === problem.answerIndex;
-    if (correct) {
-      playSfx('correct');
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-      const next = solved + 1;
-      setSolved(next);
-      setFeedback('none');
-      if (next >= QUESTIONS_PER_UNIT) {
-        saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
-        playSfx('fanfare');
-        speakJa('クリア！ よくできたね！');
-      } else {
-        setTimeout(() => {
-          setProblem(generateRotationProblem(hard));
-          setShowAnswer(false);
-          setDemoDone(false);
-          processing.current = false;
-        }, 900);
-      }
+    if (idx === problem.answerIndex) {
+      registerCorrect();
     } else {
       playSfx('wrong');
       setFeedback('wrong');
-      speakJa('おしい！ もういちど やってみよう');
+      setReviewing(true);
+      speakJa('おしい！ いっしょに かんがえてみよう');
       processing.current = false;
     }
   }
@@ -174,6 +182,26 @@ export function ShapeRotationUnit({ hard = false, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-2 text-sm text-teal-600 underline">やめる</button>
+
+      {reviewing && (
+        <ShapeHintGate
+          message={`${problem.transform.flipX ? 'かがみに うつすと、ひだりと みぎが いれかわるよ。' : 'まわすと、かたちの むきが かわるよ。'}\n「${problem.rotationLabel}」を あたまの なかで やってみよう。`}
+          context={
+            <div className="rounded-3xl bg-white shadow px-6 py-4 flex items-center gap-4">
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-xs text-teal-600 font-bold">まえ</p>
+                <ShapeSvg shapeId={problem.shapeId} transform={{ rotate: 0, flipX: false }} size={80} color="#f59e0b" />
+              </div>
+              <span className="text-2xl">➡️</span>
+              <div className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-bold text-amber-800">{problem.rotationLabel}</div>
+            </div>
+          }
+          count={problem.choices.length}
+          answerIndex={problem.answerIndex}
+          renderChoice={(idx) => <ShapeSvg shapeId={problem.shapeId} transform={problem.choices[idx]} size={64} color="#60a5fa" />}
+          onSolved={registerCorrect}
+        />
+      )}
     </div>
   );
 }

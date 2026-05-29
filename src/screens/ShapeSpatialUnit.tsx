@@ -6,6 +6,7 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
+import { ShapeHintGate } from '../components/ShapeHintGate';
 import { generateSpatialProblem, type SpatialProblem, type SceneObj } from '../lib/geometry/spatial';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -68,35 +69,43 @@ export function ShapeSpatialUnit({ hard = false, onExit }: Props) {
   const [problem, setProblem] = useState<SpatialProblem>(() => generateSpatialProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
+
+  function registerCorrect() {
+    processing.current = true;
+    playSfx('correct');
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    const next = solved + 1;
+    setSolved(next);
+    setFeedback('none');
+    setReviewing(false);
+    if (next >= QUESTIONS_PER_UNIT) {
+      saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
+      playSfx('fanfare');
+      speakJa('クリア！ よくできたね！');
+    } else {
+      setTimeout(() => {
+        setProblem(generateSpatialProblem(hard));
+        processing.current = false;
+      }, 900);
+    }
+  }
 
   function handlePick(idx: number) {
     if (processing.current) return;
     processing.current = true;
     playSfx('tap');
     if (idx === problem.answerIndex) {
-      playSfx('correct');
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-      const next = solved + 1;
-      setSolved(next);
-      setFeedback('none');
-      if (next >= QUESTIONS_PER_UNIT) {
-        saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
-        playSfx('fanfare');
-        speakJa('クリア！ よくできたね！');
-      } else {
-        setTimeout(() => {
-          setProblem(generateSpatialProblem(hard));
-          processing.current = false;
-        }, 900);
-      }
+      registerCorrect();
     } else {
       playSfx('wrong');
       setFeedback('wrong');
-      speakJa('おしい！ もういちど やってみよう');
+      setReviewing(true);
+      speakJa('おしい！ いっしょに かんがえてみよう');
       processing.current = false;
     }
   }
@@ -165,6 +174,17 @@ export function ShapeSpatialUnit({ hard = false, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-2 text-sm text-sky-600 underline">やめる</button>
+
+      {reviewing && (
+        <ShapeHintGate
+          message={`${problem.question}\nえを ゆびで さして、ばしょを たしかめよう。\n「ひだり・みぎ・うえ・した」を よく みてね。`}
+          context={<div className="rounded-3xl bg-white shadow px-4 py-4 overflow-x-auto"><SceneDisplay objects={problem.objects} /></div>}
+          count={problem.choices.length}
+          answerIndex={problem.answerIndex}
+          renderChoice={(idx) => <span className="text-xl font-bold text-sky-900 px-2 py-1">{problem.choices[idx]}</span>}
+          onSolved={registerCorrect}
+        />
+      )}
     </div>
   );
 }

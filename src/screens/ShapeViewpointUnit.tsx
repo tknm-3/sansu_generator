@@ -6,6 +6,7 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
+import { ShapeHintGate } from '../components/ShapeHintGate';
 import { generateViewpointProblem, type ViewpointProblem } from '../lib/geometry/viewpoint';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -44,36 +45,43 @@ export function ShapeViewpointUnit({ hard = false, onExit }: Props) {
   const [problem, setProblem] = useState<ViewpointProblem>(() => generateViewpointProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
 
+  function registerCorrect() {
+    processing.current = true;
+    playSfx('correct');
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    const next = solved + 1;
+    setSolved(next);
+    setFeedback('none');
+    setReviewing(false);
+    if (next >= QUESTIONS_PER_UNIT) {
+      saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
+      playSfx('fanfare');
+      speakJa('クリア！ よくできたね！');
+    } else {
+      setTimeout(() => {
+        setProblem(generateViewpointProblem(hard));
+        processing.current = false;
+      }, 900);
+    }
+  }
+
   function handlePick(idx: number) {
     if (processing.current) return;
     processing.current = true;
     playSfx('tap');
-    const correct = idx === problem.answerIndex;
-    if (correct) {
-      playSfx('correct');
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-      const next = solved + 1;
-      setSolved(next);
-      setFeedback('none');
-      if (next >= QUESTIONS_PER_UNIT) {
-        saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
-        playSfx('fanfare');
-        speakJa('クリア！ よくできたね！');
-      } else {
-        setTimeout(() => {
-          setProblem(generateViewpointProblem(hard));
-          processing.current = false;
-        }, 900);
-      }
+    if (idx === problem.answerIndex) {
+      registerCorrect();
     } else {
       playSfx('wrong');
       setFeedback('wrong');
-      speakJa('おしい！ もういちど やってみよう');
+      setReviewing(true);
+      speakJa('おしい！ いっしょに かんがえてみよう');
       processing.current = false;
     }
   }
@@ -149,6 +157,22 @@ export function ShapeViewpointUnit({ hard = false, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-2 text-sm text-teal-600 underline">やめる</button>
+
+      {reviewing && (
+        <ShapeHintGate
+          message={'うえから まっすぐ みおろすと、\nたかさは みえなくて「ばしょ」だけ みえるよ。\nつみきの ある ところを かんがえよう。'}
+          context={
+            <div className="rounded-3xl bg-white shadow px-6 py-4 flex flex-col items-center gap-1">
+              <p className="text-xs text-teal-500 font-bold">つみきの かたち（ななめから）</p>
+              <IsometricView svg={problem.isoSvg} />
+            </div>
+          }
+          count={problem.topViewChoices.length}
+          answerIndex={problem.answerIndex}
+          renderChoice={(idx) => <TopView svg={problem.topViewChoices[idx]} />}
+          onSolved={registerCorrect}
+        />
+      )}
     </div>
   );
 }

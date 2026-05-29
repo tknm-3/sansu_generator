@@ -6,6 +6,7 @@ import { playSfx } from '../features/sound/sfx';
 import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
+import { ShapeHintGate } from '../components/ShapeHintGate';
 import { generatePatternProblem, type PatternItem, type PatternProblem, type ColorKey, type ShapeType } from '../lib/geometry/pattern';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -82,35 +83,43 @@ export function ShapePatternUnit({ hard = false, onExit }: Props) {
   const [problem, setProblem] = useState<PatternProblem>(() => generatePatternProblem(hard));
   const [solved, setSolved] = useState(0);
   const [feedback, setFeedback] = useState<'none' | 'wrong'>('none');
+  const [reviewing, setReviewing] = useState(false);
   const processing = useRef(false);
   useEffect(() => { setBgmTrack(SKILL_ID); }, []);
 
   const cleared = solved >= QUESTIONS_PER_UNIT;
+
+  function registerCorrect() {
+    processing.current = true;
+    playSfx('correct');
+    confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    const next = solved + 1;
+    setSolved(next);
+    setFeedback('none');
+    setReviewing(false);
+    if (next >= QUESTIONS_PER_UNIT) {
+      saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
+      playSfx('fanfare');
+      speakJa('クリア！ よくできたね！');
+    } else {
+      setTimeout(() => {
+        setProblem(generatePatternProblem(hard));
+        processing.current = false;
+      }, 900);
+    }
+  }
 
   function handlePick(idx: number) {
     if (processing.current) return;
     processing.current = true;
     playSfx('tap');
     if (idx === problem.answerIndex) {
-      playSfx('correct');
-      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-      const next = solved + 1;
-      setSolved(next);
-      setFeedback('none');
-      if (next >= QUESTIONS_PER_UNIT) {
-        saveJson(STAMP_KEY, addStamp(loadJson<StampState>(STAMP_KEY, EMPTY_STAMPS), SKILL_ID, Date.now()));
-        playSfx('fanfare');
-        speakJa('クリア！ よくできたね！');
-      } else {
-        setTimeout(() => {
-          setProblem(generatePatternProblem(hard));
-          processing.current = false;
-        }, 900);
-      }
+      registerCorrect();
     } else {
       playSfx('wrong');
       setFeedback('wrong');
-      speakJa('おしい！ もういちど やってみよう');
+      setReviewing(true);
+      speakJa('おしい！ いっしょに かんがえてみよう');
       processing.current = false;
     }
   }
@@ -179,6 +188,17 @@ export function ShapePatternUnit({ hard = false, onExit }: Props) {
       </AnimatePresence>
 
       <button type="button" onClick={onExit} className="mt-2 text-sm text-purple-600 underline">やめる</button>
+
+      {reviewing && (
+        <ShapeHintGate
+          message={'まえから じゅんばんに みてみよう。\nおなじ ならびが くりかえして いるよ。\nつぎに くるのは どれかな？'}
+          context={<div className="rounded-3xl bg-white shadow px-5 py-4 max-w-sm"><SequenceDisplay sequence={problem.sequence} /></div>}
+          count={problem.choices.length}
+          answerIndex={problem.answerIndex}
+          renderChoice={(idx) => <ShapeIcon item={problem.choices[idx]} size={48} />}
+          onSolved={registerCorrect}
+        />
+      )}
     </div>
   );
 }
