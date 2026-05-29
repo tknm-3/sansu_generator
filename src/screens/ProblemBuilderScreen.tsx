@@ -66,14 +66,19 @@ function Stepper({ label, value, onMinus, onPlus }: { label: string; value: numb
   );
 }
 
-function CompleteButton({ onClick }: { onClick: () => void }) {
+function CompleteButton({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded-2xl bg-green-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#2e7d32] active:translate-y-1"
+      disabled={disabled}
+      className={`rounded-2xl px-8 py-4 text-xl font-bold text-white ${
+        disabled
+          ? 'cursor-not-allowed bg-gray-300 opacity-70 shadow-[0_4px_0_#9ca3af]'
+          : 'bg-green-500 shadow-[0_4px_0_#2e7d32] active:translate-y-1'
+      }`}
     >
-      これで かんせい！
+      {disabled ? 'おだいを たっせいしてね' : 'これで かんせい！'}
     </button>
   );
 }
@@ -151,6 +156,7 @@ function AddBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const { goal, target, shuffle } = useGoal(ADD_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
   const state = { a, b };
+  const reached = goal.reached(state, target);
 
   return (
     <div className={SCREEN_BG}>
@@ -161,8 +167,8 @@ function AddBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         <span className="text-4xl font-bold text-amber-700">＋</span>
         <ItemTray emoji={emoji} count={b} max={9} onChange={setB} accent="border-orange-300 bg-orange-50" />
       </div>
-      <GoalStatus reached={goal.reached(state, target)} text={goal.status(state, target)} />
-      <CompleteButton onClick={() => onComplete(buildAddition(a, b, emoji))} />
+      <GoalStatus reached={reached} text={goal.status(state, target)} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildAddition(a, b, emoji))} />
       <BackLink onClick={onBack} />
     </div>
   );
@@ -176,6 +182,7 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const emoji = def.emojiOptions[emojiIdx];
   const safeRemove = Math.min(remove, total);
   const state = { total, remove: safeRemove };
+  const reached = goal.reached(state, target);
 
   return (
     <div className={SCREEN_BG}>
@@ -195,8 +202,8 @@ function SubBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setRemove((v) => Math.max(0, v - 1))}
         onPlus={() => setRemove((v) => Math.min(total, v + 1))}
       />
-      <GoalStatus reached={goal.reached(state, target)} text={goal.status(state, target)} />
-      <CompleteButton onClick={() => onComplete(buildSubtraction(total, safeRemove, emoji))} />
+      <GoalStatus reached={reached} text={goal.status(state, target)} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildSubtraction(total, safeRemove, emoji))} />
       <BackLink onClick={onBack} />
     </div>
   );
@@ -209,6 +216,7 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
   const [onesB, setOnesB] = useState(3);
   const { goal, target, shuffle } = useGoal(BIGADD_GOALS);
   const total = (tensA * 10 + onesA) + (tensB * 10 + onesB);
+  const reached = goal.reached({ total }, target);
 
   return (
     <div className={SCREEN_BG}>
@@ -229,8 +237,8 @@ function BigAddBuilder({ onComplete, onBack }: { onComplete: (p: TemplateFilled)
           <ItemTray emoji="🟦" count={onesB} max={9} onChange={setOnesB} accent="border-orange-200 bg-white" />
         </div>
       </div>
-      <GoalStatus reached={goal.reached({ total }, target)} text={goal.status({ total }, target)} />
-      <CompleteButton onClick={() => onComplete(buildBigAddition(tensA, onesA, tensB, onesB))} />
+      <GoalStatus reached={reached} text={goal.status({ total }, target)} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildBigAddition(tensA, onesA, tensB, onesB))} />
       <BackLink onClick={onBack} />
     </div>
   );
@@ -242,6 +250,7 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [emojiIdx, setEmojiIdx] = useState(0);
   const { goal, target, shuffle } = useGoal(MUL_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
+  const reached = goal.reached({ groups, perGroup }, target);
 
   return (
     <div className={SCREEN_BG}>
@@ -264,8 +273,8 @@ function MulBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
           </div>
         ))}
       </div>
-      <GoalStatus reached={goal.reached({ groups, perGroup }, target)} text={goal.status({ groups, perGroup }, target)} />
-      <CompleteButton onClick={() => onComplete(buildMultiplication(groups, perGroup, emoji))} />
+      <GoalStatus reached={reached} text={goal.status({ groups, perGroup }, target)} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildMultiplication(groups, perGroup, emoji))} />
       <BackLink onClick={onBack} />
     </div>
   );
@@ -277,6 +286,7 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
   const [emojiIdx, setEmojiIdx] = useState(0);
   const { goal, target, shuffle } = useGoal(DIV_GOALS);
   const emoji = def.emojiOptions[emojiIdx];
+  const reached = goal.reached({ total, groups }, target);
 
   return (
     <div className={SCREEN_BG}>
@@ -290,8 +300,8 @@ function DivBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComplete: 
         onMinus={() => setGroups((v) => Math.max(1, v - 1))}
         onPlus={() => setGroups((v) => Math.min(6, v + 1))}
       />
-      <GoalStatus reached={goal.reached({ total, groups }, target)} text={goal.status({ total, groups }, target)} />
-      <CompleteButton onClick={() => onComplete(buildDivision(total, groups, emoji))} />
+      <GoalStatus reached={reached} text={goal.status({ total, groups }, target)} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildDivision(total, groups, emoji))} />
       <BackLink onClick={onBack} />
     </div>
   );
@@ -304,6 +314,7 @@ function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComple
   const [goal, setGoal] = useState(() => randomChoice(PITTARI_GOALS));
   const emoji = def.emojiOptions[emojiIdx];
   const verdict = pittariVerdict(items, capacity);
+  const reached = verdict === goal.verdict;
 
   return (
     <div className={SCREEN_BG}>
@@ -317,8 +328,8 @@ function PittariBuilder({ def, onComplete, onBack }: { def: BuilderDef; onComple
         onMinus={() => setCapacity((v) => Math.max(1, v - 1))}
         onPlus={() => setCapacity((v) => Math.min(12, v + 1))}
       />
-      <GoalStatus reached={verdict === goal.verdict} text={`いまは「${verdict}」`} />
-      <CompleteButton onClick={() => onComplete(buildPittari(items, capacity, emoji))} />
+      <GoalStatus reached={reached} text={`いまは「${verdict}」`} />
+      <CompleteButton disabled={!reached} onClick={() => onComplete(buildPittari(items, capacity, emoji))} />
       <BackLink onClick={onBack} />
     </div>
   );

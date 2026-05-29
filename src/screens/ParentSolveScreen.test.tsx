@@ -40,13 +40,22 @@ describe('ParentSolveScreen', () => {
     expect(screen.getByText(/1にん 3こ、あまり 1こ/)).toBeInTheDocument();
   });
 
-  it('1人分を まちがえると その時点で ふせいかい', () => {
-    const problem = buildDivision(7, 2, '🍪'); // 正解 1にん 3こ
+  it('まちがえても 終わりにならず ヒントが でて もういちど チャレンジできる', () => {
+    const problem = buildDivision(7, 2, '🍪'); // 正解 1にん 3こ、あまり 1こ
     render(<ParentSolveScreen problem={problem} characterName="テスト" onDone={() => {}} />);
 
     const wrong = [0, 1, 2, 4, 5, 6].find((n) => screen.queryByText(String(n)));
     fireEvent.click(screen.getByText(String(wrong)));
-    expect(screen.getByText(/こたえは/)).toBeInTheDocument();
-    expect(screen.getByText(/1にん 3こ、あまり 1こ/)).toBeInTheDocument();
+
+    // ふせいかいで 終わらず、ヒントと もういちどの うながしが でる
+    expect(screen.getByText(/もういちど チャレンジ/)).toBeInTheDocument();
+    expect(screen.getByText(/くばっていくよ/)).toBeInTheDocument();
+    expect(screen.queryByText(/せいかい！/)).not.toBeInTheDocument();
+
+    // 選択肢は のこっていて、正しい こたえを えらべば せいかいに すすむ
+    fireEvent.click(screen.getByText('3'));
+    expect(screen.getByText('② あまりは なんこ？')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('1'));
+    expect(screen.getByText(/せいかい！/)).toBeInTheDocument();
   });
 });
