@@ -75,4 +75,16 @@ npx vitest run                                          # 全部
   「もう一度とくと✨が増える／⭐→💎を狙える」で同じマップを解き直したくなる設計。
 - [2026-05-30] 冒険/物語: `AdventureZone.story`（ひらがな2〜3行、`\n`区切り）をゾーン入口に
   表示。子の没入を上げるが、長すぎるとテンポを崩すので短く。詳細は `adventure-architecture.md`。
+- [2026-05-30] 冒険/分岐ゾーン(くものてんごく): 矢印ならべ専用だった冒険モードに「もしも」分岐を
+  統合。`AdventureQuest` に `kind:'branch'` と `branchFill`（loopTimes/sensor/thenDir/elseDir＋
+  穴フラグ holeSensor/holeThen/holeElse）を足し、UI 側は `BranchAdventurePlay` で `runBranch` を使う
+  （`useProgramRunner` は第3引数に実行関数を差せる）。盤面の壁絵文字とは別に
+  `AdventureZone.wallName`（例「くも」）を足し、`buildBranchHint(…, wallName)` でヒント文言を
+  ゾーンに合わせる。
+- [2026-05-30] 冒険/分岐の穴埋め: **穴埋めは「正解1とおりだけクリアできる（一意解）」を必ず保証する**。
+  保証しないと、あてずっぽうで偶然ゴールでき「当てる」学びが消える。盤面は手で置かず、
+  4方向×穴数を総当りして「クリアできる組み合わせが正解1つだけ＆steps===optimal」になる壁配置を
+  探索で確定する（一時 vitest を書いて `--reporter=verbose --disable-console-intercept` で結果を出す）。
+  `adventure.test.ts` に全組み合わせを試す一意解テストを常設し、人手チェックに頼らない。
+  全穴（3つとも穴）のステージは1壁では一意解にできないことが多く、2壁以上が必要。
 

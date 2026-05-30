@@ -44,6 +44,11 @@
 - `allowLoop`（ループ箱可）/ `loopOnly`（ループ箱**のみ**＝谷ゾーン）
 - `zombies`（`fixed`/`patrol`。**`chase` は使わない** … `solve()` で検証不能になるため）
 - `gemEmoji`(🎁) / `goalEmoji`(🏠) / `prompt`（ひとことガイド）
+- `kind:'branch'` ＋ `branchFill`（**分岐ゾーン用**。くものてんごく）。矢印ならべではなく
+  「もしも」穴埋めになる。`branchFill = { loopTimes, sensor, thenDir, elseDir, holeSensor?, holeThen?, holeElse? }`。
+  hole が true の項目だけ こどもが穴埋め。UI は `AdventurePlay` が `kind==='branch'` を見て
+  `BranchAdventurePlay`（`runBranch` 実行）に分岐。**穴埋めは一意解を test で保証**（親 SKILL 追記ログ）。
+  ゾーン側 `AdventureZone.wallName`（例「くも」）で 分岐ヒントの呼び名を変える。
 
 ## 4. 進捗・きらきらの永続化（localStorage）
 - キー `math-app:adventure-progress` → `{ cleared: {questId:{perfect}}, sparkles:number }`
