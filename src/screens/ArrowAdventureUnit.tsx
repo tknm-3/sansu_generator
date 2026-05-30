@@ -969,7 +969,7 @@ function BranchAdventurePlay({
   }
 
   function showMoreHint() {
-    const msg = `「もし ${DIR_ARROW[fill.sensor]}が ${zone.wall} なら ${DIR_ARROW[fill.thenDir]}、ちがえば ${DIR_ARROW[fill.elseDir]}」に なるように うめてみよう！`;
+    const msg = `「もし ${DIR_ARROW[fill.sensor]}に すすめない なら ${DIR_ARROW[fill.thenDir]}、ちがえば ${DIR_ARROW[fill.elseDir]}」に なるように うめてみよう！`;
     setHint(msg);
     speakJa(msg);
   }
@@ -1036,7 +1036,7 @@ function BranchAdventurePlay({
             disabled={!canEdit}
             chipClass={accent.chip}
           />
-          <span>が {zone.wall} なら</span>
+          <span>に すすめない なら</span>
           <BranchBlankPicker
             value={fillThen}
             isHole={!!fill.holeThen}
