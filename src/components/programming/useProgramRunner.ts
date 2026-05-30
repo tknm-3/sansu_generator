@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   runProgram,
   type Command,
+  type Dir,
   type Level,
   type Pos,
   type RunResult,
@@ -24,6 +25,7 @@ export function useProgramRunner<C = Command>(
   run: (level: Level, commands: C[]) => RunResult = runProgram as unknown as (level: Level, commands: C[]) => RunResult,
 ) {
   const [charPos, setCharPos] = useState<Pos>(level.start);
+  const [charFacing, setCharFacing] = useState<Dir>(level.startFacing ?? 'up');
   const [trail, setTrail] = useState<Pos[]>([]);
   const [collected, setCollected] = useState<Pos[]>([]);
   const [blockedCell, setBlockedCell] = useState<Pos | null>(null);
@@ -47,6 +49,7 @@ export function useProgramRunner<C = Command>(
     clearTimer();
     plan.current = null;
     setCharPos(level.start);
+    setCharFacing(level.startFacing ?? 'up');
     setTrail([]);
     setCollected([]);
     setBlockedCell(null);
@@ -80,6 +83,7 @@ export function useProgramRunner<C = Command>(
       setFinished(false);
       setPlaying(true);
       setCharPos(level.start);
+      setCharFacing(result.facings?.[0] ?? level.startFacing ?? 'up');
       setTrail([]);
       setCollected([]);
       setZombiePositions((level.zombies ?? []).map((z) => z.pos));
@@ -90,6 +94,7 @@ export function useProgramRunner<C = Command>(
         i += 1;
         if (i < path.length) {
           setCharPos(path[i]);
+          if (result.facings) setCharFacing(result.facings[i]);
           setTrail(path.slice(0, i));
           applyCollected(i, path);
           setZombiePositions(result.zombiePaths.map((zp) => zp[Math.min(i, zp.length - 1)]));
@@ -130,6 +135,7 @@ export function useProgramRunner<C = Command>(
       if (nextIndex < path.length) {
         plan.current.index = nextIndex;
         setCharPos(path[nextIndex]);
+        if (result.facings) setCharFacing(result.facings[nextIndex]);
         setTrail(path.slice(0, nextIndex));
         applyCollected(nextIndex, path);
         setZombiePositions(result.zombiePaths.map((zp) => zp[Math.min(nextIndex, zp.length - 1)]));
@@ -144,5 +150,5 @@ export function useProgramRunner<C = Command>(
     [level, onFinish], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  return { charPos, trail, collected, blockedCell, playing, finished, zombiePositions, play, step, reset };
+  return { charPos, charFacing, trail, collected, blockedCell, playing, finished, zombiePositions, play, step, reset };
 }

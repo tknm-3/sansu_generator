@@ -87,4 +87,15 @@ npx vitest run                                          # 全部
   探索で確定する（一時 vitest を書いて `--reporter=verbose --disable-console-intercept` で結果を出す）。
   `adventure.test.ts` に全組み合わせを試す一意解テストを常設し、人手チェックに頼らない。
   全穴（3つとも穴）のステージは1壁では一意解にできないことが多く、2壁以上が必要。
+- [2026-05-30] 冒険/つきゾーン（もしを2つ）: 分岐穴埋めを **複数フェーズ対応**にした
+  （`branchFill.phases[]`、各フェーズ=くりかえし×ルール1つ）。1フェーズ=くも、2フェーズ=つき。
+  文言を「もし<むき>が☁️なら」→「**<むき>に すすめなかったら…すすめたら…**」に変更（こどもに
+  「すすめる/すすめない」のほうが直感的）。落とし穴: **row0スタート＋sensor穴のとき sensor=up と
+  sensor=down が同じ挙動になり一意解が壊れる**（上はいつも盤外＝ブロックなので）。row0に1枚かべを足して
+  「上沿い経路」を行き止まりにし、down経路だけ通す→一意解にもどる（adv-q46/q48で対処）。
+- [2026-05-30] 冒険/ゆきゾーン（そうたい方向）: `relativeEngine.ts` を新設。キャラのむき基準で
+  `forward/turn_right/turn_left`。`Level.startFacing` で初期むき、`relSolution` で検証、
+  `solveRelative()`（状態={pos,facing,gem mask}のBFS）が最短手数=optimal。steps はまわるも1手と数える。
+  むきは ProgrammingGrid の `charFacing` バッジ（小さな矢印）で表示（動物絵文字は回さない＝向きが伝わらないため）。
+  issueの「progress.ts でゾーン解放条件」は**不要**だった（冒険は nextPlayableIndex の配列順で自動アンロック）。
 

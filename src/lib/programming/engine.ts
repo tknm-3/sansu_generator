@@ -54,6 +54,8 @@ export interface Level {
   prompt?: string;
   /** ゾンビ（障害物）リスト */
   zombies?: ZombieDef[];
+  /** 相対方向（ゆきのゾーン）の スタート時の むき。なければ 'up' あつかい */
+  startFacing?: Dir;
 }
 
 export const DIR_ARROW: Record<Dir, string> = {
@@ -127,6 +129,8 @@ export interface RunResult {
   hitZombieStep: number;
   /** 各ステップでの ゾンビの いち（zombies[i][step]） */
   zombiePaths: Pos[][];
+  /** そうたい方向単元で、path と そろえた 各ステップでの むき（スプライト描画用） */
+  facings?: Dir[];
 }
 
 function zombieNextPos(def: ZombieDef, step: number, charPos: Pos): Pos {

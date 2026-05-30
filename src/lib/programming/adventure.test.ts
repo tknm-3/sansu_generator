@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { ADVENTURE_QUEST, ADVENTURE_ZONES, type AdventureQuest } from './adventureLevels';
+import {
+  ADVENTURE_QUEST,
+  ADVENTURE_ZONES,
+  buildBranchProgram,
+  type AdventureQuest,
+} from './adventureLevels';
 import {
   solve,
   runProgram,
@@ -10,7 +15,8 @@ import {
   type Dir,
   type Pos,
 } from './engine';
-import { runBranch, type BranchCommand } from './branch';
+import { runBranch } from './branch';
+import { runRelative, solveRelative } from './relativeEngine';
 
 function toCommands(dirs: Dir[]): Command[] {
   return dirs.map((dir) => ({ kind: 'move' as const, dir }));
@@ -85,8 +91,9 @@ describe('ぼうけん 問題集', () => {
     );
   });
 
-  const arrowQuests = all.filter((q) => q.kind !== 'branch');
+  const arrowQuests = all.filter((q) => q.kind === undefined);
   const branchQuests = all.filter((q) => q.kind === 'branch');
+  const relativeQuests = all.filter((q) => q.kind === 'relative');
 
   it.each(arrowQuests)('$id は 解けて optimal が 最短と 一致する', (q) => {
     const sol = q.solution ?? solve(q);
@@ -102,13 +109,7 @@ describe('ぼうけん 問題集', () => {
   it.each(branchQuests)('$id（分岐）は 正解プログラムで クリアできて optimal が ステップ数と 一致する', (q) => {
     const fill = q.branchFill!;
     expect(fill, `${q.id} に branchFill が ない`).toBeDefined();
-    const rule: BranchCommand = {
-      kind: 'if',
-      cond: { kind: 'wall', dir: fill.sensor },
-      then: [{ kind: 'move', dir: fill.thenDir }],
-      else: [{ kind: 'move', dir: fill.elseDir }],
-    };
-    const program: BranchCommand[] = [{ kind: 'repeat', times: fill.loopTimes, body: [rule] }];
+    const program = buildBranchProgram(fill);
     const result = runBranch(q, program);
     expect(isCleared(result), `${q.id} の 正解プログラムが クリアに ならない`).toBe(true);
     expect(isPerfect(q, result), `${q.id} の ステップ数が optimal(${q.optimal})と ずれている（実際: ${result.steps}）`).toBe(true);
@@ -116,22 +117,60 @@ describe('ぼうけん 問題集', () => {
 
   // 穴埋めは「あてずっぽうでも解ける」と 学びが うすい。穴の むきの 全組み合わせを ためし、
   // クリアできるのは 正解の 1とおり だけ（＝一意解）であることを 保証する。
+  // フェーズが 2つ（つきゾーン）でも、すべての 穴の くみあわせを 総当りする。
   const DIRS: Dir[] = ['up', 'right', 'down', 'left'];
   it.each(branchQuests)('$id（分岐）は 穴の くみあわせで 正解 1とおり だけ クリアできる（一意解）', (q) => {
     const fill = q.branchFill!;
-    const sensorOpts = fill.holeSensor ? DIRS : [fill.sensor];
-    const thenOpts = fill.holeThen ? DIRS : [fill.thenDir];
-    const elseOpts = fill.holeElse ? DIRS : [fill.elseDir];
+    // 穴スロット（フェーズ番号・どの項目か）を あつめる
+    type Slot = { phase: number; field: 'sensor' | 'thenDir' | 'elseDir' };
+    const slots: Slot[] = [];
+    fill.phases.forEach((ph, i) => {
+      if (ph.rule.holeSensor) slots.push({ phase: i, field: 'sensor' });
+      if (ph.rule.holeThen) slots.push({ phase: i, field: 'thenDir' });
+      if (ph.rule.holeElse) slots.push({ phase: i, field: 'elseDir' });
+    });
+    // 正解の しるし
+    const correct = fill.phases.map((ph) => `${ph.rule.sensor}/${ph.rule.thenDir}/${ph.rule.elseDir}`).join(' | ');
+
     const solutions: string[] = [];
-    for (const s of sensorOpts) for (const t of thenOpts) for (const e of elseOpts) {
-      const program: BranchCommand[] = [{ kind: 'repeat', times: fill.loopTimes, body: [
-        { kind: 'if', cond: { kind: 'wall', dir: s }, then: [{ kind: 'move', dir: t }], else: [{ kind: 'move', dir: e }] },
-      ]}];
-      if (isCleared(runBranch(q, program))) solutions.push(`${s}/${t}/${e}`);
+    const total = Math.pow(4, slots.length);
+    for (let combo = 0; combo < total; combo++) {
+      // この くみあわせの 穴の値を きめる
+      const assign = new Map<string, Dir>();
+      let rest = combo;
+      for (const s of slots) {
+        assign.set(`${s.phase}:${s.field}`, DIRS[rest % 4]);
+        rest = Math.floor(rest / 4);
+      }
+      const program = buildBranchProgram(fill, (phaseIdx, rule) => ({
+        sensor: assign.get(`${phaseIdx}:sensor`) ?? rule.sensor,
+        thenDir: assign.get(`${phaseIdx}:thenDir`) ?? rule.thenDir,
+        elseDir: assign.get(`${phaseIdx}:elseDir`) ?? rule.elseDir,
+      }));
+      if (isCleared(runBranch(q, program))) {
+        const sig = fill.phases.map((ph, i) => {
+          const s = assign.get(`${i}:sensor`) ?? ph.rule.sensor;
+          const t = assign.get(`${i}:thenDir`) ?? ph.rule.thenDir;
+          const e = assign.get(`${i}:elseDir`) ?? ph.rule.elseDir;
+          return `${s}/${t}/${e}`;
+        }).join(' | ');
+        if (!solutions.includes(sig)) solutions.push(sig);
+      }
     }
-    expect(solutions, `${q.id} は 正解いがいでも クリアできる: ${solutions.join(', ')}`).toEqual([
-      `${fill.sensor}/${fill.thenDir}/${fill.elseDir}`,
-    ]);
+    expect(solutions, `${q.id} は 正解いがいでも クリアできる: ${solutions.join(', ')}`).toEqual([correct]);
+  });
+
+  // ゆきのゾーン（そうたい方向）。relSolution で クリアでき、optimal が 最短（BFS）と 一致する。
+  it.each(relativeQuests)('$id（そうたい方向）は relSolution で クリアでき optimal が 最短と 一致する', (q) => {
+    expect(q.startFacing, `${q.id} に startFacing が ない`).toBeDefined();
+    expect(q.relSolution, `${q.id} に relSolution が ない`).toBeDefined();
+    const result = runRelative(q, q.relSolution!);
+    expect(isCleared(result), `${q.id} の relSolution が ゴールに つかない`).toBe(true);
+    expect(q.relSolution!.length, `${q.id} の relSolution が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+    const best = solveRelative(q);
+    expect(best, `${q.id} に そうたい解が ない`).not.toBeNull();
+    expect(best!.length, `${q.id} の optimal が 最短と ずれている（最短: ${best!.length}）`).toBe(q.optimal);
+    expect(result.steps, `${q.id} の relSolution が 最短手数で ない`).toBe(q.optimal);
   });
 
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
