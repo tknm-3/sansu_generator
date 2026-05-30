@@ -132,36 +132,38 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'はしっこを つかって まわりこもう',
   },
 
-  // ───────── 🔁 くりかえしの たに（7〜12）ループ箱の とうにゅう ─────────
+  // ───────── 🔁 くりかえしの たに（7〜12）ループ箱だけで とく（loopOnly）─────────
+  // この たには ふつうの 1マス矢印を つかわず、ループ箱（くりかえし）だけで すすむ。
+  // 「おなじ うごきは まとめる」を しっかり 体験させる ねらい。
   {
     id: 'adv-q07', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 0),
-    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, goalEmoji: HOME,
-    prompt: 'した した した した…🔁で まとめられるよ',
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'した を 4かい。🔁ループ箱だけで すすもう',
   },
   {
     id: 'adv-q08', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
-    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, goalEmoji: HOME,
-    prompt: 'みぎへ まっすぐ。ループ箱を つかおう',
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'みぎへ まっすぐ。🔁ループ箱だけで いこう',
   },
   {
     id: 'adv-q09', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, goalEmoji: HOME,
-    prompt: 'した4かい と みぎ4かい。ループ2こで いけるね',
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'した4かい と みぎ4かい。🔁ループ2こで いけるね',
   },
   {
     id: 'adv-q10', zoneId: 'valley', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
-    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, goalEmoji: HOME,
-    prompt: 'うえ と みぎを くりかえそう',
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'うえ と みぎを 🔁ループで くりかえそう',
   },
   {
     id: 'adv-q11', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], gems: [r(4, 0)], gemEmoji: GEM, optimal: 8, maxSlots: 12, allowLoop: true, goalEmoji: HOME,
-    prompt: 'したの たからばこ🎁を とってから おうちへ',
+    walls: [], gems: [r(4, 0)], gemEmoji: GEM, optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'したの たからばこ🎁を とってから おうちへ（🔁だけ）',
   },
   {
     id: 'adv-q12', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], gems: [r(0, 4)], gemEmoji: GEM, optimal: 8, maxSlots: 12, allowLoop: true, goalEmoji: HOME,
-    prompt: 'みぎの たからばこ🎁を とってから おうちへ',
+    walls: [], gems: [r(0, 4)], gemEmoji: GEM, optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: 'みぎの たからばこ🎁を とってから おうちへ（🔁だけ）',
   },
 
   // ───────── 🧭 せつやくの さばく（13〜18）やじるしの かず ぴったり ─────────

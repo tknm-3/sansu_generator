@@ -38,6 +38,8 @@ export interface Level {
   optimal: number;
   /** ループ箱を使えるレベルか */
   allowLoop?: boolean;
+  /** ループ箱「だけ」で とくレベルか（ふつうの 1マス矢印を つかわせない）。allowLoop 前提 */
+  loopOnly?: boolean;
   /** 命令スロットの最大数（矢印ならべ単元のトレイ上限） */
   maxSlots?: number;
   /** デバッグ単元で最初から入っている（まちがいを含む）プログラム */
