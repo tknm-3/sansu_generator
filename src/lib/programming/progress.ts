@@ -5,20 +5,22 @@
  */
 import { loadJson, saveJson } from '../storage';
 
-export type Difficulty = 'easy' | 'normal' | 'hard';
+export type Difficulty = 'easy' | 'normal' | 'hard' | 'superhard';
 
-export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard'];
+export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard', 'superhard'];
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   easy: 'かんたん',
   normal: 'ふつう',
   hard: 'むずかしい',
+  superhard: 'スペシャル',
 };
 
 export const DIFFICULTY_EMOJI: Record<Difficulty, string> = {
   easy: '🌱',
   normal: '⭐',
   hard: '🔥',
+  superhard: '💎',
 };
 
 /** つぎの 難易度を ひらくのに ひつような クリア回数 */
@@ -55,21 +57,27 @@ export function addClear(unitId: string, diff: Difficulty): number {
   return next;
 }
 
+const PREV_DIFF: Partial<Record<Difficulty, Difficulty>> = {
+  normal: 'easy',
+  hard: 'normal',
+  superhard: 'hard',
+};
+
 /** その難易度が あそべる（解放ずみ）か */
 export function isUnlocked(unitId: string, diff: Difficulty): boolean {
   if (diff === 'easy') return true;
-  const prev: Difficulty = diff === 'normal' ? 'easy' : 'normal';
+  const prev = PREV_DIFF[diff]!;
   return getClears(unitId, prev) >= UNLOCK_THRESHOLD;
 }
 
 /** つぎの難易度を ひらくまでの のこり回数（0なら解放ずみ／最高難易度） */
 export function clearsToUnlockNext(unitId: string, diff: Difficulty): number {
-  if (diff === 'hard') return 0;
+  if (diff === 'superhard') return 0;
   return Math.max(0, UNLOCK_THRESHOLD - getClears(unitId, diff));
 }
 
 /** クリアした結果、つぎの難易度が あらたに 解放されたか（演出用） */
 export function didUnlockNext(diff: Difficulty, clearsAfter: number): boolean {
-  if (diff === 'hard') return false;
+  if (diff === 'superhard') return false;
   return clearsAfter === UNLOCK_THRESHOLD;
 }

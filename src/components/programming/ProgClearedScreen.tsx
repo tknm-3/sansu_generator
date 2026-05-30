@@ -19,12 +19,35 @@ export function ProgClearedScreen({
   onExit,
   onAgain,
 }: Props) {
+  const isSuperhard = difficulty === 'superhard';
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-gradient-to-b from-orange-200 to-amber-50 p-8">
-      <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} className="text-7xl">
-        🎉
-      </motion.div>
-      <p className="text-2xl font-bold text-orange-700">クリア！ スタンプ ゲット！</p>
+    <div className={`flex min-h-screen flex-col items-center justify-center gap-5 p-8 ${isSuperhard ? 'bg-gradient-to-b from-yellow-200 to-amber-50' : 'bg-gradient-to-b from-orange-200 to-amber-50'}`}>
+      {isSuperhard ? (
+        <>
+          <motion.div
+            initial={{ scale: 0, rotate: -15 }}
+            animate={{ scale: [0, 1.3, 1], rotate: ['-15deg', '10deg', '0deg'] }}
+            className="text-8xl"
+          >
+            🎁
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-5xl"
+          >
+            💎✨
+          </motion.div>
+        </>
+      ) : (
+        <motion.div initial={{ scale: 0 }} animate={{ scale: [0, 1.2, 1] }} className="text-7xl">
+          🎉
+        </motion.div>
+      )}
+      <p className="text-2xl font-bold text-orange-700">
+        {isSuperhard ? '🎁 たからばこ ゲット！' : 'クリア！ スタンプ ゲット！'}
+      </p>
       <p className="text-base font-bold text-amber-700">{DIFFICULTY_LABEL[difficulty]} をクリアしたよ</p>
       {perfectCount > 0 && (
         <motion.p
