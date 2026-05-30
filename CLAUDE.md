@@ -53,6 +53,22 @@ npm run build    # ビルド
 npm run test     # テスト
 ```
 
+## ブラウザ確認（スクリーンショット）
+実画面の見た目を確認したいときに使う。`cdn.playwright.dev` はネットワーク許可外で
+`npx playwright install` は失敗するが、Chromium が `/opt/pw-browsers` に
+プリインストール済みなので、それを使う（`playwright-core` は devDependency）。
+- 環境変数 `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` は `.claude/settings.json` で設定済み。
+- 実行ファイルは `scripts/screenshot.mjs` が `/opt/pw-browsers` から自動検出する。
+```bash
+# 1) 別プロセスでサーバー起動
+npm run preview -- --port 4317 --host   # もしくは npm run dev（5173）
+# 2) スクショ
+npm run screenshot -- http://localhost:4317/ /tmp/home.png 800
+```
+localStorage シードや画面遷移が必要なときは `scripts/screenshot.mjs` の
+`capture({ url, out, initScript, steps })` をコードから使う（プログラミング進捗の
+解放などは `math-app:prog-progress` / `math-app:adventure-progress` をシードする）。
+
 ## コンテキスト節約の原則
 - ファイル全体を読む前に `Grep` で関連行を特定する
 - `Read` は `offset`+`limit` で必要な範囲だけ読む

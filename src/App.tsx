@@ -54,6 +54,7 @@ type Screen =
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
+  | { kind: 'progAdventure' }
   | { kind: 'progMaker' }
   | { kind: 'unit'; unitId: string; hard?: boolean; expert?: boolean; returnTo?: 'katachi-mission' | 'katachi-challenge' }
   | { kind: 'challenge' }
@@ -173,6 +174,7 @@ export default function App() {
           characterName={character.name}
           characterId={character.id}
           onPlay={(unitId, difficulty) => { setProgReplay(0); setScreen({ kind: 'progUnit', unitId, difficulty }); }}
+          onAdventure={() => setScreen({ kind: 'progAdventure' })}
           onMaker={() => setScreen({ kind: 'progMaker' })}
           onOpenCollection={() => setScreen({ kind: 'collection' })}
           onBack={() => setScreen({ kind: 'categorySelect' })}
@@ -190,9 +192,19 @@ export default function App() {
       };
       const replayKey = `${screen.unitId}-${screen.difficulty}-${progReplay}`;
       if (screen.unitId === 'arrow-debug') return <ArrowDebugUnit key={replayKey} {...progProps} />;
-      if (screen.unitId === 'arrow-adventure') return <ArrowAdventureUnit key={replayKey} {...progProps} />;
       if (screen.unitId === 'arrow-branch') return <ArrowBranchUnit key={replayKey} {...progProps} />;
       return <ArrowSequenceUnit key={replayKey} {...progProps} />;
+    }
+
+    if (screen.kind === 'progAdventure') {
+      return (
+        <ArrowAdventureUnit
+          key={refresh}
+          characterName={character.name}
+          characterId={character.id}
+          onExit={() => setScreen({ kind: 'programmingHome' })}
+        />
+      );
     }
 
     if (screen.kind === 'progMaker') {

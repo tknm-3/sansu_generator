@@ -1,6 +1,18 @@
 import { motion } from 'framer-motion';
 import { samePos, type Level, type Pos } from '../../lib/programming/engine';
 
+/** ゾーンの せかいかんに あわせた 盤面の みため */
+export interface GridTheme {
+  /** かべの 絵文字（なければ レンガ） */
+  wall?: string;
+  /** ふつうマスの 色クラス */
+  tile?: string;
+  /** かべマスの 色クラス */
+  wallTile?: string;
+  /** 盤面背景の 色クラス */
+  board?: string;
+}
+
 interface Props {
   level: Level;
   /** うごく キャラの 絵文字 */
@@ -17,6 +29,8 @@ interface Props {
   onCellClick?: (pos: Pos) => void;
   /** ゾンビの いち（アニメで うごく） */
   zombiePositions?: Pos[];
+  /** ゾーンごとの みため（なければ デフォルト） */
+  theme?: GridTheme;
 }
 
 function keyOf(p: Pos): string {
@@ -32,6 +46,7 @@ export function ProgrammingGrid({
   blockedCell = null,
   onCellClick,
   zombiePositions = [],
+  theme,
 }: Props) {
   // モバイル幅に おさまるように セルサイズを きめる
   const cell = Math.min(Math.floor(300 / level.cols), Math.floor(300 / level.rows), 84);
@@ -39,10 +54,14 @@ export function ProgrammingGrid({
   const trailKeys = new Set(trail.map(keyOf));
   const collectedKeys = new Set(collected.map(keyOf));
   const gemEmoji = level.gemEmoji ?? '⭐';
+  const wallEmoji = theme?.wall ?? '🧱';
+  const tileClass = theme?.tile ?? 'bg-lime-100';
+  const wallClass = theme?.wallTile ?? 'bg-stone-500';
+  const boardClass = theme?.board ?? 'bg-lime-200/70';
 
   return (
     <div
-      className="relative rounded-2xl bg-lime-200/70 p-2 shadow-inner"
+      className={`relative rounded-2xl ${boardClass} p-2 shadow-inner`}
       style={{ width: level.cols * (cell + gap) + gap, height: level.rows * (cell + gap) + gap }}
     >
       {Array.from({ length: level.rows }).map((_, row) =>
@@ -62,7 +81,7 @@ export function ProgrammingGrid({
               disabled={!onCellClick}
               onClick={onCellClick ? () => onCellClick(pos) : undefined}
               className={`absolute flex items-center justify-center rounded-lg transition-colors ${
-                isWall ? 'bg-stone-500' : 'bg-lime-100'
+                isWall ? wallClass : tileClass
               } ${isBlocked ? 'ring-4 ring-red-400' : ''} ${onCellClick ? 'cursor-pointer' : ''}`}
               style={{
                 width: cell,
@@ -72,7 +91,7 @@ export function ProgrammingGrid({
                 fontSize: cell * 0.5,
               }}
             >
-              {isWall && '🧱'}
+              {isWall && wallEmoji}
               {!isWall && isGoal && (level.goalEmoji ?? '🐟')}
               {!isWall && !isGoal && isGem && !gemTaken && gemEmoji}
               {!isWall && !isGoal && !isGem && isStart && (

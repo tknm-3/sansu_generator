@@ -9,6 +9,9 @@ import {
   UNLOCK_THRESHOLD,
   getClears,
   isUnlocked,
+  isAdventureUnlocked,
+  adventureLockedUnits,
+  getAdventureSummary,
   type Difficulty,
 } from '../lib/programming/progress';
 
@@ -16,6 +19,7 @@ interface Props {
   characterName: string;
   characterId: string;
   onPlay: (unitId: string, difficulty: Difficulty) => void;
+  onAdventure: () => void;
   onMaker: () => void;
   onOpenCollection: () => void;
   onBack: () => void;
@@ -24,12 +28,18 @@ interface Props {
 const UNITS = [
   { id: 'arrow-sequence', title: 'やじるしロボット', emoji: '🤖', desc: 'やじるしを ならべて すすもう', hasDifficulty: true },
   { id: 'arrow-debug', title: 'まちがいを なおそう', emoji: '🔧', desc: 'へんな やじるしを なおそう', hasDifficulty: true },
-  { id: 'arrow-adventure', title: 'ぼうけんしよう', emoji: '🎁', desc: 'たからばこを とって ゴールへ！', hasDifficulty: true },
   { id: 'arrow-branch', title: 'もしも ロボット', emoji: '🔀', desc: 'もし〜なら で みちを えらぼう', hasDifficulty: true },
   { id: 'arrow-maker', title: 'めいろを つくろう', emoji: '🧩', desc: 'じぶんで めいろを つくる', hasDifficulty: false },
 ];
 
-export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onMaker, onOpenCollection, onBack }: Props) {
+/** 解放ヒントに つかう 単元の よびな */
+const UNIT_LABEL: Record<string, string> = {
+  'arrow-sequence': 'やじるしロボット',
+  'arrow-debug': 'まちがいを なおそう',
+  'arrow-branch': 'もしも ロボット',
+};
+
+export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onAdventure, onMaker, onOpenCollection, onBack }: Props) {
   const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
   const [picking, setPicking] = useState<string | null>(null);
 
@@ -109,6 +119,9 @@ export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onMa
       </motion.h1>
       <p className="text-sm font-bold text-indigo-600">やじるしで {charEmoji} を うごかそう！</p>
 
+      {/* ★ 特別枠：ぼうけんしよう（問題集モード） */}
+      <AdventureSlot onAdventure={onAdventure} />
+
       <div className="flex flex-col gap-4 w-full max-w-sm">
         {UNITS.map((u, i) => (
           <motion.button
@@ -131,5 +144,48 @@ export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onMa
         ))}
       </div>
     </div>
+  );
+}
+
+/** 特別枠：他の3単元の「ふつう」を クリアすると あそべる 問題集モード */
+function AdventureSlot({ onAdventure }: { onAdventure: () => void }) {
+  const unlocked = isAdventureUnlocked();
+  const summary = getAdventureSummary();
+  const locked = adventureLockedUnits();
+
+  if (!unlocked) {
+    return (
+      <div className="w-full max-w-sm rounded-3xl border-2 border-dashed border-amber-300 bg-white/50 p-5 text-center">
+        <div className="text-4xl">🔒🗺️</div>
+        <div className="mt-1 text-lg font-bold text-amber-700">ぼうけんしよう</div>
+        <p className="mt-1 text-xs font-bold text-amber-600">
+          {locked.map((u) => UNIT_LABEL[u] ?? u).join('・')} の「ふつう」を クリアすると ひらくよ！
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <motion.button
+      type="button"
+      onClick={() => { playSfx('tap'); onAdventure(); }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.03, y: -3 }}
+      whileTap={{ scale: 0.96 }}
+      className="w-full max-w-sm rounded-3xl bg-gradient-to-r from-amber-400 to-orange-400 p-5 text-left text-white shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-5xl">🗺️</span>
+        <div className="flex-1">
+          <div className="text-xl font-bold">ぼうけんしよう <span className="text-sm">（とくべつ）</span></div>
+          <div className="text-sm opacity-90">30もんの ぼうけんに ちょうせん！</div>
+          <div className="mt-1 text-xs font-bold">
+            ✨ {summary.clearedCount} / {summary.total} もん クリア
+          </div>
+        </div>
+        <span className="text-2xl">▶</span>
+      </div>
+    </motion.button>
   );
 }

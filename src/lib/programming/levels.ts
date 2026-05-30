@@ -230,22 +230,26 @@ const ADVENTURE_HARD: Level[] = [
   },
 ];
 
+// superhard は いちばん むずかしい hard の問題を 流用する（未定義による クラッシュを ふせぐ）
 export const ADVENTURE_LEVELS: Record<Difficulty, Level[]> = {
   easy: ADVENTURE_EASY,
   normal: ADVENTURE_NORMAL,
   hard: ADVENTURE_HARD,
+  superhard: ADVENTURE_HARD,
 };
 
 export const SEQUENCE_LEVELS: Record<Difficulty, Level[]> = {
   easy: SEQUENCE_EASY,
   normal: SEQUENCE_NORMAL,
   hard: SEQUENCE_HARD,
+  superhard: SEQUENCE_HARD,
 };
 
 export const DEBUG_LEVELS: Record<Difficulty, Level[]> = {
   easy: DEBUG_EASY,
   normal: DEBUG_NORMAL,
   hard: DEBUG_HARD,
+  superhard: DEBUG_HARD,
 };
 
 /** プールから n問 ランダムに選ぶ（足りなければ くりかえし使う） */
