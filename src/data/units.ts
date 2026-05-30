@@ -211,7 +211,7 @@ export const UNITS: UnitMeta[] = [
     category: 'programming',
     title: 'ぼうけんしよう',
     grade: '小1〜小2',
-    curriculum: 'プログラミング総合：問題集モード（30問・段階解放）。他3単元のふつうクリアで解放',
+    curriculum: 'プログラミング総合：問題集モード（30問・段階解放）。いつでも あそべる',
     emoji: '🗺️',
   },
 ];

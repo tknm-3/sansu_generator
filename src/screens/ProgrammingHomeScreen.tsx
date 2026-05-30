@@ -9,8 +9,6 @@ import {
   UNLOCK_THRESHOLD,
   getClears,
   isUnlocked,
-  isAdventureUnlocked,
-  adventureLockedUnits,
   getAdventureSummary,
   type Difficulty,
 } from '../lib/programming/progress';
@@ -25,19 +23,23 @@ interface Props {
   onBack: () => void;
 }
 
-const UNITS = [
+interface Unit {
+  id: string;
+  title: string;
+  emoji: string;
+  desc: string;
+  hasDifficulty: boolean;
+  /** この単元で あそべる 難易度（省略時は ぜんぶ） */
+  difficulties?: Difficulty[];
+}
+
+const UNITS: Unit[] = [
   { id: 'arrow-sequence', title: 'やじるしロボット', emoji: '🤖', desc: 'やじるしを ならべて すすもう', hasDifficulty: true },
   { id: 'arrow-debug', title: 'まちがいを なおそう', emoji: '🔧', desc: 'へんな やじるしを なおそう', hasDifficulty: true },
-  { id: 'arrow-branch', title: 'もしも ロボット', emoji: '🔀', desc: 'もし〜なら で みちを えらぼう', hasDifficulty: true },
+  // もしも ロボットは 3段階（かんたん＝あなうめ → ふつう → むずかしい）
+  { id: 'arrow-branch', title: 'もしも ロボット', emoji: '🔀', desc: 'もし〜なら で みちを えらぼう', hasDifficulty: true, difficulties: ['easy', 'normal', 'hard'] },
   { id: 'arrow-maker', title: 'めいろを つくろう', emoji: '🧩', desc: 'じぶんで めいろを つくる', hasDifficulty: false },
 ];
-
-/** 解放ヒントに つかう 単元の よびな */
-const UNIT_LABEL: Record<string, string> = {
-  'arrow-sequence': 'やじるしロボット',
-  'arrow-debug': 'まちがいを なおそう',
-  'arrow-branch': 'もしも ロボット',
-};
 
 export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onAdventure, onMaker, onOpenCollection, onBack }: Props) {
   const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
@@ -64,7 +66,7 @@ export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onAd
         </div>
         <p className="text-lg font-bold text-indigo-900">むずかしさを えらんでね</p>
         <div className="flex w-full max-w-sm flex-col gap-3">
-          {DIFFICULTIES.map((diff) => {
+          {(unit.difficulties ?? DIFFICULTIES).map((diff) => {
             const unlocked = isUnlocked(unit.id, diff);
             const clears = getClears(unit.id, diff);
             const PREV: Partial<Record<Difficulty, Difficulty>> = { normal: 'easy', hard: 'normal', superhard: 'hard' };
@@ -147,23 +149,9 @@ export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onAd
   );
 }
 
-/** 特別枠：他の3単元の「ふつう」を クリアすると あそべる 問題集モード */
+/** 特別枠：いつでも あそべる 問題集モード（解放じょうけんなし） */
 function AdventureSlot({ onAdventure }: { onAdventure: () => void }) {
-  const unlocked = isAdventureUnlocked();
   const summary = getAdventureSummary();
-  const locked = adventureLockedUnits();
-
-  if (!unlocked) {
-    return (
-      <div className="w-full max-w-sm rounded-3xl border-2 border-dashed border-amber-300 bg-white/50 p-5 text-center">
-        <div className="text-4xl">🔒🗺️</div>
-        <div className="mt-1 text-lg font-bold text-amber-700">ぼうけんしよう</div>
-        <p className="mt-1 text-xs font-bold text-amber-600">
-          {locked.map((u) => UNIT_LABEL[u] ?? u).join('・')} の「ふつう」を クリアすると ひらくよ！
-        </p>
-      </div>
-    );
-  }
 
   return (
     <motion.button

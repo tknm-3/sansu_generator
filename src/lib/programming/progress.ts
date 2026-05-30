@@ -84,11 +84,8 @@ export function didUnlockNext(diff: Difficulty, clearsAfter: number): boolean {
 }
 
 // ───────────────────────── ぼうけんしよう（問題集モード）─────────────────────────
-// 他の3単元の「ふつう」を クリアすると 解放される 特別枠。
+// いつでも あそべる 特別枠（解放じょうけんは なし）。
 // 1問ずつ じゅんばんに クリアしていき、達成度を 可視化する。
-
-/** 冒険モードを 解放するのに クリアが ひつような 単元 */
-export const ADVENTURE_REQUIRED_UNITS = ['arrow-sequence', 'arrow-debug', 'arrow-branch'] as const;
 
 const ADV_KEY = 'math-app:adventure-progress';
 
@@ -103,14 +100,9 @@ function loadAdv(): AdventureProgress {
   return loadJson<AdventureProgress>(ADV_KEY, ADV_EMPTY);
 }
 
-/** 冒険モードが あそべる（3単元の ふつうを クリアずみ）か */
+/** 冒険モードは いつでも あそべる（解放じょうけんは なし） */
 export function isAdventureUnlocked(): boolean {
-  return ADVENTURE_REQUIRED_UNITS.every((u) => getClears(u, 'normal') >= 1);
-}
-
-/** まだ ふつうを クリアしていない 単元（解放ヒント用） */
-export function adventureLockedUnits(): string[] {
-  return ADVENTURE_REQUIRED_UNITS.filter((u) => getClears(u, 'normal') < 1);
+  return true;
 }
 
 /** その問題の 達成じょうきょう（なければ null） */

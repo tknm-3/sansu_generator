@@ -253,9 +253,9 @@ export const DEBUG_LEVELS: Record<Difficulty, Level[]> = {
 };
 
 /** プールから n問 ランダムに選ぶ（足りなければ くりかえし使う） */
-export function pickLevels(pool: Level[], n: number): Level[] {
+export function pickLevels<T extends Level>(pool: T[], n: number): T[] {
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const out: Level[] = [];
+  const out: T[] = [];
   for (let i = 0; i < n; i++) out.push(shuffled[i % shuffled.length]);
   return out;
 }
