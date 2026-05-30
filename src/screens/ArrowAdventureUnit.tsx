@@ -55,6 +55,7 @@ const ACCENT: Record<string, { chip: string; text: string; ring: string; soft: s
   amber: { chip: 'bg-amber-500', text: 'text-amber-700', ring: 'ring-amber-400', soft: 'bg-amber-100', border: 'border-amber-400' },
   lime: { chip: 'bg-lime-600', text: 'text-lime-700', ring: 'ring-lime-500', soft: 'bg-lime-100', border: 'border-lime-500' },
   indigo: { chip: 'bg-indigo-500', text: 'text-indigo-700', ring: 'ring-indigo-400', soft: 'bg-indigo-100', border: 'border-indigo-400' },
+  orange: { chip: 'bg-orange-500', text: 'text-orange-700', ring: 'ring-orange-400', soft: 'bg-orange-100', border: 'border-orange-400' },
 };
 
 // ───────────────────────── 羊皮紙の世界観（Vellum Frontier）─────────────────────────
@@ -187,6 +188,7 @@ const REGION_TINT: Record<string, string> = {
   desert: 'rgba(196,150,70,.34)',
   zombie: 'rgba(110,150,86,.32)',
   castle: 'rgba(96,116,150,.32)',
+  donguri: 'rgba(200,130,60,.32)',
 };
 
 interface TownStop {

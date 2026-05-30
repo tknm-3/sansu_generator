@@ -97,10 +97,22 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'ついに さいごの まほうの しろ。\nいままで おぼえた ちからを ぜんぶ つかって、おおきな たからを てに いれよう！',
     wall: '🧱', tile: 'bg-slate-100', wallTile: 'bg-slate-400', board: 'bg-slate-300/70',
   },
+  {
+    id: 'donguri',
+    name: 'どんぐりの くに',
+    emoji: '🌰',
+    bg: 'from-orange-100 to-yellow-50',
+    accent: 'orange',
+    tagline: 'どんぐりを ひろって りすに わたそう',
+    story: 'もりの りすが どんぐりを なくして こまっている。\nどんぐりを ひろって、りすの ところまで とどけよう！',
+    wall: '🌲', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-200/70',
+  },
 ];
 
 const GEM = '🎁';
 const HOME = '🏠';
+const ACORN = '🌰';
+const SQUIRREL = '🐿️';
 
 /**
  * 問題集の 本体。配列の じゅんばん = 出題じゅんばん。
@@ -291,6 +303,51 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     zombies: [{ kind: 'fixed', pos: r(2, 2) }, { kind: 'fixed', pos: r(3, 3) }],
     optimal: 20, maxSlots: 30, allowLoop: true, goalEmoji: HOME,
     prompt: '👑さいごの ぼうけん！ たからばこ2つを ぜんぶ とって おうちへ',
+  },
+
+  // ─── どんぐりの くに（adv-q31〜adv-q36）───
+  // どんぐり(🌰)を ひろって りす(🐿️)に とどける。かべ(🌲)を よけながら みちを さがそう。
+  {
+    id: 'adv-q31', zoneId: 'donguri', rows: 4, cols: 4, start: r(2, 0), goal: r(0, 3),
+    walls: [r(1, 1)],
+    gems: [r(3, 3)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'どんぐりを ひろって りすに わたそう！',
+  },
+  {
+    id: 'adv-q32', zoneId: 'donguri', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 2),
+    walls: [r(1, 2), r(2, 0)],
+    gems: [r(0, 3)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'かべを よけながら どんぐりを とりに いこう',
+  },
+  {
+    id: 'adv-q33', zoneId: 'donguri', rows: 4, cols: 4, start: r(3, 3), goal: r(0, 1),
+    walls: [r(2, 2), r(1, 3)],
+    gems: [r(3, 0)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'はじから はじへ！ どんぐりを とってから りすのところへ',
+  },
+  {
+    id: 'adv-q34', zoneId: 'donguri', rows: 5, cols: 5, start: r(2, 0), goal: r(2, 4),
+    walls: [r(0, 2), r(1, 3), r(3, 1), r(4, 2)],
+    gems: [r(0, 4)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 8, maxSlots: 16,
+    prompt: 'うえの どんぐりを とって みぎの りすに とどけよう',
+  },
+  {
+    id: 'adv-q35', zoneId: 'donguri', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 3),
+    walls: [r(1, 1), r(2, 3), r(3, 0)],
+    gems: [r(4, 0), r(1, 4)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 15, maxSlots: 18, allowLoop: true,
+    prompt: 'どんぐりが2つ！ ぜんぶ ひろって りすに わたそう',
+  },
+  {
+    id: 'adv-q36', zoneId: 'donguri', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(1, 2), r(2, 4), r(3, 1), r(4, 3)],
+    gems: [r(5, 4), r(2, 1)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 16, maxSlots: 22, allowLoop: true,
+    prompt: '🌰🌰2つの どんぐりを あつめて りすに とどける ラストステージ！',
   },
 ];
 
