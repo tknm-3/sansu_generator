@@ -31,6 +31,8 @@ export interface AdventureZone {
   /** ── 盤面の みため（ゾーンの せかいかんに あわせる）── */
   /** かべの 絵文字（森なら 木、さばくなら サボテン…） */
   wall: string;
+  /** かべの よびな（分岐ヒントで つかう。くもの てんごくなら「くも」。なければ「かべ」） */
+  wallName?: string;
   /** ふつうの マスの 色（Tailwind） */
   tile: string;
   /** かべマスの 色（Tailwind） */
@@ -134,7 +136,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     accent: 'sky',
     tagline: 'もしも くもが あったら…どっちに すすむ？',
     story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも くもが あったら…」の ルールで かしこく すすもう！',
-    wall: '☁️', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-200/70',
+    wall: '☁️', wallName: 'くも', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-200/70',
   },
 ];
 
@@ -381,54 +383,56 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
 
   // ─── くもの てんごく（adv-q37〜adv-q42）───
   // ☁️が かべ。「もしも ☁️が あったら…」の ルールを 穴埋めで えらんで ゴールへ。
-  // 穴埋めパターン: センサー穴 → then穴 → else穴 → 2穴 → 2穴 → 全穴（ボス）
+  // ステージごとに 正解の むきが かわる（おなじ こたえの 丸おぼえでは 解けない）。
+  // 穴の かず: 1 → 1 → 1 → 2 → 2 → 3（全穴・ボス）と だんだん ふえる。
+  // 盤面は すべて「正解 1とおりだけ クリア・最短一致」を adventure.test.ts で検証ずみ。
   {
     id: 'adv-q37', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
     walls: [r(0, 2)], goalEmoji: '⭐',
     kind: 'branch',
     branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true },
     optimal: 6, maxSlots: 6,
-    prompt: 'センサーの むきを えらんで みよう！「もし [？] が ☁️ なら ↓、ちがえば →」',
+    prompt: 'どっちを しらべる？「もし [？] が ☁️ なら ↓、ちがえば →」',
   },
   {
     id: 'adv-q38', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [r(0, 1), r(1, 3)], goalEmoji: '⭐',
+    walls: [r(2, 0)], goalEmoji: '⭐',
     kind: 'branch',
-    branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true },
+    branchFill: { loopTimes: 6, sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true },
     optimal: 6, maxSlots: 6,
-    prompt: '☁️に あたったら どっちへ？「もし → が ☁️ なら [？]、ちがえば →」',
+    prompt: '☁️に あたったら どっちへ？「もし ↓ が ☁️ なら [？]、ちがえば ↓」',
   },
   {
-    id: 'adv-q39', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [r(1, 2), r(2, 0)], goalEmoji: '⭐',
+    id: 'adv-q39', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
+    walls: [r(0, 1)], goalEmoji: '⭐',
     kind: 'branch',
-    branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeElse: true },
+    branchFill: { loopTimes: 6, sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true },
     optimal: 6, maxSlots: 6,
-    prompt: '☁️が ないとき どっちへ？「もし → が ☁️ なら ↓、ちがえば [？]」',
+    prompt: '☁️が ないとき どっちへ？「もし ← が ☁️ なら ↓、ちがえば [？]」',
   },
   {
-    id: 'adv-q40', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [r(0, 2), r(2, 0)], goalEmoji: '⭐',
+    id: 'adv-q40', zoneId: 'kumo', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(3, 0)], goalEmoji: '⭐',
     kind: 'branch',
-    branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true, holeThen: true },
-    optimal: 6, maxSlots: 6,
-    prompt: 'センサーと ☁️のとき の むきを えらぼう！「もし [？] が ☁️ なら [？]、ちがえば →」',
+    branchFill: { loopTimes: 8, sensor: 'up', thenDir: 'right', elseDir: 'up', holeSensor: true, holeThen: true },
+    optimal: 8, maxSlots: 8,
+    prompt: 'うえへ のぼろう！「もし [？] が ☁️ なら [？]、ちがえば ↑」',
   },
   {
     id: 'adv-q41', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(0, 2), r(1, 4), r(3, 0)], goalEmoji: '⭐',
+    walls: [r(0, 2)], goalEmoji: '⭐',
     kind: 'branch',
     branchFill: { loopTimes: 8, sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true, holeElse: true },
     optimal: 8, maxSlots: 8,
-    prompt: '☁️のとき と ☁️じゃないとき の むきを えらぼう！「もし → が ☁️ なら [？]、ちがえば [？]」',
+    prompt: '☁️のとき と そうでないとき！「もし → が ☁️ なら [？]、ちがえば [？]」',
   },
   {
     id: 'adv-q42', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(0, 3), r(2, 1)], goalEmoji: '⭐',
+    walls: [r(0, 1), r(2, 4)], goalEmoji: '⭐',
     kind: 'branch',
-    branchFill: { loopTimes: 8, sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true, holeThen: true, holeElse: true },
+    branchFill: { loopTimes: 8, sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true },
     optimal: 8, maxSlots: 8,
-    prompt: '☁️ 3つを ぜんぶ うめてゴール！「もし [？] が ☁️ なら [？]、ちがえば [？]」',
+    prompt: '☁️を ぜんぶ うめてゴール！「もし [？] が ☁️ なら [？]、ちがえば [？]」',
   },
 ];
 

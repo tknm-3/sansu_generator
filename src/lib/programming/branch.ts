@@ -134,13 +134,14 @@ function manhattan(a: Pos, b: Pos): number {
 /**
  * 分岐単元の 前向きヒント。「まちがい」と いわず、
  * 「もし〜なら」で かべを よける 発想を そっと あと押しする。
+ * wall は しょうがいぶつの よびな（既定「かべ」、くものてんごくは「くも」など）。
  */
-export function buildBranchHint(level: Level, result: RunResult, attempt: number): string {
+export function buildBranchHint(level: Level, result: RunResult, attempt: number, wall = 'かべ'): string {
   if (result.blockedStep >= 0) {
     if (attempt <= 1) {
-      return 'かべに あたって とまっちゃった！\n「もし まえが かべ なら…」の ルールで よけられるかな？';
+      return `${wall}に あたって とまっちゃった！\n「もし まえが ${wall} なら…」の ルールで よけられるかな？`;
     }
-    return 'すすむ さきに かべが あるみたい。\nかべの ときは べつの むきへ いく ルールに してみよう。';
+    return `すすむ さきに ${wall}が あるみたい。\n${wall}の ときは べつの むきへ いく ルールに してみよう。`;
   }
   if (result.missedGems > 0) {
     return `ほしを あと ${result.missedGems}こ とおりたいね。\nほしを とおる みちを かんがえてみよう。`;

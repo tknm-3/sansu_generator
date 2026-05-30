@@ -901,6 +901,7 @@ function BranchAdventurePlay({
   const zone = getZone(quest.zoneId);
   const accent = ACCENT[zone.accent] ?? ACCENT.sky;
   const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
+  const wallName = zone.wallName ?? 'かべ';
   const fill = quest.branchFill!;
 
   const [fillSensor, setFillSensor] = useState<Dir | null>(fill.holeSensor ? null : fill.sensor);
@@ -938,7 +939,7 @@ function BranchAdventurePlay({
     } else {
       const nextAttempt = attempts + 1;
       setAttempts(nextAttempt);
-      const h = buildBranchHint(quest, result, nextAttempt);
+      const h = buildBranchHint(quest, result, nextAttempt, wallName);
       setHint(h);
       speakJa(h);
     }

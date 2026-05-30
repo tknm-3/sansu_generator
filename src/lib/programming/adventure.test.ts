@@ -114,6 +114,26 @@ describe('ぼうけん 問題集', () => {
     expect(isPerfect(q, result), `${q.id} の ステップ数が optimal(${q.optimal})と ずれている（実際: ${result.steps}）`).toBe(true);
   });
 
+  // 穴埋めは「あてずっぽうでも解ける」と 学びが うすい。穴の むきの 全組み合わせを ためし、
+  // クリアできるのは 正解の 1とおり だけ（＝一意解）であることを 保証する。
+  const DIRS: Dir[] = ['up', 'right', 'down', 'left'];
+  it.each(branchQuests)('$id（分岐）は 穴の くみあわせで 正解 1とおり だけ クリアできる（一意解）', (q) => {
+    const fill = q.branchFill!;
+    const sensorOpts = fill.holeSensor ? DIRS : [fill.sensor];
+    const thenOpts = fill.holeThen ? DIRS : [fill.thenDir];
+    const elseOpts = fill.holeElse ? DIRS : [fill.elseDir];
+    const solutions: string[] = [];
+    for (const s of sensorOpts) for (const t of thenOpts) for (const e of elseOpts) {
+      const program: BranchCommand[] = [{ kind: 'repeat', times: fill.loopTimes, body: [
+        { kind: 'if', cond: { kind: 'wall', dir: s }, then: [{ kind: 'move', dir: t }], else: [{ kind: 'move', dir: e }] },
+      ]}];
+      if (isCleared(runBranch(q, program))) solutions.push(`${s}/${t}/${e}`);
+    }
+    expect(solutions, `${q.id} は 正解いがいでも クリアできる: ${solutions.join(', ')}`).toEqual([
+      `${fill.sensor}/${fill.thenDir}/${fill.elseDir}`,
+    ]);
+  });
+
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
   // LoopBuilder の せいやく（1ループ＝1方向 × 2〜5かい）の はんいで 解けることを 確認する。
   const loopOnly = all.filter((q) => q.loopOnly);
