@@ -92,12 +92,23 @@ const ADV_KEY = 'math-app:adventure-progress';
 interface AdventureProgress {
   /** questId -> 達成じょうきょう */
   cleared: Record<string, { perfect: boolean }>;
+  /** あつめた きらきら（✨）の ごうけい。クリアの たびに ふえる（リプレイでも ふえる）*/
+  sparkles?: number;
 }
 
-const ADV_EMPTY: AdventureProgress = { cleared: {} };
+const ADV_EMPTY: AdventureProgress = { cleared: {}, sparkles: 0 };
 
 function loadAdv(): AdventureProgress {
   return loadJson<AdventureProgress>(ADV_KEY, ADV_EMPTY);
+}
+
+/** クリア1回で もらえる きらきら（ぴったり賞は ボーナス）*/
+export const SPARKLE_CLEAR = 1;
+export const SPARKLE_PERFECT = 3;
+
+/** あつめた きらきらの ごうけい */
+export function getSparkles(): number {
+  return loadAdv().sparkles ?? 0;
 }
 
 /** 冒険モードは いつでも あそべる（解放じょうけんは なし） */
@@ -115,12 +126,21 @@ export function isQuestCleared(questId: string): boolean {
   return getQuestCleared(questId) != null;
 }
 
-/** 問題クリアを きろくする（ぴったりは いちど とれば のこる） */
-export function addQuestClear(questId: string, perfect: boolean): void {
+/**
+ * 問題クリアを きろくして、こんかい もらった きらきら(✨)の かずを かえす。
+ * ぴったり賞は いちど とれば のこる。きらきらは クリアの たびに ふえる（同じ問題の
+ * リプレイでも ふえる）ので、「もう いちど とこう」の どうきづけに なる。
+ */
+export function addQuestClear(questId: string, perfect: boolean): number {
   const state = loadAdv();
   const prev = state.cleared[questId];
   const nextPerfect = (prev?.perfect ?? false) || perfect;
-  saveJson(ADV_KEY, { cleared: { ...state.cleared, [questId]: { perfect: nextPerfect } } });
+  const earned = perfect ? SPARKLE_PERFECT : SPARKLE_CLEAR;
+  saveJson(ADV_KEY, {
+    cleared: { ...state.cleared, [questId]: { perfect: nextPerfect } },
+    sparkles: (state.sparkles ?? 0) + earned,
+  });
+  return earned;
 }
 
 /** 達成度サマリ（達成度バー・パーセント表示用） */

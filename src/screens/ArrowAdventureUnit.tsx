@@ -33,6 +33,7 @@ import {
   currentZoneId,
   getAdventureSummary,
   getQuestCleared,
+  getSparkles,
   getZoneStatus,
   isQuestCleared,
   isQuestUnlocked,
@@ -240,6 +241,7 @@ function AdventureMap({
 }) {
   const summary = getAdventureSummary();
   const percent = Math.round((summary.clearedCount / summary.total) * 100);
+  const sparkles = getSparkles();
   const frontier = nextPlayableIndex();
   const curZoneIdx = Math.max(0, ADVENTURE_ZONES.findIndex((z) => z.id === currentZoneId()));
 
@@ -305,17 +307,43 @@ function AdventureMap({
           ← もどる
         </button>
         <span className="text-sm font-bold" style={{ color: SEPIA }}>
-          {summary.clearedCount}/{summary.total}もん {percent}%
-          {summary.perfectCount > 0 && <span className="ml-1 text-[#b9472f]">💎{summary.perfectCount}</span>}
+          {summary.perfectCount > 0 && <span className="mr-2 text-[#b9472f]">💎{summary.perfectCount}</span>}
+          <span title="あつめた きらきら">✨{sparkles}</span>
         </span>
       </div>
 
-      {/* いまの まちの 名まえ */}
-      <div className="relative z-10 mt-2 flex flex-col items-center">
+      {/* 達成度バー：これまで どのくらい すすんだか */}
+      <div className="relative z-10 mt-3 w-full max-w-md px-4">
+        <div className="mb-1 flex items-center justify-between text-[11px] font-bold" style={{ color: SEPIA }}>
+          <span>🗺️ ぼうけんの しんちょく</span>
+          <span>{summary.clearedCount}/{summary.total}もん・{percent}%</span>
+        </div>
+        <div
+          className="h-3 w-full overflow-hidden rounded-full border"
+          style={{ background: 'rgba(255,255,255,.45)', borderColor: 'rgba(123,90,58,.35)' }}
+        >
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: 'linear-gradient(90deg,#e0a23a,#b9472f)' }}
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
+      {/* いまの まちの 名まえ＋ものがたり */}
+      <div className="relative z-10 mt-3 flex flex-col items-center px-4">
         <Ribbon width={264}>
           <span className="text-lg">{zone.emoji} {zone.name}</span>
         </Ribbon>
         <p className="mt-1.5 text-xs font-bold" style={{ color: '#9a7c54' }}>{zone.tagline}</p>
+        <div
+          className="mt-2 max-w-md rounded-xl border px-3 py-2 text-center text-xs font-bold leading-relaxed"
+          style={{ background: 'rgba(255,250,235,.6)', borderColor: 'rgba(123,90,58,.3)', color: '#6b4f30', whiteSpace: 'pre-line' }}
+        >
+          📖 {zone.story}
+        </div>
       </div>
 
       {/* ワールド地図：まちの ならび（いま どこに いるか）*/}
@@ -602,7 +630,7 @@ function AdventurePlay({
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
-  const [overlay, setOverlay] = useState<null | { perfect: boolean }>(null);
+  const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
   function handleFinish(result: RunResult) {
     if (isCleared(result)) {
@@ -610,11 +638,11 @@ function AdventurePlay({
       playSfx('correct');
       confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
       const perfect = isPerfect(quest, result);
-      addQuestClear(quest.id, perfect);
+      const earned = addQuestClear(quest.id, perfect);
       speakJa(buildPraise(perfect));
       setHint(null);
       playSfx('fanfare');
-      window.setTimeout(() => setOverlay({ perfect }), 600);
+      window.setTimeout(() => setOverlay({ perfect, earned }), 600);
     } else {
       const nextAttempt = attempts + 1;
       setAttempts(nextAttempt);
@@ -840,7 +868,7 @@ function AdventurePlay({
 
       <AnimatePresence>
         {overlay && (
-          <ClearOverlay quest={quest} perfect={overlay.perfect} onContinue={onCleared} />
+          <ClearOverlay quest={quest} perfect={overlay.perfect} earned={overlay.earned} onContinue={onCleared} />
         )}
       </AnimatePresence>
     </div>
@@ -848,7 +876,7 @@ function AdventurePlay({
 }
 
 /** クリア演出。ゾーンクリアや「あと○問で つぎのまち」を 予告する */
-function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; perfect: boolean; onContinue: () => void }) {
+function ClearOverlay({ quest, perfect, earned, onContinue }: { quest: AdventureQuest; perfect: boolean; earned: number; onContinue: () => void }) {
   // この時点で addQuestClear 済み。ゾーンの のこりを かぞえる。
   const zone = getZone(quest.zoneId);
   const zoneQuests = ADVENTURE_QUEST.filter((q) => q.zoneId === quest.zoneId);
@@ -868,6 +896,11 @@ function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; p
     preview = `あと ${remaining}もんで ${zone.emoji} ${zone.name} クリア！`;
   }
 
+  // ぴったり賞 いがいで クリアした問題は、もう いちど とくと ぴったり賞＆きらきらが もらえる
+  const replayHint = !perfect
+    ? 'もう いちど とくと ✨が ふえるよ。ぴったり賞も ねらってみよう！'
+    : 'ぴったりの みちを みつけたね！ ほかの もんだいにも ちょうせんしよう。';
+
   return (
     <motion.div
       className="fixed inset-0 z-20 flex flex-col items-center justify-center gap-5 bg-black/40 p-8"
@@ -882,6 +915,14 @@ function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; p
         <p className="text-2xl font-bold text-orange-600">{buildPraise(perfect)}</p>
         {perfect && <p className="mt-1 text-sm font-bold text-amber-600">💎 ぴったり賞 ゲット！</p>}
         <motion.p
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: [0.6, 1.25, 1] }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mt-2 text-lg font-bold text-amber-500"
+        >
+          ✨ +{earned} きらきら ゲット！
+        </motion.p>
+        <motion.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -889,6 +930,7 @@ function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; p
         >
           {preview}
         </motion.p>
+        <p className="mt-2 text-xs font-bold text-rose-500">{replayHint}</p>
       </div>
       <button
         type="button"

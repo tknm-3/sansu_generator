@@ -26,6 +26,8 @@ export interface AdventureZone {
   accent: string;
   /** 次のゾーン予告などに つかう ひとこと */
   tagline: string;
+  /** ゾーンに はいったとき みせる みじかい ものがたり（ぜんぶ ひらがな・2〜3行）*/
+  story: string;
   /** ── 盤面の みため（ゾーンの せかいかんに あわせる）── */
   /** かべの 絵文字（森なら 木、さばくなら サボテン…） */
   wall: string;
@@ -52,6 +54,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     bg: 'from-emerald-100 to-teal-50',
     accent: 'emerald',
     tagline: 'やじるしを ならべて みちを つくろう',
+    story: 'ふるい たからの ちずを みつけた！\nやじるしを ならべて、はじまりの もりへ しゅっぱつだ。',
     wall: '🌳', tile: 'bg-emerald-50', wallTile: 'bg-emerald-200', board: 'bg-emerald-200/70',
   },
   {
@@ -61,6 +64,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     bg: 'from-violet-100 to-fuchsia-50',
     accent: 'violet',
     tagline: 'おなじ うごきは ループ箱が べんり！',
+    story: 'おなじ みちが ずーっと つづく たに。\n「くりかえし」の まほうを つかって すすもう。',
     wall: '🪨', tile: 'bg-violet-50', wallTile: 'bg-violet-200', board: 'bg-violet-200/70',
   },
   {
@@ -70,6 +74,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     bg: 'from-amber-100 to-orange-50',
     accent: 'amber',
     tagline: 'やじるしの かずが かぎられているよ',
+    story: 'あつい さばくは みずが だいじ。\nやじるしを むだに しないで、いちばん みじかい みちを さがそう。',
     wall: '🌵', tile: 'bg-amber-50', wallTile: 'bg-amber-200', board: 'bg-amber-200/70',
   },
   {
@@ -79,6 +84,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     bg: 'from-lime-100 to-green-50',
     accent: 'lime',
     tagline: 'ゾンビを よけて すすもう',
+    story: 'よるの たには ゾンビが うろうろ…\nぶつからないように そっと よけて、たからを あつめよう。',
     wall: '🪦', tile: 'bg-lime-50', wallTile: 'bg-lime-300', board: 'bg-lime-300/70',
   },
   {
@@ -88,6 +94,7 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     bg: 'from-sky-100 to-indigo-50',
     accent: 'indigo',
     tagline: 'いままでの ちからを ぜんぶ つかおう！',
+    story: 'ついに さいごの まほうの しろ。\nいままで おぼえた ちからを ぜんぶ つかって、おおきな たからを てに いれよう！',
     wall: '🧱', tile: 'bg-slate-100', wallTile: 'bg-slate-400', board: 'bg-slate-300/70',
   },
 ];
@@ -127,9 +134,10 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'かべの きれめを とおって いこう',
   },
   {
-    id: 'adv-q06', zoneId: 'forest', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
-    walls: [r(1, 1), r(1, 2), r(3, 2), r(3, 3)], optimal: 8, maxSlots: 12, goalEmoji: HOME,
-    prompt: 'はしっこを つかって まわりこもう',
+    id: 'adv-q06', zoneId: 'forest', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(1, 1), r(1, 2), r(1, 3), r(3, 2), r(3, 3), r(3, 4), r(4, 4)],
+    optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: '🌳もりの おくの ボス！ ながい みちを すすもう',
   },
 
   // ───────── 🔁 くりかえしの たに（7〜12）ループ箱だけで とく（loopOnly）─────────
@@ -161,9 +169,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'したの たからばこ🎁を とってから おうちへ（🔁だけ）',
   },
   {
-    id: 'adv-q12', zoneId: 'valley', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], gems: [r(0, 4)], gemEmoji: GEM, optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: HOME,
-    prompt: 'みぎの たからばこ🎁を とってから おうちへ（🔁だけ）',
+    id: 'adv-q12', zoneId: 'valley', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [], gems: [r(5, 0)], gemEmoji: GEM, optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: HOME,
+    prompt: '🔁たにの ボス！ したの たからばこ🎁を とってから おうちへ（🔁だけ）',
   },
 
   // ───────── 🧭 せつやくの さばく（13〜18）やじるしの かず ぴったり ─────────
@@ -193,9 +201,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'まんなかの かべを よけて みじかく',
   },
   {
-    id: 'adv-q18', zoneId: 'desert', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(1, 2), r(2, 1)], optimal: 8, maxSlots: 8, allowLoop: true, goalEmoji: HOME,
-    prompt: 'かべを よけても ぴったり 8こで いけるよ',
+    id: 'adv-q18', zoneId: 'desert', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(2, 2), r(3, 3)], optimal: 10, maxSlots: 10, allowLoop: true, goalEmoji: HOME,
+    prompt: '🧭さばくの ボス！ おおきな さばくを ぴったり 10こで わたろう',
   },
 
   // ───────── 🧟 ゾンビの たに（19〜24）ゾンビ回避 ─────────
@@ -234,11 +242,11 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'よこに うごく ゾンビを やりすごそう',
   },
   {
-    id: 'adv-q24', zoneId: 'zombie', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    id: 'adv-q24', zoneId: 'zombie', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
     walls: [], gems: [r(2, 2)], gemEmoji: GEM,
-    zombies: [{ kind: 'fixed', pos: r(1, 1) }, { kind: 'fixed', pos: r(3, 3) }],
-    optimal: 8, maxSlots: 14, goalEmoji: HOME,
-    prompt: 'たからばこ🎁を とって みぎうえの おうちへ',
+    zombies: [{ kind: 'fixed', pos: r(1, 1) }, { kind: 'fixed', pos: r(3, 3) }, { kind: 'fixed', pos: r(4, 4) }],
+    optimal: 10, maxSlots: 18, goalEmoji: HOME,
+    prompt: '🧟たにの ボス！ ゾンビだらけ。たからばこを とって みぎうえの おうちへ',
   },
 
   // ───────── 🏰 まほうの しろ（25〜30）ふくごう・そうしあげ ─────────
@@ -278,11 +286,11 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'たからばこ2つを とって おうちへ',
   },
   {
-    id: 'adv-q30', zoneId: 'castle', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], gems: [r(0, 4), r(4, 0)], gemEmoji: GEM,
-    zombies: [{ kind: 'fixed', pos: r(2, 2) }],
-    optimal: 16, maxSlots: 24, allowLoop: true, goalEmoji: HOME,
-    prompt: 'さいごの ぼうけん！ たからばこ2つを とって おうちへ',
+    id: 'adv-q30', zoneId: 'castle', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [], gems: [r(0, 5), r(5, 0)], gemEmoji: GEM,
+    zombies: [{ kind: 'fixed', pos: r(2, 2) }, { kind: 'fixed', pos: r(3, 3) }],
+    optimal: 20, maxSlots: 30, allowLoop: true, goalEmoji: HOME,
+    prompt: '👑さいごの ぼうけん！ たからばこ2つを ぜんぶ とって おうちへ',
   },
 ];
 
