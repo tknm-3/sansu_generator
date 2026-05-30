@@ -29,6 +29,9 @@ export function useProgramRunner<C = Command>(
   const [blockedCell, setBlockedCell] = useState<Pos | null>(null);
   const [playing, setPlaying] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [zombiePositions, setZombiePositions] = useState<Pos[]>(
+    () => (level.zombies ?? []).map((z) => z.pos),
+  );
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const plan = useRef<{ result: RunResult; index: number } | null>(null);
@@ -49,6 +52,7 @@ export function useProgramRunner<C = Command>(
     setBlockedCell(null);
     setPlaying(false);
     setFinished(false);
+    setZombiePositions((level.zombies ?? []).map((z) => z.pos));
   }, [level]);
 
   // レベルが かわったら リセット
@@ -78,6 +82,7 @@ export function useProgramRunner<C = Command>(
       setCharPos(level.start);
       setTrail([]);
       setCollected([]);
+      setZombiePositions((level.zombies ?? []).map((z) => z.pos));
 
       const { path } = result;
       let i = 0;
@@ -87,17 +92,18 @@ export function useProgramRunner<C = Command>(
           setCharPos(path[i]);
           setTrail(path.slice(0, i));
           applyCollected(i, path);
+          setZombiePositions(result.zombiePaths.map((zp) => zp[Math.min(i, zp.length - 1)]));
           timer.current = setTimeout(tick, STEP_MS);
         } else {
           setTrail(path.slice(0, path.length - 1));
           if (result.blockedCell) setBlockedCell(result.blockedCell);
+          setZombiePositions(result.zombiePaths.map((zp) => zp[zp.length - 1]));
           setPlaying(false);
           setFinished(true);
           onFinish?.(result);
         }
       };
       if (path.length <= 1) {
-        // うごかない場合も けっかは出す
         if (result.blockedCell) setBlockedCell(result.blockedCell);
         setPlaying(false);
         setFinished(true);
@@ -126,10 +132,11 @@ export function useProgramRunner<C = Command>(
         setCharPos(path[nextIndex]);
         setTrail(path.slice(0, nextIndex));
         applyCollected(nextIndex, path);
+        setZombiePositions(result.zombiePaths.map((zp) => zp[Math.min(nextIndex, zp.length - 1)]));
       } else {
-        // さいごの コマまで きた
         setTrail(path.slice(0, Math.max(0, path.length - 1)));
         if (result.blockedCell) setBlockedCell(result.blockedCell);
+        setZombiePositions(result.zombiePaths.map((zp) => zp[zp.length - 1]));
         setFinished(true);
         onFinish?.(result);
       }
@@ -137,5 +144,5 @@ export function useProgramRunner<C = Command>(
     [level, onFinish], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  return { charPos, trail, collected, blockedCell, playing, finished, play, step, reset };
+  return { charPos, trail, collected, blockedCell, playing, finished, zombiePositions, play, step, reset };
 }

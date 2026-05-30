@@ -94,21 +94,21 @@ const SEQUENCE_HARD: Level[] = [
 const DEBUG_EASY: Level[] = [
   {
     id: 'dbg-e1', rows: 3, cols: 4, start: r(1, 0), goal: r(1, 3),
-    walls: [], optimal: 3, goalEmoji: '🐟',
+    walls: [], optimal: 3, goalEmoji: '🐟', maxChanges: 1,
     buggy: ['right', 'up', 'right'],
     solution: ['right', 'right', 'right'],
     prompt: 'まっすぐ ゴールへ いきたいのに…',
   },
   {
     id: 'dbg-e2', rows: 4, cols: 3, start: r(0, 1), goal: r(3, 1),
-    walls: [], optimal: 3, goalEmoji: '🐟',
+    walls: [], optimal: 3, goalEmoji: '🐟', maxChanges: 1,
     buggy: ['down', 'left', 'down'],
     solution: ['down', 'down', 'down'],
     prompt: 'したへ おりたいのに よこに ずれちゃう',
   },
   {
     id: 'dbg-e3', rows: 3, cols: 4, start: r(2, 0), goal: r(0, 3),
-    walls: [], optimal: 5, goalEmoji: '🐟',
+    walls: [], optimal: 5, goalEmoji: '🐟', maxChanges: 1,
     buggy: ['up', 'down', 'right', 'right', 'right'],
     solution: ['up', 'up', 'right', 'right', 'right'],
     prompt: 'ゴールは みぎうえ。どこが へん？',
@@ -118,21 +118,21 @@ const DEBUG_EASY: Level[] = [
 const DEBUG_NORMAL: Level[] = [
   {
     id: 'dbg-n1', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [], optimal: 6, goalEmoji: '🐟',
+    walls: [], optimal: 6, goalEmoji: '🐟', maxChanges: 2,
     buggy: ['right', 'left', 'right', 'down', 'up', 'down'],
     solution: ['right', 'right', 'right', 'down', 'down', 'down'],
     prompt: 'みぎした まで いきたいよ。2かしょ へん',
   },
   {
     id: 'dbg-n2', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
-    walls: [r(2, 1)], optimal: 6, goalEmoji: '🐟',
+    walls: [r(2, 1)], optimal: 6, goalEmoji: '🐟', maxChanges: 2,
     buggy: ['up', 'up', 'left', 'right', 'right', 'right'],
     solution: ['up', 'up', 'up', 'right', 'right', 'right'],
     prompt: 'みぎうえへ。どこを なおす？',
   },
   {
     id: 'dbg-n3', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
-    walls: [], optimal: 6, goalEmoji: '🐟',
+    walls: [], optimal: 6, goalEmoji: '🐟', maxChanges: 2,
     buggy: ['down', 'right', 'down', 'left', 'down', 'left'],
     solution: ['down', 'left', 'down', 'left', 'down', 'left'],
     prompt: 'ひだりした へ。かいだんを おりよう',
@@ -142,19 +142,99 @@ const DEBUG_NORMAL: Level[] = [
 const DEBUG_HARD: Level[] = [
   {
     id: 'dbg-h1', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(2, 0), r(2, 4)], gems: [r(2, 2)], optimal: 8, goalEmoji: '🐟',
+    walls: [r(2, 0), r(2, 4)], gems: [r(2, 2)], optimal: 8, goalEmoji: '🐟', maxChanges: 2,
     buggy: ['right', 'down', 'down', 'down', 'down', 'right', 'right', 'right'],
     solution: ['right', 'right', 'down', 'down', 'down', 'down', 'right', 'right'],
     prompt: 'ほし⭐を とおってゴールへ いきたいよ',
   },
   {
     id: 'dbg-h2', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(1, 1), r(3, 3)], gems: [r(0, 4)], optimal: 8, goalEmoji: '🐟',
+    walls: [r(1, 1), r(3, 3)], gems: [r(0, 4)], optimal: 8, goalEmoji: '🐟', maxChanges: 3,
     buggy: ['right', 'right', 'right', 'left', 'down', 'down', 'down', 'down'],
     solution: ['right', 'right', 'right', 'right', 'down', 'down', 'down', 'down'],
     prompt: 'うえの ほし⭐を とおってゴールへ',
   },
 ];
+
+// ───────────────────────── ぼうけんしよう ─────────────────────────
+
+const ADVENTURE_EASY: Level[] = [
+  {
+    id: 'adv-e1', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [], gems: [r(1, 2)], gemEmoji: '🎁', optimal: 6, maxSlots: 10, goalEmoji: '🏠',
+    prompt: 'たからばこ🎁を とってから おうちへ！',
+  },
+  {
+    id: 'adv-e2', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [r(1, 1)], gems: [r(2, 3)], gemEmoji: '🎁', optimal: 6, maxSlots: 10, goalEmoji: '🏠',
+    prompt: 'かべを よけて たからばこ🎁を とろう',
+  },
+  {
+    id: 'adv-e3', rows: 4, cols: 5, start: r(0, 0), goal: r(3, 4),
+    walls: [], gems: [r(0, 4), r(3, 0)], gemEmoji: '🎁', optimal: 10, maxSlots: 14, goalEmoji: '🏠',
+    prompt: 'たからばこが 2つ！ どちらも とろう',
+  },
+];
+
+const ADVENTURE_NORMAL: Level[] = [
+  {
+    id: 'adv-n1', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(1, 1), r(2, 2)],
+    gems: [r(0, 3)], gemEmoji: '🎁',
+    zombies: [{ kind: 'fixed', pos: r(2, 3) }],
+    optimal: 8, maxSlots: 12, goalEmoji: '🏠',
+    prompt: 'ゾンビ🧟を さけて たからばこを とろう',
+  },
+  {
+    id: 'adv-n2', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [],
+    gems: [r(1, 1)], gemEmoji: '🎁',
+    zombies: [{ kind: 'fixed', pos: r(1, 3) }, { kind: 'fixed', pos: r(3, 2) }],
+    optimal: 6, maxSlots: 12, goalEmoji: '🏠',
+    prompt: 'ゾンビが 2ひき！ みちを よく かんがえよう',
+  },
+  {
+    id: 'adv-n3', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(2, 1), r(2, 3)],
+    gems: [r(2, 2)], gemEmoji: '🎁',
+    zombies: [{ kind: 'fixed', pos: r(0, 4) }, { kind: 'fixed', pos: r(4, 0) }],
+    optimal: 8, maxSlots: 14, goalEmoji: '🏠',
+    prompt: 'まんなかの たからばこ🎁を めざそう',
+  },
+];
+
+const ADVENTURE_HARD: Level[] = [
+  {
+    id: 'adv-h1', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(2, 0), r(2, 4)],
+    gems: [r(0, 4)], gemEmoji: '🎁',
+    zombies: [{ kind: 'patrol', pos: r(2, 2), path: [r(2, 3), r(2, 2), r(2, 1)] }],
+    optimal: 10, maxSlots: 14, allowLoop: true, goalEmoji: '🏠',
+    prompt: 'ゾンビが おうふく！ タイミングを みきわめよう',
+  },
+  {
+    id: 'adv-h2', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(1, 2), r(3, 2)],
+    gems: [r(2, 0), r(2, 4)], gemEmoji: '🎁',
+    zombies: [{ kind: 'patrol', pos: r(0, 0), path: [r(1, 0), r(2, 0), r(1, 0)] }],
+    optimal: 12, maxSlots: 16, allowLoop: true, goalEmoji: '🏠',
+    prompt: 'たからばこを 2つ とってゴールへ！',
+  },
+  {
+    id: 'adv-h3', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 1), r(3, 3)],
+    gems: [r(0, 4)], gemEmoji: '🎁',
+    zombies: [{ kind: 'chase', pos: r(4, 0) }],
+    optimal: 10, maxSlots: 14, goalEmoji: '🏠',
+    prompt: 'ゾンビが おいかけてくる！ にげながら たからばこを とれ！',
+  },
+];
+
+export const ADVENTURE_LEVELS: Record<Difficulty, Level[]> = {
+  easy: ADVENTURE_EASY,
+  normal: ADVENTURE_NORMAL,
+  hard: ADVENTURE_HARD,
+};
 
 export const SEQUENCE_LEVELS: Record<Difficulty, Level[]> = {
   easy: SEQUENCE_EASY,

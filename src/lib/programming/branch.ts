@@ -122,6 +122,8 @@ export function runBranch(level: Level, program: BranchCommand[]): RunResult {
     missedGems,
     steps,
     finalPos: cur,
+    hitZombieStep: -1,
+    zombiePaths: [],
   };
 }
 

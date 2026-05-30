@@ -12,14 +12,17 @@ import { ProgClearedScreen } from '../components/programming/ProgClearedScreen';
 import {
   buildHint,
   buildPraise,
+  flatten,
   isCleared,
   isPerfect,
+  solve,
   DIR_ARROW,
+  DIR_LABEL,
   type Command,
   type Dir,
   type RunResult,
 } from '../lib/programming/engine';
-import { DEBUG_LEVELS, pickLevels } from '../lib/programming/levels';
+import { ADVENTURE_LEVELS, pickLevels } from '../lib/programming/levels';
 import {
   addClear,
   didUnlockNext,
@@ -28,7 +31,7 @@ import {
   type Difficulty,
 } from '../lib/programming/progress';
 
-const UNIT_ID = 'arrow-debug';
+const UNIT_ID = 'arrow-adventure';
 const QUESTIONS = 3;
 const ARROWS: Dir[] = ['up', 'left', 'down', 'right'];
 
@@ -40,15 +43,11 @@ interface Props {
   onAgain: () => void;
 }
 
-const toCommands = (dirs: Dir[]): Command[] => dirs.map((dir) => ({ kind: 'move', dir }));
-
-export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Props) {
+export function ArrowAdventureUnit({ characterId, difficulty, onExit, onAgain }: Props) {
   const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
-  const [levels] = useState(() => pickLevels(DEBUG_LEVELS[difficulty], QUESTIONS));
+  const [levels] = useState(() => pickLevels(ADVENTURE_LEVELS[difficulty], QUESTIONS));
   const [idx, setIdx] = useState(0);
-  const [commands, setCommands] = useState<Command[]>(() => toCommands(levels[0].buggy ?? []));
-  const [selected, setSelected] = useState<number | null>(null);
-  const [changesUsed, setChangesUsed] = useState(0);
+  const [commands, setCommands] = useState<Command[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [perfectCount, setPerfectCount] = useState(0);
@@ -60,15 +59,6 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
 
   useEffect(() => { setBgmTrack('arrow-sequence'); }, []);
 
-  // 問題が かわったら そのレベルの buggy を よみこむ
-  useEffect(() => {
-    setCommands(toCommands(level.buggy ?? []));
-    setSelected(null);
-    setChangesUsed(0);
-    setAttempts(0);
-    setHint(null);
-  }, [level]);
-
   function handleFinish(result: RunResult) {
     if (isCleared(result)) {
       setLocked(true);
@@ -76,7 +66,7 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
       confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
       const perfect = isPerfect(level, result);
       if (perfect) setPerfectCount((p) => p + 1);
-      speakJa('なおせた！ ' + buildPraise(perfect));
+      speakJa(buildPraise(perfect));
       setHint(null);
       window.setTimeout(() => {
         if (idx + 1 >= QUESTIONS) {
@@ -86,6 +76,8 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
           setCleared(true);
         } else {
           setIdx((i) => i + 1);
+          setCommands([]);
+          setAttempts(0);
           setLocked(false);
         }
       }, 1300);
@@ -100,44 +92,58 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
 
   const runner = useProgramRunner(level, handleFinish);
 
-  const maxChanges = level.maxChanges;
-  const changesLeft = maxChanges !== undefined ? maxChanges - changesUsed : undefined;
+  const flatLen = flatten(commands).length;
+  const maxSlots = level.maxSlots ?? 16;
+  const canAdd = flatLen < maxSlots && !runner.playing && !locked;
 
-  function setDir(dir: Dir) {
-    if (selected == null || runner.playing || locked) return;
-    if (changesLeft !== undefined && changesLeft <= 0) return;
+  function addMove(dir: Dir) {
+    if (!canAdd) return;
     playSfx('tap');
-    setCommands((c) => c.map((cmd, i) => (i === selected ? { kind: 'move', dir } : cmd)));
-    setChangesUsed((n) => n + 1);
-    setSelected(null);
+    setCommands((c) => [...c, { kind: 'move', dir }]);
     setHint(null);
   }
 
-  function handleStart() {
+  function removeAt(i: number) {
     if (runner.playing || locked) return;
+    playSfx('tap');
+    setCommands((c) => c.filter((_, j) => j !== i));
+  }
+
+  function handleStart() {
+    if (runner.playing || locked || commands.length === 0) return;
     playSfx('tap');
     setHint(null);
     runner.play(commands);
   }
+
   function handleStep() {
-    if (runner.playing || locked) return;
+    if (runner.playing || locked || commands.length === 0) return;
     playSfx('tap');
     runner.step(commands);
   }
+
   function handleReset() {
     if (locked) return;
     playSfx('tap');
     runner.reset();
     setHint(null);
   }
-  function resetToBuggy() {
+
+  function handleClearAll() {
     if (runner.playing || locked) return;
     playSfx('tap');
-    setCommands(toCommands(level.buggy ?? []));
-    setSelected(null);
-    setChangesUsed(0);
-    setHint(null);
+    setCommands([]);
     runner.reset();
+    setHint(null);
+  }
+
+  function showMoreHint() {
+    const sol = solve(level);
+    if (sol && sol.length > 0) {
+      const msg = `さいしょは 「${DIR_LABEL[sol[0]]}」から はじめると いいかも！`;
+      setHint(msg);
+      speakJa(msg);
+    }
   }
 
   if (cleared) {
@@ -155,27 +161,21 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-4 bg-gradient-to-b from-rose-100 to-amber-50 p-5">
+    <div className="flex min-h-screen flex-col items-center gap-4 bg-gradient-to-b from-emerald-100 to-teal-50 p-5">
       <div className="flex w-full max-w-sm items-center justify-between">
-        <button type="button" onClick={onExit} className="rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-rose-700">
+        <button type="button" onClick={onExit} className="rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-emerald-700">
           ← やめる
         </button>
-        <span className="text-sm font-bold text-rose-700">といた かず: {idx} / {QUESTIONS}</span>
-        <span className="rounded-full bg-rose-400 px-3 py-1 text-xs font-bold text-white">
+        <span className="text-sm font-bold text-emerald-700">といた かず: {idx} / {QUESTIONS}</span>
+        <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">
           {DIFFICULTY_EMOJI[difficulty]} {DIFFICULTY_LABEL[difficulty]}
         </span>
       </div>
 
-      {changesLeft !== undefined && (
-        <div className={`rounded-full px-4 py-1 text-sm font-bold ${changesLeft > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'}`}>
-          {changesLeft > 0 ? `あと ${changesLeft}こ なおせるよ` : 'これ以上 なおせないよ！'}
-        </div>
-      )}
-
-      <motion.h2 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-center text-lg font-bold text-rose-900">
-        やじるしを なおして {charEmoji} を {level.goalEmoji ?? '🐟'} まで！
+      <motion.h2 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="text-center text-lg font-bold text-emerald-900">
+        {charEmoji} を {level.goalEmoji ?? '🏠'} まで はこぼう！
       </motion.h2>
-      {level.prompt && <p className="text-sm font-bold text-amber-600">{level.prompt}</p>}
+      {level.prompt && <p className="text-sm font-bold text-teal-600">{level.prompt}</p>}
 
       <ProgrammingGrid
         level={level}
@@ -184,48 +184,50 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
         trail={runner.trail}
         collected={runner.collected}
         blockedCell={runner.blockedCell}
+        zombiePositions={runner.zombiePositions}
       />
 
-      {/* なおす やじるし（タップで えらんで むきを かえる） */}
-      <div className="flex min-h-[52px] w-full max-w-sm flex-wrap items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-rose-300 bg-white/60 p-2">
-        {commands.map((cmd, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => { if (!runner.playing && !locked) { playSfx('tap'); setSelected(i === selected ? null : i); } }}
-            className={`rounded-lg px-2 py-1 text-lg font-bold text-white shadow-[0_2px_0_#9f1239] transition-all ${
-              selected === i ? 'bg-rose-600 ring-4 ring-rose-300 scale-110' : 'bg-rose-400'
-            }`}
-          >
-            {cmd.kind === 'move' ? DIR_ARROW[cmd.dir] : '🔁'}
-          </button>
-        ))}
+      {/* くみたてた やじるし */}
+      <div className="flex min-h-[52px] w-full max-w-sm flex-wrap items-center gap-1 rounded-2xl border-2 border-dashed border-emerald-300 bg-white/60 p-2">
+        {commands.length === 0 ? (
+          <span className="px-2 text-sm text-emerald-300">ここに やじるしが ならぶよ</span>
+        ) : (
+          commands.map((cmd, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => removeAt(i)}
+              className="rounded-lg bg-emerald-400 px-2 py-1 text-lg font-bold text-white shadow-[0_2px_0_#065f46]"
+            >
+              {cmd.kind === 'move' ? DIR_ARROW[cmd.dir] : `🔁${DIR_ARROW[cmd.body[0]]}×${cmd.times}`}
+            </button>
+          ))
+        )}
       </div>
-      <p className="text-xs text-amber-500">
-        {selected == null ? 'なおしたい やじるしを タップしてね' : 'どの むきに する？ ↓からえらんでね'}
-      </p>
+      <p className="text-xs text-teal-500">やじるしを タップすると けせるよ（のこり {maxSlots - flatLen}）</p>
 
-      {/* むき えらび */}
+      {/* やじるしパレット */}
       <div className="grid grid-cols-4 gap-2">
         {ARROWS.map((dir) => (
           <motion.button
             key={dir}
             type="button"
-            onClick={() => setDir(dir)}
+            onClick={() => addMove(dir)}
             whileTap={{ scale: 0.9 }}
-            disabled={selected == null || runner.playing || locked || (changesLeft !== undefined && changesLeft <= 0)}
-            className="h-14 w-14 rounded-2xl bg-rose-400 text-2xl font-bold text-white shadow-[0_4px_0_#9f1239] disabled:opacity-30"
+            disabled={!canAdd}
+            className="h-14 w-14 rounded-2xl bg-emerald-400 text-2xl font-bold text-white shadow-[0_4px_0_#065f46] disabled:opacity-40"
           >
             {DIR_ARROW[dir]}
           </motion.button>
         ))}
       </div>
 
+      {/* そうさボタン */}
       <div className="flex w-full max-w-sm gap-2">
         <button
           type="button"
           onClick={handleStart}
-          disabled={runner.playing || locked}
+          disabled={runner.playing || locked || commands.length === 0}
           className="flex-1 rounded-2xl bg-green-500 py-3 text-lg font-bold text-white shadow-[0_4px_0_#15803d] active:translate-y-1 disabled:opacity-40"
         >
           ▶ スタート
@@ -233,7 +235,7 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
         <button
           type="button"
           onClick={handleStep}
-          disabled={runner.playing || locked}
+          disabled={runner.playing || locked || commands.length === 0}
           className="rounded-2xl bg-sky-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#0369a1] active:translate-y-1 disabled:opacity-40"
         >
           👣 1コマ
@@ -248,16 +250,23 @@ export function ArrowDebugUnit({ characterId, difficulty, onExit, onAgain }: Pro
         </button>
         <button
           type="button"
-          onClick={resetToBuggy}
-          disabled={runner.playing || locked}
+          onClick={handleClearAll}
+          disabled={runner.playing || locked || commands.length === 0}
           className="rounded-2xl bg-rose-300 px-3 py-3 text-base font-bold text-white shadow-[0_4px_0_#9f1239] active:translate-y-1 disabled:opacity-40"
-          title="さいしょに もどす"
+          title="やじるしを ぜんぶ けす"
         >
-          🔄
+          🗑️
         </button>
       </div>
 
-      {hint && <HintBanner charEmoji={charEmoji} message={hint} />}
+      {hint && (
+        <HintBanner
+          charEmoji={charEmoji}
+          message={hint}
+          onMoreHint={showMoreHint}
+          moreHintLabel="さいしょの 1マス"
+        />
+      )}
     </div>
   );
 }
