@@ -4,6 +4,7 @@
  * 既存のスタンプ（rewards/stamps）とは別軸で、単元×難易度ごとのクリア回数を記録する。
  */
 import { loadJson, saveJson } from '../storage';
+import { ADVENTURE_QUEST, ADVENTURE_ZONES } from './adventureLevels';
 
 export type Difficulty = 'easy' | 'normal' | 'hard' | 'superhard';
 
@@ -80,4 +81,107 @@ export function clearsToUnlockNext(unitId: string, diff: Difficulty): number {
 export function didUnlockNext(diff: Difficulty, clearsAfter: number): boolean {
   if (diff === 'superhard') return false;
   return clearsAfter === UNLOCK_THRESHOLD;
+}
+
+// ───────────────────────── ぼうけんしよう（問題集モード）─────────────────────────
+// 他の3単元の「ふつう」を クリアすると 解放される 特別枠。
+// 1問ずつ じゅんばんに クリアしていき、達成度を 可視化する。
+
+/** 冒険モードを 解放するのに クリアが ひつような 単元 */
+export const ADVENTURE_REQUIRED_UNITS = ['arrow-sequence', 'arrow-debug', 'arrow-branch'] as const;
+
+const ADV_KEY = 'math-app:adventure-progress';
+
+interface AdventureProgress {
+  /** questId -> 達成じょうきょう */
+  cleared: Record<string, { perfect: boolean }>;
+}
+
+const ADV_EMPTY: AdventureProgress = { cleared: {} };
+
+function loadAdv(): AdventureProgress {
+  return loadJson<AdventureProgress>(ADV_KEY, ADV_EMPTY);
+}
+
+/** 冒険モードが あそべる（3単元の ふつうを クリアずみ）か */
+export function isAdventureUnlocked(): boolean {
+  return ADVENTURE_REQUIRED_UNITS.every((u) => getClears(u, 'normal') >= 1);
+}
+
+/** まだ ふつうを クリアしていない 単元（解放ヒント用） */
+export function adventureLockedUnits(): string[] {
+  return ADVENTURE_REQUIRED_UNITS.filter((u) => getClears(u, 'normal') < 1);
+}
+
+/** その問題の 達成じょうきょう（なければ null） */
+export function getQuestCleared(questId: string): { perfect: boolean } | null {
+  return loadAdv().cleared[questId] ?? null;
+}
+
+/** その問題を クリアずみか */
+export function isQuestCleared(questId: string): boolean {
+  return getQuestCleared(questId) != null;
+}
+
+/** 問題クリアを きろくする（ぴったりは いちど とれば のこる） */
+export function addQuestClear(questId: string, perfect: boolean): void {
+  const state = loadAdv();
+  const prev = state.cleared[questId];
+  const nextPerfect = (prev?.perfect ?? false) || perfect;
+  saveJson(ADV_KEY, { cleared: { ...state.cleared, [questId]: { perfect: nextPerfect } } });
+}
+
+/** 達成度サマリ（達成度バー・パーセント表示用） */
+export function getAdventureSummary(): { total: number; clearedCount: number; perfectCount: number } {
+  const state = loadAdv();
+  let clearedCount = 0;
+  let perfectCount = 0;
+  for (const q of ADVENTURE_QUEST) {
+    const c = state.cleared[q.id];
+    if (c) {
+      clearedCount += 1;
+      if (c.perfect) perfectCount += 1;
+    }
+  }
+  return { total: ADVENTURE_QUEST.length, clearedCount, perfectCount };
+}
+
+/** いま あたらしく あそべる（フロンティアの）問題の index。ぜんぶ クリアずみなら length */
+export function nextPlayableIndex(): number {
+  const state = loadAdv();
+  for (let i = 0; i < ADVENTURE_QUEST.length; i++) {
+    if (!state.cleared[ADVENTURE_QUEST[i].id]) return i;
+  }
+  return ADVENTURE_QUEST.length;
+}
+
+/** その index の問題が あそべる（クリアずみ または フロンティア）か */
+export function isQuestUnlocked(index: number): boolean {
+  return index <= nextPlayableIndex();
+}
+
+export type ZoneStatus = 'cleared' | 'current' | 'next' | 'locked';
+
+/** そのゾーンの 問題が ぜんぶ クリアずみか */
+function isZoneCleared(zoneId: string): boolean {
+  const state = loadAdv();
+  const quests = ADVENTURE_QUEST.filter((q) => q.zoneId === zoneId);
+  return quests.length > 0 && quests.every((q) => state.cleared[q.id]);
+}
+
+/** いま いる ゾーンの id（フロンティアの問題が ぞくする ゾーン） */
+export function currentZoneId(): string {
+  const idx = Math.min(nextPlayableIndex(), ADVENTURE_QUEST.length - 1);
+  return ADVENTURE_QUEST[idx].zoneId;
+}
+
+/** マップ表示用：ゾーンの じょうたい */
+export function getZoneStatus(zoneId: string): ZoneStatus {
+  if (isZoneCleared(zoneId)) return 'cleared';
+  const cur = currentZoneId();
+  if (zoneId === cur) return 'current';
+  const curIdx = ADVENTURE_ZONES.findIndex((z) => z.id === cur);
+  const thisIdx = ADVENTURE_ZONES.findIndex((z) => z.id === zoneId);
+  if (thisIdx === curIdx + 1) return 'next';
+  return 'locked';
 }
