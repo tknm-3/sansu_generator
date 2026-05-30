@@ -129,6 +129,14 @@ export function ArrowSequenceUnit({ characterId, difficulty, onExit, onAgain }: 
     setHint(null);
   }
 
+  function handleClearAll() {
+    if (runner.playing || locked) return;
+    playSfx('tap');
+    setCommands([]);
+    runner.reset();
+    setHint(null);
+  }
+
   function showMoreHint() {
     const sol = solve(level);
     if (sol && sol.length > 0) {
@@ -240,6 +248,15 @@ export function ArrowSequenceUnit({ characterId, difficulty, onExit, onAgain }: 
           className="rounded-2xl bg-amber-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1 disabled:opacity-40"
         >
           ↺
+        </button>
+        <button
+          type="button"
+          onClick={handleClearAll}
+          disabled={runner.playing || locked || commands.length === 0}
+          className="rounded-2xl bg-rose-300 px-3 py-3 text-base font-bold text-white shadow-[0_4px_0_#9f1239] active:translate-y-1 disabled:opacity-40"
+          title="やじるしを ぜんぶ けす"
+        >
+          🗑️
         </button>
       </div>
 

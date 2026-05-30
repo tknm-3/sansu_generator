@@ -16,6 +16,12 @@ export type Command =
   | { kind: 'move'; dir: Dir }
   | { kind: 'repeat'; times: number; body: Dir[] };
 
+/** ゾンビ（障害物）の定義 */
+export type ZombieDef =
+  | { kind: 'fixed';   pos: Pos }
+  | { kind: 'patrol';  pos: Pos; path: Pos[] }
+  | { kind: 'chase';   pos: Pos };
+
 export interface Level {
   id: string;
   rows: number;
@@ -24,8 +30,10 @@ export interface Level {
   goal: Pos;
   /** すすめないマス（かべ） */
   walls: Pos[];
-  /** 通らなければいけない とちゅうの ちず（ほし）。なくてもよい */
+  /** 通らなければいけない とちゅうの アイテム。なくてもよい */
   gems?: Pos[];
+  /** gems の 絵文字。なければ ⭐ */
+  gemEmoji?: string;
   /** 最短手数（ぴったり賞の判定に使う） */
   optimal: number;
   /** ループ箱を使えるレベルか */
@@ -34,12 +42,16 @@ export interface Level {
   maxSlots?: number;
   /** デバッグ単元で最初から入っている（まちがいを含む）プログラム */
   buggy?: Dir[];
+  /** デバッグ単元で変更できる矢印の最大数 */
+  maxChanges?: number;
   /** 正解の一例（デバッグ単元の検証・おてほん表示に使う） */
   solution?: Dir[];
   /** ゴールの絵文字（さかな・ほし など）。なければさかな */
   goalEmoji?: string;
   /** この問題のひとことガイド */
   prompt?: string;
+  /** ゾンビ（障害物）リスト */
+  zombies?: ZombieDef[];
 }
 
 export const DIR_ARROW: Record<Dir, string> = {
@@ -109,6 +121,33 @@ export interface RunResult {
   steps: number;
   /** さいごの いち */
   finalPos: Pos;
+  /** ゾンビに あたった ステップ番号（-1なら あたらなかった） */
+  hitZombieStep: number;
+  /** 各ステップでの ゾンビの いち（zombies[i][step]） */
+  zombiePaths: Pos[][];
+}
+
+function zombieNextPos(def: ZombieDef, step: number, charPos: Pos): Pos {
+  if (def.kind === 'fixed') return def.pos;
+  if (def.kind === 'patrol') {
+    const pts = [def.pos, ...def.path];
+    const cycle = (pts.length - 1) * 2;
+    const t = step % cycle;
+    return t < pts.length ? pts[t] : pts[cycle - t];
+  }
+  // chase: マンハッタン距離が縮まる方向へ 1マス
+  const diffs: { d: Pos; dist: number }[] = [
+    { d: { r: -1, c: 0 }, dist: 0 },
+    { d: { r: 1, c: 0 }, dist: 0 },
+    { d: { r: 0, c: -1 }, dist: 0 },
+    { d: { r: 0, c: 1 }, dist: 0 },
+  ].map(({ d }) => {
+    const np: Pos = { r: def.pos.r + d.r, c: def.pos.c + d.c };
+    return { d, dist: Math.abs(np.r - charPos.r) + Math.abs(np.c - charPos.c) };
+  });
+  diffs.sort((a, b) => a.dist - b.dist);
+  const best = diffs[0].d;
+  return { r: def.pos.r + best.r, c: def.pos.c + best.c };
 }
 
 /** プログラムを実行して、軌跡とけっかを計算する */
@@ -122,6 +161,12 @@ export function runProgram(level: Level, cmds: Command[]): RunResult {
   const collected = new Set<string>();
   if (gemKeys.has(posKey(cur))) collected.add(posKey(cur));
 
+  const zombieDefs = level.zombies ?? [];
+  // ステップ0 の ゾンビ初期いち
+  const zombiePositions: Pos[] = zombieDefs.map((z) => z.pos);
+  const zombiePaths: Pos[][] = zombieDefs.map((z) => [z.pos]);
+  let hitZombieStep = -1;
+
   let blockedCell: Pos | null = null;
   for (let i = 0; i < dirs.length; i++) {
     const d = dirs[i];
@@ -134,6 +179,38 @@ export function runProgram(level: Level, cmds: Command[]): RunResult {
     cur = next;
     path.push(cur);
     if (gemKeys.has(posKey(cur))) collected.add(posKey(cur));
+
+    // ゾンビを動かす（chaseは移動前のキャラ位置に向かう）
+    for (let z = 0; z < zombieDefs.length; z++) {
+      const def = zombieDefs[z];
+      let newPos: Pos;
+      if (def.kind === 'chase') {
+        // chaseは今のキャラ位置を追う（1ステップ1マス）
+        const zp = zombiePositions[z];
+        const dx = cur.c - zp.c;
+        const dy = cur.r - zp.r;
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          newPos = { r: zp.r, c: zp.c + Math.sign(dx) };
+        } else {
+          newPos = { r: zp.r + Math.sign(dy), c: zp.c };
+        }
+      } else {
+        newPos = zombieNextPos(def, i + 1, cur);
+      }
+      zombiePositions[z] = newPos;
+      zombiePaths[z].push(newPos);
+    }
+
+    // ゾンビ衝突チェック
+    if (hitZombieStep === -1) {
+      for (const zp of zombiePositions) {
+        if (samePos(cur, zp)) {
+          hitZombieStep = i;
+          break;
+        }
+      }
+    }
+    if (hitZombieStep !== -1) break;
   }
 
   const missedGems = gemKeys.size - collected.size;
@@ -141,17 +218,19 @@ export function runProgram(level: Level, cmds: Command[]): RunResult {
     path,
     blockedStep,
     blockedCell,
-    reachedGoal: samePos(cur, level.goal) && blockedStep === -1,
+    reachedGoal: samePos(cur, level.goal) && blockedStep === -1 && hitZombieStep === -1,
     collectedAll: missedGems === 0,
     missedGems,
     steps: dirs.length,
     finalPos: cur,
+    hitZombieStep,
+    zombiePaths,
   };
 }
 
-/** クリア（ゴール到達かつ ほし全取得）したか */
+/** クリア（ゴール到達・ほし全取得・ゾンビ未衝突）したか */
 export function isCleared(result: RunResult): boolean {
-  return result.reachedGoal && result.collectedAll;
+  return result.reachedGoal && result.collectedAll && result.hitZombieStep === -1;
 }
 
 /** 最短手数ちょうどでクリアしたか（ぴったり賞） */
@@ -168,6 +247,15 @@ function manhattan(a: Pos, b: Pos): number {
  * attempt（やりなおした かいすう）が ふえるほど ヒントが こくなる。
  */
 export function buildHint(level: Level, result: RunResult, attempt: number): string {
+  // 0) ゾンビに あたった
+  if (result.hitZombieStep >= 0) {
+    const stepNo = result.hitZombieStep + 1;
+    if (attempt <= 1) {
+      return `${stepNo}ばんめで ゾンビに あたっちゃった！\nゾンビの うごきを よく みてみよう。`;
+    }
+    return `${stepNo}ばんめで ゾンビと ぶつかるよ。\nゾンビを さけながら すすむ みちを かんがえてみよう！`;
+  }
+
   // 1) かべ・そとに ぶつかった
   if (result.blockedStep >= 0) {
     const stepNo = result.blockedStep + 1;
@@ -206,22 +294,34 @@ const DIRS: Dir[] = ['up', 'down', 'left', 'right'];
 
 /**
  * ゴールまでの 最短ルート（すべての ほしを とおる）を BFS で探す。
- * 見つからなければ null。おてほん表示・レベル検証に使う。
+ * 見つからなければ null。追跡ゾンビがいるレベルは null を返す。
  */
 export function solve(level: Level): Dir[] | null {
+  // chase ゾンビは BFS が複雑すぎるので スキップ
+  if ((level.zombies ?? []).some((z) => z.kind === 'chase')) return null;
+
   const gems = level.gems ?? [];
   const gemIndex = new Map(gems.map((g, i) => [posKey(g), i]));
   const allMask = (1 << gems.length) - 1;
+  const zombies = level.zombies ?? [];
 
   function maskAt(p: Pos, mask: number): number {
     const idx = gemIndex.get(posKey(p));
     return idx === undefined ? mask : mask | (1 << idx);
   }
 
+  function zombieKey(step: number): string {
+    return zombies.map((z) => posKey(zombieNextPos(z, step, { r: -99, c: -99 }))).join(';');
+  }
+
+  function isZombieAt(pos: Pos, step: number): boolean {
+    return zombies.some((z) => samePos(zombieNextPos(z, step, pos), pos));
+  }
+
   const startMask = maskAt(level.start, 0);
-  const startState = `${posKey(level.start)}|${startMask}`;
-  const queue: { pos: Pos; mask: number; path: Dir[] }[] = [
-    { pos: level.start, mask: startMask, path: [] },
+  const startState = `${posKey(level.start)}|${startMask}|0`;
+  const queue: { pos: Pos; mask: number; step: number; path: Dir[] }[] = [
+    { pos: level.start, mask: startMask, step: 0, path: [] },
   ];
   const seen = new Set<string>([startState]);
 
@@ -230,14 +330,20 @@ export function solve(level: Level): Dir[] | null {
     if (samePos(node.pos, level.goal) && node.mask === allMask) {
       return node.path;
     }
+    // 無限ループ防止
+    if (node.step > level.rows * level.cols * 4) continue;
     for (const d of DIRS) {
       const next: Pos = { r: node.pos.r + DELTA[d].r, c: node.pos.c + DELTA[d].c };
       if (!inBounds(level, next) || isWall(level, next)) continue;
+      const nextStep = node.step + 1;
+      // ゾンビ衝突チェック
+      if (isZombieAt(next, nextStep)) continue;
       const mask = maskAt(next, node.mask);
-      const key = `${posKey(next)}|${mask}`;
+      const zk = zombies.length > 0 ? `|${zombieKey(nextStep)}` : '';
+      const key = `${posKey(next)}|${mask}|${nextStep % 20}${zk}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      queue.push({ pos: next, mask, path: [...node.path, d] });
+      queue.push({ pos: next, mask, step: nextStep, path: [...node.path, d] });
     }
   }
   return null;

@@ -15,6 +15,8 @@ interface Props {
   blockedCell?: Pos | null;
   /** セルを タップしたとき（自分で作る単元の へんしゅう用） */
   onCellClick?: (pos: Pos) => void;
+  /** ゾンビの いち（アニメで うごく） */
+  zombiePositions?: Pos[];
 }
 
 function keyOf(p: Pos): string {
@@ -29,12 +31,14 @@ export function ProgrammingGrid({
   collected = [],
   blockedCell = null,
   onCellClick,
+  zombiePositions = [],
 }: Props) {
   // モバイル幅に おさまるように セルサイズを きめる
   const cell = Math.min(Math.floor(300 / level.cols), Math.floor(300 / level.rows), 84);
   const gap = 4;
   const trailKeys = new Set(trail.map(keyOf));
   const collectedKeys = new Set(collected.map(keyOf));
+  const gemEmoji = level.gemEmoji ?? '⭐';
 
   return (
     <div
@@ -70,7 +74,7 @@ export function ProgrammingGrid({
             >
               {isWall && '🧱'}
               {!isWall && isGoal && (level.goalEmoji ?? '🐟')}
-              {!isWall && !isGoal && isGem && !gemTaken && '⭐'}
+              {!isWall && !isGoal && isGem && !gemTaken && gemEmoji}
               {!isWall && !isGoal && !isGem && isStart && (
                 <span className="text-xs font-bold text-lime-600">スタート</span>
               )}
@@ -81,6 +85,23 @@ export function ProgrammingGrid({
           );
         }),
       )}
+
+      {/* ゾンビ */}
+      {zombiePositions.map((zp, i) => (
+        <motion.div
+          key={`zombie-${i}`}
+          className="pointer-events-none absolute flex items-center justify-center"
+          style={{ width: cell, height: cell, fontSize: cell * 0.55 }}
+          initial={false}
+          animate={{
+            left: gap + zp.c * (cell + gap),
+            top: gap + zp.r * (cell + gap),
+          }}
+          transition={{ type: 'tween', ease: 'easeInOut', duration: 0.35 }}
+        >
+          🧟
+        </motion.div>
+      ))}
 
       {/* うごく キャラ */}
       <motion.div

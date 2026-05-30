@@ -205,6 +205,18 @@ export const UNITS: UnitMeta[] = [
       hard: 'ピースが おおい かたちだよ',
     },
   },
+  {
+    id: 'arrow-adventure',
+    category: 'programming',
+    title: 'ぼうけんしよう',
+    grade: '小1〜小2',
+    curriculum: 'プログラミング応用：宝箱取得＋ゾンビ回避',
+    emoji: '🎁',
+    modeHint: {
+      normal: 'ゾンビが いるよ。さけながら すすもう',
+      hard: 'ゾンビが うごく！ タイミングが だいじ',
+    },
+  },
 ];
 
 export function getUnit(id: string): UnitMeta | undefined {
