@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Yomogi&family=Kaisei+Decol:wght@500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Kaisei Decol', 'Yomogi', serif; }
+
+  /* ── 羊皮紙の素材 ── */
+  .map {
+    position: relative; width: 420px; min-height: 980px; overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #fbf3df 0%, #f1e3c2 45%, #e7d3a8 100%);
+    color: #5b4326;
+  }
+  /* 焼け縁ヴィネット */
+  .map::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 70px 18px rgba(120,80,30,.38), inset 0 0 18px 4px rgba(90,55,20,.25);
+    background:
+      radial-gradient(60% 50% at 50% 50%, transparent 60%, rgba(120,80,30,.10) 100%);
+  }
+  /* 紙の繊維グレイン */
+  .grain { position: absolute; inset: 0; opacity: .12; pointer-events: none; mix-blend-mode: multiply; }
+
+  /* ── ヘッダー：リボン見出し＋方位磁針 ── */
+  .topbar { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; z-index: 5; }
+  .pill { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 12px;
+    background: rgba(255,255,255,.5); border: 1.5px solid rgba(123,90,58,.35); color: #6b4f30; }
+  .compass { width: 46px; height: 46px; }
+
+  .ribbon { position: relative; margin: 6px auto 2px; width: 270px; text-align: center; z-index: 5; }
+  .ribbon .band {
+    background: linear-gradient(#b9472f, #9c3622); color: #fbe6c9;
+    font-family: 'Kaisei Decol'; font-weight: 700; font-size: 22px; letter-spacing: .12em;
+    padding: 9px 10px; border-radius: 6px; box-shadow: 0 3px 0 rgba(110,30,18,.55), inset 0 1px 0 rgba(255,255,255,.18);
+    border: 1px solid rgba(110,30,18,.6);
+  }
+  .ribbon .tail { position: absolute; top: 12px; width: 22px; height: 22px; background: #7e2a1a; transform: rotate(45deg); }
+  .ribbon .tail.l { left: -8px; } .ribbon .tail.r { right: -8px; }
+
+  /* 距離目盛り＝進捗 */
+  .progress { position: relative; z-index: 5; width: 300px; margin: 8px auto 4px; }
+  .progress .scale { display: flex; justify-content: space-between; font-size: 10px; color: #8a6b45; letter-spacing: .15em; }
+  .progress .bar { height: 10px; border-radius: 6px; background: rgba(123,90,58,.18); border: 1px solid rgba(123,90,58,.3); overflow: hidden; margin-top: 2px; }
+  .progress .fill { height: 100%; width: 46%; background: linear-gradient(90deg, #c9802f, #e0a94b); }
+  .progress .label { text-align: center; font-size: 12px; font-weight: 700; color: #7a5a3a; margin-top: 4px; }
+
+  /* ── 地方（region）の帯 ── */
+  .regions { position: absolute; inset: 0; z-index: 1; }
+  .region { position: absolute; left: 0; right: 0; }
+  .r-forest { top: 220px; height: 190px; background: radial-gradient(80% 70% at 30% 40%, rgba(96,140,80,.30), transparent 70%); }
+  .r-valley { top: 410px; height: 170px; background: radial-gradient(80% 70% at 70% 40%, rgba(124,98,160,.28), transparent 70%); }
+  .r-desert { top: 580px; height: 170px; background: radial-gradient(80% 70% at 30% 50%, rgba(196,150,70,.30), transparent 70%); }
+  .r-castle { top: 750px; height: 210px; background: radial-gradient(80% 70% at 60% 50%, rgba(96,116,150,.30), transparent 70%); }
+
+  /* 地形の絵文字を 散らす */
+  .terrain { position: absolute; z-index: 2; font-size: 26px; filter: saturate(.8) contrast(.9); opacity: .85; }
+
+  /* ── 蛇行トレイル（SVG）── */
+  .trail { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+  /* ── クエスト停留所 ── */
+  .stops { position: absolute; inset: 0; z-index: 4; }
+  .stop { position: absolute; width: 56px; height: 56px; transform: translate(-50%,-50%);
+    display: flex; align-items: center; justify-content: center; }
+  .seal { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; border: 2px solid rgba(90,55,20,.55);
+    box-shadow: 0 3px 0 rgba(90,55,20,.35), inset 0 2px 4px rgba(255,255,255,.3); }
+  .seal.done { background: radial-gradient(circle at 35% 30%, #e7c46a, #b9472f); color: #fff3d6; border-color: #7e2a1a; }
+  .seal.now  { background: radial-gradient(circle at 35% 30%, #fff7e0, #e0a94b); color: #6b4f30; border-color: #9c6a2a;
+    box-shadow: 0 0 0 6px rgba(224,169,75,.35), 0 3px 0 rgba(90,55,20,.4); }
+  .seal.open { background: radial-gradient(circle at 35% 30%, #fbf3df, #e7d3a8); color: #7a5a3a; }
+  .stop .hero { position: absolute; top: -30px; font-size: 30px; filter: drop-shadow(0 2px 1px rgba(0,0,0,.3)); }
+  .flag { position: absolute; top: -8px; right: -2px; font-size: 16px; }
+
+  /* fog of war */
+  .fog { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; z-index: 6;
+    background: linear-gradient(transparent, rgba(238,225,196,.85) 55%, rgba(232,216,184,.96));
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 18px; }
+  .fog .q { font-size: 30px; opacity: .5; letter-spacing: .3em; }
+
+  .legend { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: #9a7c54; z-index: 7; letter-spacing: .1em; }
+</style>
+</head>
+<body>
+  <div class="map">
+    <svg class="grain"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+
+    <!-- ヘッダー -->
+    <div class="topbar">
+      <span class="pill">← もどる</span>
+      <svg class="compass" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#7a5a3a" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a5a3a" stroke-width="1" opacity=".5"/>
+        <polygon points="50,10 57,50 50,46 43,50" fill="#b9472f"/>
+        <polygon points="50,90 43,50 50,54 57,50" fill="#7a5a3a"/>
+        <text x="50" y="22" font-size="10" text-anchor="middle" fill="#7a5a3a">N</text>
+      </svg>
+    </div>
+
+    <div class="ribbon">
+      <span class="tail l"></span><span class="tail r"></span>
+      <div class="band">ぼうけんの ちず</div>
+    </div>
+
+    <div class="progress">
+      <div class="scale"><span>START</span><span>· · · · · ·</span><span>CASTLE</span></div>
+      <div class="bar"><div class="fill"></div></div>
+      <div class="label">14 / 30 もん ふみは 46%</div>
+    </div>
+
+    <!-- 地方 -->
+    <div class="regions">
+      <div class="region r-forest"></div>
+      <div class="region r-valley"></div>
+      <div class="region r-desert"></div>
+      <div class="region r-castle"></div>
+    </div>
+
+    <!-- 地形 -->
+    <div class="terrain" style="left:40px; top:250px">🌲</div>
+    <div class="terrain" style="left:330px; top:300px">🌳</div>
+    <div class="terrain" style="left:60px; top:360px">🍄</div>
+    <div class="terrain" style="left:300px; top:450px">⛰️</div>
+    <div class="terrain" style="left:70px; top:520px">🪨</div>
+    <div class="terrain" style="left:330px; top:620px">🌵</div>
+    <div class="terrain" style="left:50px; top:680px">🌵</div>
+    <div class="terrain" style="left:300px; top:800px">🏰</div>
+    <div class="terrain" style="left:120px; top:880px">🚩</div>
+
+    <!-- 蛇行トレイル -->
+    <svg class="trail" viewBox="0 0 420 980" preserveAspectRatio="none">
+      <path d="M70,250 C 200,270 260,300 300,340 S 130,420 110,470 S 300,540 320,600 S 110,660 120,720 S 300,790 300,850"
+        fill="none" stroke="#7a5a3a" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="2 12" opacity=".75"/>
+    </svg>
+
+    <!-- 停留所 -->
+    <div class="stops">
+      <div class="stop" style="left:70px; top:250px"><div class="seal done">⭐</div></div>
+      <div class="stop" style="left:300px; top:340px"><div class="seal done">💎</div></div>
+      <div class="stop" style="left:110px; top:470px"><div class="seal now">🧭<span class="hero">🐰</span><span class="flag">🚩</span></div></div>
+      <div class="stop" style="left:320px; top:600px"><div class="seal open">7</div></div>
+      <div class="stop" style="left:120px; top:720px"><div class="seal open">8</div></div>
+    </div>
+
+    <!-- 霧（未踏の城ゾーン）-->
+    <div class="fog"><div class="q">？ ？ ？</div></div>
+    <div class="legend">⭐クリア　💎ぴったり賞　🧭いまここ　🌫️きりのむこう</div>
+  </div>
+</body>
+</html>
