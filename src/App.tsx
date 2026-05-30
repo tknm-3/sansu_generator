@@ -55,7 +55,7 @@ type Screen =
   | { kind: 'programmingHome' }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
   | { kind: 'progMaker' }
-  | { kind: 'unit'; unitId: string; hard?: boolean; returnTo?: 'katachi-mission' | 'katachi-challenge' }
+  | { kind: 'unit'; unitId: string; hard?: boolean; expert?: boolean; returnTo?: 'katachi-mission' | 'katachi-challenge' }
   | { kind: 'challenge' }
   | { kind: 'mission' }
   | { kind: 'katachi-mission' }
@@ -140,6 +140,7 @@ export default function App() {
 
     if (screen.kind === 'unit') {
       const hard = screen.hard ?? false;
+      const expert = screen.expert ?? false;
       switch (screen.unitId) {
         case 'make-ten':        return <MakeTenUnit        key={refresh} {...sharedProps} />;
         case 'addition':        return <AdditionUnit        key={refresh} {...sharedProps} />;
@@ -160,7 +161,7 @@ export default function App() {
         case 'shape-pattern':   return <ShapePatternUnit    key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-spatial':   return <ShapeSpatialUnit    key={refresh} hard={hard} {...sharedProps} />;
         case 'shape-fit':       return <ShapeFitUnit        key={refresh} variant="fit"     hard={hard} {...sharedProps} />;
-        case 'shape-tangram':   return <ShapeFitUnit        key={refresh} variant="tangram" hard={hard} {...sharedProps} />;
+        case 'shape-tangram':   return <ShapeFitUnit        key={refresh} variant="tangram" hard={hard} expert={expert} {...sharedProps} />;
         default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
       }
     }
@@ -300,7 +301,7 @@ export default function App() {
           characterName={character.name}
           characterId={character.id}
           stampTotal={stampTotal}
-          onSelectUnit={(unitId, hard) => setScreen({ kind: 'unit', unitId, hard })}
+          onSelectUnit={(unitId, hard, expert) => setScreen({ kind: 'unit', unitId, hard, expert })}
           onStartMission={() => setScreen({ kind: 'katachi-mission' })}
           onStartChallenge={() => setScreen({ kind: 'katachi-challenge' })}
           onOpenCollection={() => setScreen({ kind: 'collection' })}

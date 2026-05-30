@@ -8,7 +8,7 @@ interface Props {
   characterName: string;
   characterId: string;
   stampTotal: number;
-  onSelectUnit: (unitId: string, hard: boolean) => void;
+  onSelectUnit: (unitId: string, hard: boolean, expert?: boolean) => void;
   onStartMission: () => void;
   onStartChallenge: () => void;
   onOpenCollection: () => void;
@@ -39,9 +39,9 @@ export function KatachiHomeScreen({
     setPendingUnit(unit);
   }
 
-  function handleModeSelect(hard: boolean) {
+  function handleModeSelect(hard: boolean, expert = false) {
     if (!pendingUnit) return;
-    onSelectUnit(pendingUnit.id, hard);
+    onSelectUnit(pendingUnit.id, hard, expert);
     setPendingUnit(null);
   }
 
@@ -176,6 +176,17 @@ export function KatachiHomeScreen({
                   <span className="text-xs font-bold text-orange-50 mt-0.5">{pendingUnit.modeHint.hard}</span>
                 )}
               </button>
+              {/* タングラムだけ 3だんめ「もっとむずかしい」（共通7ピース・同色・うらがえし） */}
+              {pendingUnit.id === 'shape-tangram' && pendingUnit.modeHint?.expert && (
+                <button
+                  type="button"
+                  onClick={() => handleModeSelect(true, true)}
+                  className="w-full rounded-2xl bg-violet-500 py-3 font-bold text-white shadow-[0_4px_0_#5b21b6] active:translate-y-1 flex flex-col items-center"
+                >
+                  <span className="text-xl">💎 もっとむずかしい</span>
+                  <span className="text-xs font-bold text-violet-50 mt-0.5">{pendingUnit.modeHint.expert}</span>
+                </button>
+              )}
 
               <button
                 type="button"
