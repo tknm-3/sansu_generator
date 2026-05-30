@@ -7,8 +7,8 @@ export interface UnitMeta {
   grade: string;
   curriculum: string;
   emoji: string;
-  /** ふつう／むずかしい で なにが かわるかの こども向け せつめい（ひらがな） */
-  modeHint?: { normal: string; hard: string };
+  /** ふつう／むずかしい で なにが かわるかの こども向け せつめい（ひらがな）。expert は タングラムの「もっとむずかしい」用 */
+  modeHint?: { normal: string; hard: string; expert?: string };
 }
 
 export const UNITS: UnitMeta[] = [
@@ -203,6 +203,7 @@ export const UNITS: UnitMeta[] = [
     modeHint: {
       normal: 'やさしい かたちだよ',
       hard: 'ピースが おおい かたちだよ',
+      expert: 'おなじ 7まいで・ぜんぶ おなじ いろ・うらがえしも あるよ',
     },
   },
 ];

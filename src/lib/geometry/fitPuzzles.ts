@@ -18,6 +18,8 @@ export interface FitPiece {
   y: number;
   /** はめるときに ひつような かいてんかく（度）。0 のときは かいてん なし */
   targetRotation?: 0 | 90 | 180 | 270;
+  /** はめるときに よこ反転（うらがえし）が ひつようか。tangram の じょうきゅうモード用 */
+  targetFlip?: boolean;
 }
 
 export interface FitPuzzle {
@@ -555,8 +557,74 @@ const TANGRAM_HARD: FitPuzzle[] = [
   },
 ];
 
-export function getPuzzles(variant: 'fit' | 'tangram', hard: boolean): FitPuzzle[] {
+// ── 「タングラム」じょうきゅう（もっとむずかしい）──
+// 7まいの 共通ピース（大三角×2・小三角×2・正方形・中三角・平行四辺形）を
+// くみあわせて いろいろな かたちを つくる。どの パズルも おなじ 7まいを つかう。
+// ・ピースは 1色（同色）で 見せて、「色あわせ」ではなく「形」で かんがえさせる（ShapeFitUnit がわで 同色に する）
+// ・平行四辺形は うらがえし（targetFlip）が ひつような パズルが ある
+const TANGRAM_EXPERT: FitPuzzle[] = [
+  {
+    id: 'robot-x',
+    title: 'ロボットを つくろう',
+    boardW: 220,
+    boardH: 180,
+    pieces: [
+      // からだ：80かくの ましかく（大三角 2まい）
+      { id: 'rb-lt1', color: BLUE, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' } },
+      { id: 'rb-lt2', color: GREEN, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' }, targetRotation: 180 },
+      // あたま：正方形
+      { id: 'rb-sq', color: YELLOW, w: 40, h: 40, x: 60, y: 0, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 40 } },
+      // うで：中三角
+      { id: 'rb-mt', color: ORANGE, w: 80, h: 40, x: 120, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,40' } },
+      // あし：80×40の おび（平行四辺形＋小三角 2まい）
+      { id: 'rb-pa', color: PURPLE, w: 80, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,40 40,0 80,0 40,40' } },
+      { id: 'rb-st1', color: RED, w: 40, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' } },
+      { id: 'rb-st2', color: TEAL, w: 40, h: 40, x: 80, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' }, targetRotation: 180 },
+    ],
+  },
+  {
+    id: 'dog-x',
+    title: 'いぬを つくろう',
+    boardW: 220,
+    boardH: 180,
+    pieces: [
+      // どうたい：80かくの ましかく（大三角 2まい）
+      { id: 'dx-lt1', color: BLUE, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' } },
+      { id: 'dx-lt2', color: GREEN, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' }, targetRotation: 180 },
+      // あたま：正方形（ひだり）
+      { id: 'dx-sq', color: YELLOW, w: 40, h: 40, x: 0, y: 40, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 40 } },
+      // しっぽ：中三角（みぎ）
+      { id: 'dx-mt', color: ORANGE, w: 80, h: 40, x: 120, y: 80, shape: { type: 'poly', points: '0,0 80,0 0,40' } },
+      // あし：80×40の おび（平行四辺形＋小三角 2まい）
+      { id: 'dx-pa', color: PURPLE, w: 80, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,40 40,0 80,0 40,40' } },
+      { id: 'dx-st1', color: RED, w: 40, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' } },
+      { id: 'dx-st2', color: TEAL, w: 40, h: 40, x: 80, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' }, targetRotation: 180 },
+    ],
+  },
+  {
+    id: 'rocket-x',
+    title: 'ロケットを つくろう',
+    boardW: 220,
+    boardH: 180,
+    pieces: [
+      // ほんたい：80かくの ましかく（大三角 2まい）
+      { id: 'rk-lt1', color: BLUE, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' } },
+      { id: 'rk-lt2', color: GREEN, w: 80, h: 80, x: 40, y: 40, shape: { type: 'poly', points: '0,0 80,0 0,80' }, targetRotation: 180 },
+      // さき：正方形（うえ）
+      { id: 'rk-sq', color: YELLOW, w: 40, h: 40, x: 60, y: 0, shape: { type: 'rect', x: 0, y: 0, w: 40, h: 40 } },
+      // つばさ：中三角（みぎした）
+      { id: 'rk-mt', color: ORANGE, w: 80, h: 40, x: 120, y: 120, shape: { type: 'poly', points: '0,0 80,0 0,40' } },
+      // した：80×40の おび（平行四辺形は うらがえし！＋小三角 2まい）
+      { id: 'rk-pa', color: PURPLE, w: 80, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,40 40,0 80,0 40,40' }, targetFlip: true },
+      { id: 'rk-st1', color: RED, w: 40, h: 40, x: 40, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' }, targetRotation: 270 },
+      { id: 'rk-st2', color: TEAL, w: 40, h: 40, x: 80, y: 120, shape: { type: 'poly', points: '0,0 40,0 0,40' }, targetRotation: 90 },
+    ],
+  },
+];
+
+export function getPuzzles(variant: 'fit' | 'tangram', hard: boolean, expert = false): FitPuzzle[] {
   if (variant === 'fit') return hard ? FIT_HARD : FIT_EASY;
+  if (expert) return TANGRAM_EXPERT;
   return hard ? TANGRAM_HARD : TANGRAM_EASY;
 }
 
@@ -564,13 +632,13 @@ export function getPuzzles(variant: 'fit' | 'tangram', hard: boolean): FitPuzzle
 // 中心を げんてんにした シルエットの「かたち」を あらわす かぎ もじれつ を つくる。
 // おなじ かぎ なら 見た目（はめたときの シルエット）が おなじ。
 // → おなじ かぎ どうしの ピースは どの スロットに はめても せいかい にできる。
-export function silhouetteKey(shape: FitShape, w: number, h: number, rotDeg: number): string {
+export function silhouetteKey(shape: FitShape, w: number, h: number, rotDeg: number, flip = false): string {
   const rot = ((Math.round(rotDeg / 90) * 90) % 360 + 360) % 360;
   const cx = w / 2;
   const cy = h / 2;
-  // 中心きじゅんの (dx, dy) を rot かいてんした ざひょう（中心きじゅんのまま）を かえす
+  // 中心きじゅんの (dx, dy) を（ひつようなら よこ反転してから）rot かいてんした ざひょうを かえす
   const rotate = (px: number, py: number): [number, number] => {
-    const dx = px - cx;
+    const dx = flip ? -(px - cx) : px - cx;
     const dy = py - cy;
     switch (rot) {
       case 90: return [-dy, dx];

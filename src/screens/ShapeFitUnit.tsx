@@ -19,6 +19,8 @@ import { pickPuzzles, rememberPuzzles, puzzleRank } from '../lib/geometry/fitSes
 
 const PUZZLES_PER_UNIT = 3;
 const SNAP_THRESHOLD = 52;
+// じょうきゅう（もっとむずかしい）で つかう「同色」。色の てがかりを なくして 形で かんがえさせる。
+const MONO_COLOR = '#5b9bd5';
 // さいきん だした パズルIDを おぼえておく localStorage キーの あたま（skillId・なんいど ごと）
 const RECENT_KEY_PREFIX = 'math-app:fit-recent:';
 
@@ -27,6 +29,8 @@ interface Props {
   characterName: string;
   characterId: string;
   hard?: boolean;
+  /** tangram の「もっとむずかしい」モード（共通7ピース・同色・うらがえし あり） */
+  expert?: boolean;
   onExit: () => void;
 }
 
@@ -39,8 +43,8 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function PieceShape({ piece, gray = false }: { piece: FitPiece; gray?: boolean }) {
-  const fill = gray ? '#eef2f7' : piece.color;
+function PieceShape({ piece, gray = false, mono = false }: { piece: FitPiece; gray?: boolean; mono?: boolean }) {
+  const fill = gray ? '#eef2f7' : mono ? MONO_COLOR : piece.color;
   const stroke = gray ? '#94a3b8' : 'white';
   const dash = gray ? '5 4' : undefined;
   const s = piece.shape;
@@ -73,11 +77,19 @@ function renderSilhouetteShape(s: FitShape) {
 function TrayPiece({
   piece,
   rotation,
+  flipped = false,
+  mono = false,
+  canFlip = false,
   onRotate,
+  onFlip,
 }: {
   piece: FitPiece;
   rotation: number;
+  flipped?: boolean;
+  mono?: boolean;
+  canFlip?: boolean;
   onRotate: () => void;
+  onFlip?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: piece.id });
   const outerStyle: CSSProperties = {
@@ -88,56 +100,71 @@ function TrayPiece({
     cursor: 'grab',
   };
   return (
-    <div ref={setNodeRef} style={outerStyle} {...listeners} {...attributes}>
-      {/* 内側だけ回転。ドラッグ位置の判定はアウター基準なので中心は変わらない */}
+    <div ref={setNodeRef} style={outerStyle} {...listeners} {...attributes} className="relative">
+      {/* 内側だけ 回転・反転。ドラッグ位置の判定はアウター基準なので中心は変わらない */}
       <div
         onClick={(e) => { e.stopPropagation(); onRotate(); }}
         style={{
-          transform: `rotate(${rotation}deg)`,
+          transform: `rotate(${rotation}deg) scaleX(${flipped ? -1 : 1})`,
           transformOrigin: '50% 50%',
           display: 'inline-block',
           filter: isDragging ? 'drop-shadow(0 8px 8px rgba(0,0,0,0.25))' : undefined,
           cursor: 'pointer',
         }}
       >
-        <PieceShape piece={piece} />
+        <PieceShape piece={piece} mono={mono} />
       </div>
+      {canFlip && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onFlip?.(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="absolute -right-2 -top-2 rounded-full bg-white shadow px-1.5 py-0.5 text-xs leading-none border border-teal-300"
+          title="うらがえす"
+        >
+          🔁
+        </button>
+      )}
     </div>
   );
 }
 
-export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
+export function ShapeFitUnit({ variant, hard = false, expert = false, onExit }: Props) {
   const skillId = variant === 'fit' ? 'shape-fit' : 'shape-tangram';
+  // じょうきゅう（もっとむずかしい）は tangram だけ。同色・うらがえし・共通7ピース。
+  const isExpert = variant === 'tangram' && expert;
 
   // なんいど ごとに りれきを わけて、さいきん だしていない パズルを ゆうせんして だす。
-  const recentKey = `${RECENT_KEY_PREFIX}${skillId}${hard ? ':hard' : ''}`;
+  const recentKey = `${RECENT_KEY_PREFIX}${skillId}${isExpert ? ':expert' : hard ? ':hard' : ''}`;
   const queue = useMemo(() => {
-    const all = getPuzzles(variant, hard);
+    const all = getPuzzles(variant, hard, isExpert);
     const recent = loadJson<string[]>(recentKey, []);
     return pickPuzzles(all, recent, PUZZLES_PER_UNIT);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variant, hard, recentKey]);
+  }, [variant, hard, isExpert, recentKey]);
 
   // この セットで だした パズルを りれきに きろく（ぜんたいの だいたい はんぶんを おぼえる）。
   useEffect(() => {
-    const all = getPuzzles(variant, hard);
+    const all = getPuzzles(variant, hard, isExpert);
     const recent = loadJson<string[]>(recentKey, []);
     const keep = Math.max(PUZZLES_PER_UNIT, Math.floor(all.length / 2));
     saveJson(recentKey, rememberPuzzles(recent, queue.map((p) => p.id), keep));
-  }, [queue, recentKey, variant, hard]);
+  }, [queue, recentKey, variant, hard, isExpert]);
 
   const [pIdx, setPIdx] = useState(0);
   // スロットID → そこに はまっている ピースID。
   // 見た目が おなじ（silhouetteKey が おなじ）ピースは どの スロットにも はめられる。
   const [placement, setPlacement] = useState<Record<string, string>>({});
   const [pieceRotations, setPieceRotations] = useState<Record<string, number>>({});
+  // ピースID → よこ反転（うらがえし）しているか。じょうきゅうモード用。
+  const [pieceFlips, setPieceFlips] = useState<Record<string, boolean>>({});
   const [solvedPuzzles, setSolvedPuzzles] = useState(0);
   const [missed, setMissed] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => { setBgmTrack(skillId); }, [skillId]);
-  useEffect(() => { setPieceRotations({}); setPlacement({}); }, [pIdx]);
+  useEffect(() => { setPieceRotations({}); setPlacement({}); setPieceFlips({}); }, [pIdx]);
 
   const puzzle = queue[pIdx];
   const trayOrder = useMemo(() => shuffle(puzzle.pieces.map((p) => p.id)), [puzzle.id]);
@@ -154,6 +181,10 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
     setPieceRotations((prev) => ({ ...prev, [id]: ((prev[id] ?? 0) + 90) % 360 }));
   }
 
+  function flipPiece(id: string) {
+    setPieceFlips((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
   function handleDragEnd(e: DragEndEvent) {
     const pieceId = String(e.active.id);
     const piece = puzzle.pieces.find((p) => p.id === pieceId);
@@ -164,14 +195,15 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
     const dropCx = r.left + r.width / 2 - board.left;
     const dropCy = r.top + r.height / 2 - board.top;
     const currentRot = ((pieceRotations[pieceId] ?? 0) + 360) % 360;
-    const pieceKey = silhouetteKey(piece.shape, piece.w, piece.h, currentRot);
+    const currentFlip = pieceFlips[pieceId] ?? false;
+    const pieceKey = silhouetteKey(piece.shape, piece.w, piece.h, currentRot, currentFlip);
 
     // まだ うまっていない スロットのうち、見た目が おなじで いちばん ちかいものを さがす。
     let bestSlot: FitPiece | null = null;
     let bestDist = Infinity;
     for (const slot of puzzle.pieces) {
       if (placement[slot.id] !== undefined) continue;
-      const slotKey = silhouetteKey(slot.shape, slot.w, slot.h, slot.targetRotation ?? 0);
+      const slotKey = silhouetteKey(slot.shape, slot.w, slot.h, slot.targetRotation ?? 0, slot.targetFlip ?? false);
       if (slotKey !== pieceKey) continue;
       const dist = Math.hypot(dropCx - (slot.x + slot.w / 2), dropCy - (slot.y + slot.h / 2));
       if (dist < bestDist) {
@@ -247,7 +279,9 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
           <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-teal-700" title={`これまで ${rank.clears} かい クリア`}>
             {rank.emoji} {rank.label}
           </span>
-          {hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
+          {isExpert
+            ? <span className="rounded-full bg-violet-500 px-3 py-1 text-xs font-bold text-white">💎 もっとむずかしい</span>
+            : hard && <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-bold text-white">🔥 むずかしい</span>}
         </div>
       </div>
 
@@ -261,6 +295,7 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
       <p className="text-sm text-teal-600 font-bold">
         ドラッグして はめよう！
         {variant === 'tangram' && <span className="ml-1 text-orange-500">タップで かいてん 🔄</span>}
+        {isExpert && <span className="ml-1 text-violet-500">🔁で うらがえし</span>}
       </p>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -286,7 +321,9 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
                       transform={`rotate(${rot}, ${p.x + p.w / 2}, ${p.y + p.h / 2})`}
                     >
                       <g transform={`translate(${p.x}, ${p.y})`}>
-                        {renderSilhouetteShape(p.shape)}
+                        <g transform={p.targetFlip ? `translate(${p.w},0) scale(-1,1)` : undefined}>
+                          {renderSilhouetteShape(p.shape)}
+                        </g>
                       </g>
                     </g>
                   );
@@ -297,6 +334,7 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
                 const slot = puzzle.pieces.find((pp) => pp.id === slotId)!;
                 const piece = puzzle.pieces.find((pp) => pp.id === pieceId)!;
                 const rot = pieceRotations[pieceId] ?? 0;
+                const flip = pieceFlips[pieceId] ?? false;
                 const left = slot.x + slot.w / 2 - piece.w / 2;
                 const top = slot.y + slot.h / 2 - piece.h / 2;
                 return (
@@ -306,11 +344,11 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
                     style={{
                       left,
                       top,
-                      transform: `rotate(${rot}deg)`,
+                      transform: `rotate(${rot}deg) scaleX(${flip ? -1 : 1})`,
                       transformOrigin: `${piece.w / 2}px ${piece.h / 2}px`,
                     }}
                   >
-                    <PieceShape piece={piece} />
+                    <PieceShape piece={piece} mono={isExpert} />
                   </div>
                 );
               })}
@@ -343,7 +381,11 @@ export function ShapeFitUnit({ variant, hard = false, onExit }: Props) {
                 key={p.id}
                 piece={p}
                 rotation={pieceRotations[p.id] ?? 0}
+                flipped={pieceFlips[p.id] ?? false}
+                mono={isExpert}
+                canFlip={isExpert}
                 onRotate={() => rotatepiece(p.id)}
+                onFlip={() => flipPiece(p.id)}
               />
             ))
           )}

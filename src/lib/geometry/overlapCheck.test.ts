@@ -40,7 +40,7 @@ function worldPoly(p: FitPiece): Pt[] {
   const cy = p.h / 2;
   const rot = (((p.targetRotation ?? 0) % 360) + 360) % 360;
   const rotate = (px: number, py: number): Pt => {
-    const dx = px - cx;
+    const dx = p.targetFlip ? -(px - cx) : px - cx;
     const dy = py - cy;
     let rx = dx;
     let ry = dy;
@@ -99,9 +99,14 @@ function clip(subject: Pt[], clipper: Pt[]): Pt[] {
 }
 
 describe('tangram pieces do not overlap', () => {
-  for (const hard of [false, true]) {
-    for (const pz of getPuzzles('tangram', hard)) {
-      it(`${pz.id} (${hard ? 'hard' : 'easy'})`, () => {
+  const sets: Array<{ label: string; puzzles: ReturnType<typeof getPuzzles> }> = [
+    { label: 'easy', puzzles: getPuzzles('tangram', false) },
+    { label: 'hard', puzzles: getPuzzles('tangram', true) },
+    { label: 'expert', puzzles: getPuzzles('tangram', false, true) },
+  ];
+  for (const { label, puzzles } of sets) {
+    for (const pz of puzzles) {
+      it(`${pz.id} (${label})`, () => {
         const polys = pz.pieces.map((p) => ({ id: p.id, poly: worldPoly(p) }));
         for (let i = 0; i < polys.length; i++) {
           for (let j = i + 1; j < polys.length; j++) {
