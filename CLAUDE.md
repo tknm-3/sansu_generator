@@ -54,20 +54,12 @@ npm run test     # テスト
 ```
 
 ## ブラウザ確認（スクリーンショット）
-実画面の見た目を確認したいときに使う。`cdn.playwright.dev` はネットワーク許可外で
-`npx playwright install` は失敗するが、Chromium が `/opt/pw-browsers` に
-プリインストール済みなので、それを使う（`playwright-core` は devDependency）。
-- 環境変数 `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` は `.claude/settings.json` で設定済み。
-- 実行ファイルは `scripts/screenshot.mjs` が `/opt/pw-browsers` から自動検出する。
-```bash
-# 1) 別プロセスでサーバー起動
-npm run preview -- --port 4317 --host   # もしくは npm run dev（5173）
-# 2) スクショ
-npm run screenshot -- http://localhost:4317/ /tmp/home.png 800
-```
-localStorage シードや画面遷移が必要なときは `scripts/screenshot.mjs` の
-`capture({ url, out, initScript, steps })` をコードから使う（プログラミング進捗の
-解放などは `math-app:prog-progress` / `math-app:adventure-progress` をシードする）。
+実画面の見た目を確認したいときは **`screenshot-app` スキル**を使う
+（`.claude/skills/screenshot-app/`）。手順・localStorageシードキー・遷移文言の確定方法・
+スマホ実機での確認方法・はまりどころ（命名画面で止まる/真っ白/module not found）をまとめてある。
+- Chromium は `/opt/pw-browsers` にプリインストール済み（`PLAYWRIGHT_BROWSERS_PATH` は設定済み）。
+  `npx playwright install` はネット許可外で失敗するので使わない。
+- 基本は `scripts/screenshot.mjs` の `capture({ url, out, initScript, steps })` を使う。
 
 ## コンテキスト節約の原則
 - ファイル全体を読む前に `Grep` で関連行を特定する
