@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { runBranch, countNodes, type BranchCommand } from './branch';
-import { BRANCH_LEVELS } from './branchLevels';
-import { DIFFICULTIES } from './progress';
+import { BRANCH_LEVELS, type BranchDifficulty } from './branchLevels';
 import type { Level } from './engine';
+
+const BRANCH_DIFFS: BranchDifficulty[] = ['easy', 'normal', 'hard'];
 
 const move = (dir: 'up' | 'down' | 'left' | 'right'): BranchCommand => ({ kind: 'move', dir });
 
@@ -56,7 +57,7 @@ describe('runBranch インタプリタ', () => {
 });
 
 describe('分岐レベルは おてほんで クリアできる', () => {
-  for (const diff of DIFFICULTIES) {
+  for (const diff of BRANCH_DIFFS) {
     for (const level of BRANCH_LEVELS[diff]) {
       it(`${level.id} (${diff})`, () => {
         const res = runBranch(level, level.answer);
