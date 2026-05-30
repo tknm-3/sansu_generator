@@ -139,9 +139,9 @@ function manhattan(a: Pos, b: Pos): number {
 export function buildBranchHint(level: Level, result: RunResult, attempt: number, wall = 'かべ'): string {
   if (result.blockedStep >= 0) {
     if (attempt <= 1) {
-      return `${wall}に あたって とまっちゃった！\n「もし まえが ${wall} なら…」の ルールで よけられるかな？`;
+      return `${wall}に あたって とまっちゃった！\n「もし まえに すすめない なら…」の ルールで よけられるかな？`;
     }
-    return `すすむ さきに ${wall}が あるみたい。\n${wall}の ときは べつの むきへ いく ルールに してみよう。`;
+    return `すすむ さきに ${wall}が あるみたい。\nすすめない ときは べつの むきへ いく ルールに してみよう。`;
   }
   if (result.missedGems > 0) {
     return `ほしを あと ${result.missedGems}こ とおりたいね。\nほしを とおる みちを かんがえてみよう。`;

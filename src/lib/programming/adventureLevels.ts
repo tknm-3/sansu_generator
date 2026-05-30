@@ -134,8 +134,8 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     emoji: '☁️',
     bg: 'from-sky-100 to-cyan-50',
     accent: 'sky',
-    tagline: 'もしも くもが あったら…どっちに すすむ？',
-    story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも くもが あったら…」の ルールで かしこく すすもう！',
+    tagline: '☁️に すすめない とき…どっちへ いく？',
+    story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも すすめない なら…」の ルールで かしこく すすもう！',
     wall: '☁️', wallName: 'くも', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-200/70',
   },
 ];
@@ -392,7 +392,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true },
     optimal: 6, maxSlots: 6,
-    prompt: 'どっちを しらべる？「もし [？] が ☁️ なら ↓、ちがえば →」',
+    prompt: 'どっちを しらべる？「もし [？] に すすめない なら ↓、ちがえば →」',
   },
   {
     id: 'adv-q38', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
@@ -400,7 +400,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 6, sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true },
     optimal: 6, maxSlots: 6,
-    prompt: '☁️に あたったら どっちへ？「もし ↓ が ☁️ なら [？]、ちがえば ↓」',
+    prompt: 'すすめない とき どっちへ？「もし ↓ に すすめない なら [？]、ちがえば ↓」',
   },
   {
     id: 'adv-q39', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
@@ -408,7 +408,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 6, sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true },
     optimal: 6, maxSlots: 6,
-    prompt: '☁️が ないとき どっちへ？「もし ← が ☁️ なら ↓、ちがえば [？]」',
+    prompt: 'すすめない とき どっちへ？「もし ← に すすめない なら ↓、ちがえば [？]」',
   },
   {
     id: 'adv-q40', zoneId: 'kumo', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
@@ -416,7 +416,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 8, sensor: 'up', thenDir: 'right', elseDir: 'up', holeSensor: true, holeThen: true },
     optimal: 8, maxSlots: 8,
-    prompt: 'うえへ のぼろう！「もし [？] が ☁️ なら [？]、ちがえば ↑」',
+    prompt: 'うえへ のぼろう！「もし [？] に すすめない なら [？]、ちがえば ↑」',
   },
   {
     id: 'adv-q41', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
@@ -424,7 +424,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 8, sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true, holeElse: true },
     optimal: 8, maxSlots: 8,
-    prompt: '☁️のとき と そうでないとき！「もし → が ☁️ なら [？]、ちがえば [？]」',
+    prompt: 'すすめるかどうか！「もし → に すすめない なら [？]、ちがえば [？]」',
   },
   {
     id: 'adv-q42', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
@@ -432,7 +432,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'branch',
     branchFill: { loopTimes: 8, sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true },
     optimal: 8, maxSlots: 8,
-    prompt: '☁️を ぜんぶ うめてゴール！「もし [？] が ☁️ なら [？]、ちがえば [？]」',
+    prompt: 'すすめない ときを よめ！「もし [？] に すすめない なら [？]、ちがえば [？]」',
   },
 ];
 
