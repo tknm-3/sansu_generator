@@ -24,6 +24,7 @@ import { ProgrammingHomeScreen } from './screens/ProgrammingHomeScreen';
 import { ArrowSequenceUnit } from './screens/ArrowSequenceUnit';
 import { ArrowDebugUnit } from './screens/ArrowDebugUnit';
 import { ArrowAdventureUnit } from './screens/ArrowAdventureUnit';
+import { ArrowBranchUnit } from './screens/ArrowBranchUnit';
 import { ArrowMakerUnit } from './screens/ArrowMakerUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
 import { MissionScreen } from './screens/MissionScreen';
@@ -189,6 +190,7 @@ export default function App() {
       const replayKey = `${screen.unitId}-${screen.difficulty}-${progReplay}`;
       if (screen.unitId === 'arrow-debug') return <ArrowDebugUnit key={replayKey} {...progProps} />;
       if (screen.unitId === 'arrow-adventure') return <ArrowAdventureUnit key={replayKey} {...progProps} />;
+      if (screen.unitId === 'arrow-branch') return <ArrowBranchUnit key={replayKey} {...progProps} />;
       return <ArrowSequenceUnit key={replayKey} {...progProps} />;
     }
 
