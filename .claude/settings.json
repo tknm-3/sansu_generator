@@ -1,4 +1,7 @@
 {
+  "env": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers"
+  },
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
