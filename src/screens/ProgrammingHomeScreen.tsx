@@ -57,7 +57,8 @@ export function ProgrammingHomeScreen({ characterName, characterId, onPlay, onMa
           {DIFFICULTIES.map((diff) => {
             const unlocked = isUnlocked(unit.id, diff);
             const clears = getClears(unit.id, diff);
-            const prev: Difficulty = diff === 'normal' ? 'easy' : 'normal';
+            const PREV: Partial<Record<Difficulty, Difficulty>> = { normal: 'easy', hard: 'normal', superhard: 'hard' };
+            const prev = PREV[diff] ?? 'easy';
             const prevClears = getClears(unit.id, prev);
             return (
               <motion.button

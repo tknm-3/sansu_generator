@@ -50,8 +50,10 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
   const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
   const [levels] = useState(() => pickLevels(BRANCH_LEVELS[difficulty], QUESTIONS));
   const [idx, setIdx] = useState(0);
+  const isSuperhard = difficulty === 'superhard';
   const [items, setItems] = useState<BranchCommand[]>([]);
-  const [loopOn, setLoopOn] = useState(true);
+  // hard ではループ箱を使わない。superhard は常にループ箱オン
+  const [loopOn, setLoopOn] = useState(isSuperhard ? true : difficulty !== 'hard');
   const [loopTimes, setLoopTimes] = useState(4);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
 
   function resetBuild() {
     setItems([]);
-    setLoopOn(true);
+    setLoopOn(isSuperhard ? true : difficulty !== 'hard');
     setLoopTimes(4);
   }
 
@@ -165,13 +167,16 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
   }
 
   function showMoreHint() {
-    const msg = 'まずは「もし みぎ🧱 なら ↓、ちがえば →」の ルールを 1つ つくって、🔁で くりかえしてみよう！';
+    const msg = isSuperhard
+      ? 'くりかえし箱に → と ↓ を いれて、かい数を ふやしてみよう！'
+      : 'まずは「もし みぎ🧱 なら ↓、ちがえば →」の ルールを 1つ つくって、🔁で くりかえしてみよう！';
     setHint(msg);
     speakJa(msg);
   }
 
   if (cleared) {
-    const next: Difficulty | undefined = difficulty === 'easy' ? 'normal' : difficulty === 'normal' ? 'hard' : undefined;
+    const NEXT_DIFF: Partial<Record<Difficulty, Difficulty>> = { easy: 'normal', normal: 'hard', hard: 'superhard' };
+    const next: Difficulty | undefined = NEXT_DIFF[difficulty];
     return (
       <ProgClearedScreen
         difficulty={difficulty}
@@ -211,23 +216,25 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
       />
 
       {/* くみたてた プログラム（ループ箱の なか） */}
-      <div className="w-full max-w-sm rounded-2xl border-2 border-dashed border-violet-300 bg-white/60 p-2">
+      <div className={`w-full max-w-sm rounded-2xl border-2 border-dashed p-2 ${isSuperhard ? 'border-amber-400 bg-amber-50/60' : 'border-violet-300 bg-white/60'}`}>
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-xs font-bold text-violet-500">
+          <span className={`text-xs font-bold ${isSuperhard ? 'text-amber-600' : 'text-violet-500'}`}>
             {loopOn ? `🔁 ${loopTimes}かい くりかえす：` : 'プログラム：'}
           </span>
           <span className="text-xs text-violet-400">のこり {Math.max(0, maxBlocks - blockCount)}</span>
         </div>
         <div className="flex min-h-[40px] flex-wrap items-center gap-1">
           {items.length === 0 ? (
-            <span className="px-2 text-sm text-violet-300">ルールや やじるしを ならべよう</span>
+            <span className="px-2 text-sm text-violet-300">
+              {isSuperhard ? 'やじるしを ならべよう' : 'ルールや やじるしを ならべよう'}
+            </span>
           ) : (
             items.map((cmd, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => removeAt(i)}
-                className="rounded-lg bg-violet-500 px-2 py-1 text-sm font-bold text-white shadow-[0_2px_0_#6d28d9]"
+                className={`rounded-lg px-2 py-1 text-sm font-bold text-white shadow-[0_2px_0_#6d28d9] ${isSuperhard ? 'bg-amber-500' : 'bg-violet-500'}`}
               >
                 {cmd.kind === 'move' ? DIR_ARROW[cmd.dir] : cmd.kind === 'if' ? ruleLabel(cmd) : '🔁'}
               </button>
@@ -237,47 +244,54 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
       </div>
       <p className="text-xs text-amber-500">ブロックを タップすると けせるよ</p>
 
-      {/* くりかえし箱の せってい */}
-      <div className="flex w-full max-w-sm items-center justify-between gap-2 rounded-2xl bg-violet-100 px-3 py-2">
-        <button
-          type="button"
-          onClick={() => { if (canEdit) { playSfx('tap'); setLoopOn((v) => !v); } }}
-          className={`rounded-xl px-3 py-2 text-sm font-bold ${loopOn ? 'bg-violet-500 text-white' : 'bg-white text-violet-600'}`}
-        >
-          🔁 くりかえし {loopOn ? 'オン' : 'オフ'}
-        </button>
-        {loopOn && (
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => { if (canEdit) setLoopTimes((t) => Math.max(2, t - 1)); }} className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-violet-600">－</button>
-            <span className="w-7 text-center text-lg font-bold text-violet-800">{loopTimes}</span>
-            <button type="button" onClick={() => { if (canEdit) setLoopTimes((t) => Math.min(12, t + 1)); }} className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-violet-600">＋</button>
-            <span className="ml-1 text-xs font-bold text-violet-500">かい</span>
-          </div>
-        )}
-      </div>
-
-      {/* ルールカード エディタ */}
-      <div className="flex w-full max-w-sm flex-col gap-2 rounded-2xl bg-white/80 p-3 shadow-sm">
-        <p className="text-center text-xs font-bold text-violet-700">🔀 ルールを つくる</p>
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-bold text-violet-800">
-          <span>もし</span>
-          <DirPicker value={sensor} onChange={setSensor} disabled={!canEdit} />
-          <span>が 🧱 なら</span>
-          <DirPicker value={thenDir} onChange={setThenDir} disabled={!canEdit} />
-          <span>、ちがえば</span>
-          <DirPicker value={elseDir} onChange={setElseDir} disabled={!canEdit} />
+      {/* くりかえし箱の せってい（superhard は常にオン・トグル非表示／easy,normal は切替可能／hard は非表示） */}
+      {difficulty !== 'hard' && (
+        <div className={`flex w-full max-w-sm items-center justify-between gap-2 rounded-2xl px-3 py-2 ${isSuperhard ? 'bg-amber-100' : 'bg-violet-100'}`}>
+          {!isSuperhard && (
+            <button
+              type="button"
+              onClick={() => { if (canEdit) { playSfx('tap'); setLoopOn((v) => !v); } }}
+              className={`rounded-xl px-3 py-2 text-sm font-bold ${loopOn ? 'bg-violet-500 text-white' : 'bg-white text-violet-600'}`}
+            >
+              🔁 くりかえし {loopOn ? 'オン' : 'オフ'}
+            </button>
+          )}
+          {isSuperhard && <span className="text-sm font-bold text-amber-700">🔁 くりかえし</span>}
+          {loopOn && (
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => { if (canEdit) setLoopTimes((t) => Math.max(2, t - 1)); }} className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-violet-600">－</button>
+              <span className="w-7 text-center text-lg font-bold text-violet-800">{loopTimes}</span>
+              <button type="button" onClick={() => { if (canEdit) setLoopTimes((t) => Math.min(12, t + 1)); }} className="h-8 w-8 rounded-lg bg-white text-lg font-bold text-violet-600">＋</button>
+              <span className="ml-1 text-xs font-bold text-violet-500">かい</span>
+            </div>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={addRule}
-          disabled={!canEdit || blockCount + 3 > maxBlocks}
-          className="mx-auto rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white shadow-[0_3px_0_#6d28d9] disabled:opacity-40"
-        >
-          ＋ ルールを ついか
-        </button>
-      </div>
+      )}
 
-      {/* ふつうの やじるし（おまけ） */}
+      {/* ルールカード エディタ（superhard では非表示） */}
+      {!isSuperhard && (
+        <div className="flex w-full max-w-sm flex-col gap-2 rounded-2xl bg-white/80 p-3 shadow-sm">
+          <p className="text-center text-xs font-bold text-violet-700">🔀 ルールを つくる</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-bold text-violet-800">
+            <span>もし</span>
+            <DirPicker value={sensor} onChange={setSensor} disabled={!canEdit} />
+            <span>が 🧱 なら</span>
+            <DirPicker value={thenDir} onChange={setThenDir} disabled={!canEdit} />
+            <span>、ちがえば</span>
+            <DirPicker value={elseDir} onChange={setElseDir} disabled={!canEdit} />
+          </div>
+          <button
+            type="button"
+            onClick={addRule}
+            disabled={!canEdit || blockCount + 3 > maxBlocks}
+            className="mx-auto rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white shadow-[0_3px_0_#6d28d9] disabled:opacity-40"
+          >
+            ＋ ルールを ついか
+          </button>
+        </div>
+      )}
+
+      {/* やじるし */}
       <div className="flex items-center gap-2">
         <span className="text-xs font-bold text-violet-500">やじるし：</span>
         {ARROWS.map((dir) => (
@@ -287,7 +301,7 @@ export function ArrowBranchUnit({ characterId, difficulty, onExit, onAgain }: Pr
             onClick={() => addMove(dir)}
             whileTap={{ scale: 0.9 }}
             disabled={!canEdit || blockCount + 1 > maxBlocks}
-            className="h-10 w-10 rounded-xl bg-violet-300 text-xl font-bold text-white shadow-[0_3px_0_#7c3aed] disabled:opacity-40"
+            className={`h-10 w-10 rounded-xl text-xl font-bold text-white disabled:opacity-40 ${isSuperhard ? 'bg-amber-400 shadow-[0_3px_0_#d97706]' : 'bg-violet-300 shadow-[0_3px_0_#7c3aed]'}`}
           >
             {DIR_ARROW[dir]}
           </motion.button>
