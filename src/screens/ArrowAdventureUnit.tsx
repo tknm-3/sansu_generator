@@ -30,13 +30,13 @@ import {
 } from '../lib/programming/adventureLevels';
 import {
   addQuestClear,
+  currentZoneId,
   getAdventureSummary,
   getQuestCleared,
   getZoneStatus,
   isQuestCleared,
   isQuestUnlocked,
   nextPlayableIndex,
-  type ZoneStatus,
 } from '../lib/programming/progress';
 
 interface Props {
@@ -58,7 +58,7 @@ const ACCENT: Record<string, { chip: string; text: string; ring: string; soft: s
 
 // ───────────────────────── 羊皮紙の世界観（Vellum Frontier）─────────────────────────
 // デザイン哲学は design/adventure-philosophy.md を参照。
-// 一枚の手描き宝地図として、蛇行トレイル・封蝋スタンプ・霧（fog of war）で 旅を表現する。
+// RPG のように「まち（ゾーン）」を 1枚ずつ めくって たびする 宝地図として 表現する。
 
 /** 羊皮紙のグラデーション背景 */
 const PARCHMENT = 'radial-gradient(125% 85% at 50% -10%, #fbf3df 0%, #f1e3c2 46%, #e7d3a8 100%)';
@@ -81,19 +81,6 @@ function ParchmentTexture() {
         aria-hidden
       />
     </>
-  );
-}
-
-/** 方位磁針 */
-function Compass({ size = 46 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden>
-      <circle cx="50" cy="50" r="44" fill="rgba(255,255,255,.35)" stroke={SEPIA} strokeWidth="2" />
-      <circle cx="50" cy="50" r="37" fill="none" stroke={SEPIA} strokeWidth="1" opacity="0.45" />
-      <polygon points="50,12 57,50 50,46 43,50" fill="#b9472f" />
-      <polygon points="50,88 43,50 50,54 57,50" fill={SEPIA} />
-      <text x="50" y="25" fontSize="11" textAnchor="middle" fill={SEPIA} fontWeight="700">N</text>
-    </svg>
   );
 }
 
@@ -122,17 +109,21 @@ export function ArrowAdventureUnit({ characterId, onExit }: Props) {
   // クリアを localStorage に きろくするので、tick で 読みなおして 再描画する
   const [tick, setTick] = useState(0);
   const [playIndex, setPlayIndex] = useState<number | null>(null);
+  // 直前に クリアした 問題の index。マップで ペンギンを つぎの 宿場へ あるかせる演出に つかう。
+  const [justCleared, setJustCleared] = useState<number | null>(null);
 
   useEffect(() => { setBgmTrack('arrow-sequence'); }, []);
 
   function startQuest(index: number) {
     if (!isQuestUnlocked(index)) return;
     playSfx('tap');
+    setJustCleared(null); // 自分で えらんだら 歩行演出は ださない
     setPlayIndex(index);
   }
 
   function handleQuestCleared() {
-    // 進捗は addQuestClear 済み。マップに もどして 再描画。
+    // 進捗は addQuestClear 済み。クリアした index を おぼえて マップへ もどす。
+    setJustCleared(playIndex);
     setPlayIndex(null);
     setTick((t) => t + 1);
   }
@@ -155,43 +146,55 @@ export function ArrowAdventureUnit({ characterId, onExit }: Props) {
     <AdventureMap
       key={tick}
       charEmoji={charEmoji}
+      justCleared={justCleared}
       onSelect={startQuest}
       onExit={onExit}
     />
   );
 }
 
-// ───────────────────────── マップ（ゾーン地図 + 達成度）─────────────────────────
+// ───────────────────────── 町マップ（ゾーン＝ひとつの まち）─────────────────────────
+// RPG のように、ゾーンを ひとつの 「まち」として 1画面に みせる。
+// クリアすると ペンギンが つぎの 宿場へ あるいて すすみ、
+// まちを ぜんぶ クリアすると ▶（つぎの まち）で 別の まちへ 切りかわる。
 
-// 地図レイアウトの 寸法（一枚の宝地図として 縦に スクロールする）
-const MAP_W = 340; // 地図の 内側はば（px・中央ぞろえ）
-const LANES = [58, 170, 282]; // 蛇行する 横レーン（px）
-const SERP = [0, 1, 2, 1]; // レーンの 行き来パターン
-const STOP_STEP = 96; // 停留所どうしの 縦かんかく
-const HEADER_H = 60; // ゾーン見出しの 高さ
+const TOWN_W = 320; // まちマップの はば（px）
+const TOWN_H = 430; // まちマップの たかさ（px）
+
+// 6つの 宿場（停留所）の ざひょう。曲がりくねった 一本道に そって ならべる。
+const STOPS: { x: number; y: number }[] = [
+  { x: 64, y: 56 },
+  { x: 226, y: 92 },
+  { x: 262, y: 196 },
+  { x: 96, y: 232 },
+  { x: 66, y: 336 },
+  { x: 244, y: 372 },
+];
+// まちの でぐち（つぎの まちへの もん）。道の さいごに おく。
+const TOWN_EXIT = { x: 160, y: 416 };
+
+// まちの 雰囲気を だす 装飾絵文字の ちらし位置（zone.wall を うすく まく）
+const SCATTER: { x: number; y: number; s: number }[] = [
+  { x: 150, y: 38, s: 26 }, { x: 296, y: 140, s: 20 }, { x: 28, y: 150, s: 22 },
+  { x: 178, y: 168, s: 18 }, { x: 300, y: 290, s: 24 }, { x: 26, y: 280, s: 20 },
+  { x: 170, y: 300, s: 22 }, { x: 124, y: 122, s: 16 }, { x: 250, y: 320, s: 18 },
+];
+
 const REGION_TINT: Record<string, string> = {
-  forest: 'rgba(96,140,80,.26)',
-  valley: 'rgba(124,98,160,.24)',
-  desert: 'rgba(196,150,70,.26)',
-  zombie: 'rgba(110,140,86,.26)',
-  castle: 'rgba(96,116,150,.26)',
+  forest: 'rgba(96,140,80,.32)',
+  valley: 'rgba(124,98,160,.30)',
+  desert: 'rgba(196,150,70,.34)',
+  zombie: 'rgba(110,150,86,.32)',
+  castle: 'rgba(96,116,150,.32)',
 };
 
-interface StopNode {
+interface TownStop {
   q: AdventureQuest;
-  i: number;
-  x: number;
-  y: number;
+  globalIndex: number; // ADVENTURE_QUEST 内の とおし番号
   cleared: boolean;
   perfect: boolean;
   unlocked: boolean;
   isFrontier: boolean;
-}
-interface ZoneBand {
-  zone: AdventureZone;
-  status: ZoneStatus;
-  top: number;
-  bottom: number;
 }
 
 /** 宝地図の トレイル線（蛇行する S字カーブ）を つくる */
@@ -207,75 +210,92 @@ function trailPath(points: { x: number; y: number }[]): string {
   return d;
 }
 
+/** ある ゾーンの 6問を とおし番号つきで あつめる */
+function stopsOfZone(zoneId: string, frontier: number): TownStop[] {
+  return ADVENTURE_QUEST.map((q, i) => ({ q, i }))
+    .filter(({ q }) => q.zoneId === zoneId)
+    .map(({ q, i }) => {
+      const rec = getQuestCleared(q.id);
+      return {
+        q,
+        globalIndex: i,
+        cleared: isQuestCleared(q.id),
+        perfect: !!rec?.perfect,
+        unlocked: i <= frontier,
+        isFrontier: i === frontier,
+      };
+    });
+}
+
 function AdventureMap({
   charEmoji,
+  justCleared,
   onSelect,
   onExit,
 }: {
   charEmoji: string;
+  justCleared: number | null;
   onSelect: (index: number) => void;
   onExit: () => void;
 }) {
   const summary = getAdventureSummary();
   const percent = Math.round((summary.clearedCount / summary.total) * 100);
   const frontier = nextPlayableIndex();
+  const curZoneIdx = Math.max(0, ADVENTURE_ZONES.findIndex((z) => z.id === currentZoneId()));
 
-  // ゾーンを じゅんに たどり、停留所を 蛇行トレイル上に ならべる。
-  // cleared / current ゾーンは 停留所を みせ、next / locked は 霧の むこうに かくす。
-  const layout = useMemo(() => {
-    const grouped = ADVENTURE_ZONES.map((zone) => ({
-      zone,
-      quests: ADVENTURE_QUEST.map((q, i) => ({ q, i })).filter(({ q }) => q.zoneId === zone.id),
-    }));
-
-    const nodes: StopNode[] = [];
-    const bands: ZoneBand[] = [];
-    const trail: { x: number; y: number }[] = [];
-    const mist: { zone: AdventureZone; status: ZoneStatus }[] = [];
-
-    let y = 16;
-    let stopN = 0;
-    for (const { zone, quests } of grouped) {
-      const status = getZoneStatus(zone.id);
-      if (status === 'next' || status === 'locked') {
-        mist.push({ zone, status });
-        continue;
-      }
-      const bandTop = y;
-      y += HEADER_H;
-      for (const { q, i } of quests) {
-        const x = LANES[SERP[stopN % SERP.length]];
-        const cy = y + 36;
-        const rec = getQuestCleared(q.id);
-        nodes.push({
-          q,
-          i,
-          x,
-          y: cy,
-          cleared: isQuestCleared(q.id),
-          perfect: !!rec?.perfect,
-          unlocked: i <= frontier,
-          isFrontier: i === frontier,
-        });
-        trail.push({ x, y: cy });
-        y += STOP_STEP;
-        stopN++;
-      }
-      bands.push({ zone, status, top: bandTop, bottom: y });
-      y += 6;
+  // クリア直後は その まちを みせる。そうでなければ いま いる まち。
+  const initialIdx = useMemo(() => {
+    if (justCleared != null) {
+      const zid = ADVENTURE_QUEST[justCleared]?.zoneId;
+      const idx = ADVENTURE_ZONES.findIndex((z) => z.id === zid);
+      if (idx >= 0) return idx;
     }
+    return curZoneIdx;
+    // マウント時に いちど だけ きめる
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    const mistTop = y;
-    const totalHeight = y + (mist.length ? 190 : 28);
-    return { nodes, bands, trail, mist, mistTop, totalHeight };
-  }, [frontier]);
+  const [viewIdx, setViewIdx] = useState(initialIdx);
+  const [slideDir, setSlideDir] = useState(0); // +1=つぎへ -1=まえへ
+  // 歩行演出は クリアした まちを 表示しているときだけ。一度 あるいたら けす。
+  const [pendingWalk, setPendingWalk] = useState<number | null>(justCleared);
+
+  const zone = ADVENTURE_ZONES[viewIdx];
+  const status = getZoneStatus(zone.id);
+  const stops = useMemo(() => stopsOfZone(zone.id, frontier), [zone.id, frontier]);
+  const zoneCleared = status === 'cleared';
+
+  // 表示中の まちに クリア宿場が あるときだけ、その ローカル index を わたす
+  const walkLocal = (() => {
+    if (pendingWalk == null || ADVENTURE_QUEST[pendingWalk]?.zoneId !== zone.id) return null;
+    const li = stops.findIndex((s) => s.globalIndex === pendingWalk);
+    return li >= 0 ? li : null;
+  })();
+
+  // 行き来できるのは 到達ずみ（cleared / current）の まちだけ
+  const prevReachable = viewIdx > 0;
+  const nextReachable =
+    viewIdx + 1 < ADVENTURE_ZONES.length &&
+    (getZoneStatus(ADVENTURE_ZONES[viewIdx + 1].id) === 'cleared' ||
+      getZoneStatus(ADVENTURE_ZONES[viewIdx + 1].id) === 'current');
+  const nextZone = ADVENTURE_ZONES[viewIdx + 1];
+
+  function goTo(target: number) {
+    if (target < 0 || target >= ADVENTURE_ZONES.length || target === viewIdx) return;
+    const st = getZoneStatus(ADVENTURE_ZONES[target].id);
+    if (st !== 'cleared' && st !== 'current') return; // 未到達は いけない
+    playSfx('tap');
+    setSlideDir(target > viewIdx ? 1 : -1);
+    setPendingWalk(null); // 手で うごかしたら 歩行演出は おわり
+    setViewIdx(target);
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center" style={{ background: PARCHMENT }}>
       <ParchmentTexture />
 
-      {/* ヘッダー：もどる・方位磁針 */}
-      <div className="relative z-10 flex w-full max-w-md items-center justify-between px-4 pr-16 pt-4">
+      {/* ヘッダー：もどる・達成度 */}
+      <div className="relative z-10 flex w-full max-w-md items-center justify-between px-4 pt-4">
         <button
           type="button"
           onClick={onExit}
@@ -284,129 +304,224 @@ function AdventureMap({
         >
           ← もどる
         </button>
-        <Compass />
+        <span className="text-sm font-bold" style={{ color: SEPIA }}>
+          {summary.clearedCount}/{summary.total}もん {percent}%
+          {summary.perfectCount > 0 && <span className="ml-1 text-[#b9472f]">💎{summary.perfectCount}</span>}
+        </span>
       </div>
 
-      {/* タイトル・リボン */}
-      <div className="relative z-10 mt-1 flex flex-col items-center">
-        <Ribbon width={250}>
-          <span className="text-xl">ぼうけんの ちず</span>
+      {/* いまの まちの 名まえ */}
+      <div className="relative z-10 mt-2 flex flex-col items-center">
+        <Ribbon width={264}>
+          <span className="text-lg">{zone.emoji} {zone.name}</span>
         </Ribbon>
+        <p className="mt-1.5 text-xs font-bold" style={{ color: '#9a7c54' }}>{zone.tagline}</p>
       </div>
 
-      {/* 進捗＝距離の目盛り */}
-      <div className="relative z-10 mt-3 w-[300px]">
-        <div className="flex justify-between text-[10px] tracking-[0.18em]" style={{ color: '#8a6b45' }}>
-          <span>START</span>
-          <span>・・・・・・</span>
-          <span>CASTLE</span>
-        </div>
-        <div
-          className="mt-0.5 h-2.5 overflow-hidden rounded-md border"
-          style={{ background: 'rgba(123,90,58,.18)', borderColor: 'rgba(123,90,58,.3)' }}
-        >
-          <motion.div
-            className="h-full"
-            style={{ background: 'linear-gradient(90deg,#c9802f,#e0a94b)' }}
-            initial={{ width: 0 }}
-            animate={{ width: `${percent}%` }}
-            transition={{ type: 'spring', stiffness: 60 }}
-          />
-        </div>
-        <p className="mt-1 text-center text-xs font-bold" style={{ color: SEPIA }}>
-          {summary.clearedCount} / {summary.total} もん ふみは {percent}%
-          {summary.perfectCount > 0 && <span className="ml-1 text-[#b9472f]">💎×{summary.perfectCount}</span>}
-        </p>
-      </div>
-
-      {/* 宝地図ぜんたい */}
-      <div className="relative z-10 mt-3 mb-6" style={{ width: MAP_W, height: layout.totalHeight }}>
-        {/* 地方の 色あい（region tint）*/}
-        {layout.bands.map(({ zone, top, bottom }) => (
-          <div
-            key={`tint-${zone.id}`}
-            className="absolute left-0 right-0 rounded-[40px]"
-            style={{
-              top: top - 4,
-              height: bottom - top + 8,
-              background: `radial-gradient(70% 60% at 50% 40%, ${REGION_TINT[zone.id] ?? 'rgba(123,90,58,.2)'}, transparent 72%)`,
-            }}
-            aria-hidden
-          />
-        ))}
-
-        {/* 蛇行トレイル */}
-        <svg className="pointer-events-none absolute inset-0" width={MAP_W} height={layout.totalHeight} aria-hidden>
-          <path d={trailPath(layout.trail)} fill="none" stroke={SEPIA} strokeWidth={3.5} strokeLinecap="round" strokeDasharray="2 12" opacity={0.7} />
-        </svg>
-
-        {/* ゾーン見出し（リボン小）*/}
-        {layout.bands.map(({ zone, status, top }) => (
-          <div key={`head-${zone.id}`} className="absolute left-0 right-0 flex items-center justify-center" style={{ top, height: HEADER_H }}>
-            <div
-              className="flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm"
-              style={{
-                background: status === 'current' ? 'rgba(255,247,224,.92)' : 'rgba(255,255,255,.55)',
-                borderColor: 'rgba(123,90,58,.4)',
-              }}
+      {/* ワールド地図：まちの ならび（いま どこに いるか）*/}
+      <div className="relative z-10 mt-3 flex items-end gap-1.5">
+        {ADVENTURE_ZONES.map((z, i) => {
+          const st = getZoneStatus(z.id);
+          const reached = st === 'cleared' || st === 'current';
+          const here = i === viewIdx;
+          return (
+            <button
+              key={z.id}
+              type="button"
+              disabled={!reached}
+              onClick={() => goTo(i)}
+              className="flex flex-col items-center"
+              title={z.name}
             >
-              <span className="text-xl">{zone.emoji}</span>
-              <span className="text-sm font-bold" style={{ color: SEPIA }}>{zone.name}</span>
-              {status === 'cleared' && <span className="text-sm">🏁</span>}
-            </div>
-          </div>
-        ))}
-
-        {/* 停留所（封蝋スタンプ）*/}
-        {layout.nodes.map((n) => (
-          <MapStop key={n.q.id} node={n} charEmoji={charEmoji} onSelect={onSelect} />
-        ))}
-
-        {/* 霧（fog of war）— つぎの ゾーン予告＋未踏 */}
-        {layout.mist.length > 0 && (
-          <div
-            className="absolute left-0 right-0 flex flex-col items-center gap-2 rounded-[40px] pt-8"
-            style={{
-              top: layout.mistTop,
-              height: 190,
-              background: 'linear-gradient(transparent, rgba(232,216,184,.78) 38%, rgba(225,208,176,.96))',
-            }}
-          >
-            {layout.mist.map(({ zone, status }) =>
-              status === 'next' ? (
-                <motion.div
-                  key={zone.id}
-                  initial={{ opacity: 0.5 }}
-                  animate={{ opacity: [0.55, 0.85, 0.55] }}
-                  transition={{ repeat: Infinity, duration: 2.4 }}
-                  className="flex items-center gap-2 rounded-full border border-dashed px-4 py-2"
-                  style={{ borderColor: 'rgba(123,90,58,.5)', background: 'rgba(255,255,255,.4)' }}
-                >
-                  <span className="text-2xl">{zone.emoji}</span>
-                  <div className="text-left">
-                    <div className="text-sm font-bold" style={{ color: SEPIA }}>つぎは… {zone.name}！</div>
-                    <div className="text-[10px]" style={{ color: '#9a7c54' }}>{zone.tagline}</div>
-                  </div>
-                </motion.div>
-              ) : (
-                <span key={zone.id} className="text-2xl tracking-[0.3em]" style={{ color: 'rgba(123,90,58,.35)' }}>？？？</span>
-              ),
-            )}
-          </div>
-        )}
+              <span
+                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-lg transition ${here ? 'scale-110' : ''}`}
+                style={{
+                  background: here ? 'rgba(255,247,224,.95)' : reached ? 'rgba(255,255,255,.6)' : 'rgba(231,211,168,.5)',
+                  borderColor: here ? '#b9472f' : 'rgba(123,90,58,.4)',
+                  filter: reached ? 'none' : 'grayscale(.7) opacity(.7)',
+                }}
+              >
+                {st === 'locked' ? '🔒' : z.emoji}
+              </span>
+              <span className="h-3 text-[9px] leading-3" style={{ color: '#b9472f' }}>
+                {here ? '▲' : st === 'cleared' ? '🏁' : ''}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      <p className="relative z-10 -mt-3 pb-4 text-[10px] tracking-widest" style={{ color: '#9a7c54' }}>
-        ⭐クリア　💎ぴったり賞　🧭いまここ　🌫️きりのむこう
+      {/* まちマップ本体（◀ ▶ で 行き来）*/}
+      <div className="relative z-10 mt-2 flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => goTo(viewIdx - 1)}
+          disabled={!prevReachable}
+          className="rounded-full px-1 py-6 text-2xl disabled:opacity-20"
+          style={{ color: SEPIA }}
+          aria-label="まえの まち"
+        >
+          ◀
+        </button>
+        <div className="relative overflow-hidden" style={{ width: TOWN_W, height: TOWN_H }}>
+          <AnimatePresence mode="popLayout" initial={false}>
+            <TownBoard
+              key={zone.id}
+              zone={zone}
+              stops={stops}
+              charEmoji={charEmoji}
+              walkFrom={walkLocal}
+              slideDir={slideDir}
+              onSelect={onSelect}
+              onWalkDone={() => setPendingWalk(null)}
+            />
+          </AnimatePresence>
+        </div>
+        <button
+          type="button"
+          onClick={() => goTo(viewIdx + 1)}
+          disabled={!nextReachable}
+          className="rounded-full px-1 py-6 text-2xl disabled:opacity-20"
+          style={{ color: SEPIA }}
+          aria-label="つぎの まち"
+        >
+          ▶
+        </button>
+      </div>
+
+      {/* まちの じょうたい メッセージ */}
+      <div className="relative z-10 mt-1 flex h-9 items-center text-center">
+        {zoneCleared ? (
+          nextReachable ? (
+            <button
+              type="button"
+              onClick={() => goTo(viewIdx + 1)}
+              className="rounded-full px-4 py-1.5 text-sm font-bold text-[#fbe6c9] shadow"
+              style={{ background: 'linear-gradient(#b9472f,#9c3622)' }}
+            >
+              🏁 クリア！ つぎの まち {nextZone?.emoji} へ →
+            </button>
+          ) : (
+            <span className="text-sm font-bold" style={{ color: SEPIA }}>🏁 この まちは クリア！</span>
+          )
+        ) : status === 'current' ? (
+          <span className="text-sm font-bold" style={{ color: SEPIA }}>{charEmoji} いま ここを ぼうけんちゅう！</span>
+        ) : null}
+      </div>
+
+      <p className="relative z-10 pb-4 text-[10px] tracking-widest" style={{ color: '#9a7c54' }}>
+        ⭐クリア　💎ぴったり賞　⛳いまここ　⛩️つぎの まちへ
       </p>
     </div>
   );
 }
 
-/** トレイル上の 停留所（封蝋スタンプ）。状態で みためが かわる */
-function MapStop({ node, charEmoji, onSelect }: { node: StopNode; charEmoji: string; onSelect: (index: number) => void }) {
-  const { i, x, y, cleared, perfect, unlocked, isFrontier } = node;
-  // 封蝋の みため
+/** ひとつの まち（ゾーン）の マップ。ペンギンの 現在地と 歩行演出を もつ */
+function TownBoard({
+  zone,
+  stops,
+  charEmoji,
+  walkFrom,
+  slideDir,
+  onSelect,
+  onWalkDone,
+}: {
+  zone: AdventureZone;
+  stops: TownStop[];
+  charEmoji: string;
+  walkFrom: number | null;
+  slideDir: number;
+  onSelect: (index: number) => void;
+  onWalkDone: () => void;
+}) {
+  // ペンギンが ふだん たつ 宿場（最初の 未クリア）。全クリアなら でぐちへ。
+  const restPawn = (() => {
+    const li = stops.findIndex((s) => !s.cleared);
+    return li === -1 ? STOPS.length : li;
+  })();
+
+  const [pawnIdx, setPawnIdx] = useState(walkFrom != null ? walkFrom : restPawn);
+  const [walking, setWalking] = useState(false);
+
+  useEffect(() => {
+    if (walkFrom == null) return;
+    setWalking(true);
+    const t1 = window.setTimeout(() => { setPawnIdx(walkFrom + 1); playSfx('tap'); }, 500);
+    const t2 = window.setTimeout(() => { setWalking(false); onWalkDone(); }, 1700);
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+    // マウント時に いちど だけ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pawnPos = pawnIdx >= STOPS.length ? TOWN_EXIT : STOPS[pawnIdx];
+  const tint = REGION_TINT[zone.id] ?? 'rgba(123,90,58,.28)';
+  const trail = trailPath([...STOPS, TOWN_EXIT]);
+  const allCleared = stops.length > 0 && stops.every((s) => s.cleared);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: slideDir * 80 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: slideDir * -80, position: 'absolute' }}
+      transition={{ type: 'spring', stiffness: 90, damping: 17 }}
+      className="left-0 top-0"
+      style={{ width: TOWN_W, height: TOWN_H }}
+    >
+      {/* まちの じめん（テーマ色）*/}
+      <div
+        className="absolute inset-0 rounded-[34px] border-2"
+        style={{
+          borderColor: 'rgba(123,90,58,.4)',
+          background: `radial-gradient(85% 75% at 50% 35%, ${tint}, rgba(255,250,235,.4) 82%)`,
+        }}
+      />
+      {/* まちの モチーフ（木・サボテン・しろ など）を うすく ちらす */}
+      {SCATTER.map((s, i) => (
+        <span
+          key={i}
+          className="pointer-events-none absolute select-none"
+          style={{ left: s.x, top: s.y, fontSize: s.s, opacity: 0.26, transform: 'translate(-50%,-50%)' }}
+          aria-hidden
+        >
+          {zone.wall}
+        </span>
+      ))}
+      {/* 道（破線トレイル）*/}
+      <svg className="pointer-events-none absolute inset-0" width={TOWN_W} height={TOWN_H} aria-hidden>
+        <path d={trail} fill="none" stroke={SEPIA} strokeWidth={4} strokeLinecap="round" strokeDasharray="2 13" opacity={0.55} />
+      </svg>
+      {/* でぐち（つぎの まちへの もん）*/}
+      <div className="absolute flex flex-col items-center" style={{ left: TOWN_EXIT.x, top: TOWN_EXIT.y, transform: 'translate(-50%,-50%)' }}>
+        <span className="text-3xl" style={{ filter: allCleared ? 'none' : 'grayscale(.6)', opacity: allCleared ? 1 : 0.55 }}>⛩️</span>
+      </div>
+      {/* 宿場（封蝋スタンプ）*/}
+      {stops.map((s, li) => (
+        <MapStop key={s.q.id} stop={s} x={STOPS[li].x} y={STOPS[li].y} onSelect={onSelect} />
+      ))}
+      {/* ペンギン（いまここ）。クリアすると つぎの 宿場へ あるいて すすむ */}
+      <motion.div
+        className="pointer-events-none absolute z-10"
+        style={{ transform: 'translate(-50%,-100%)' }}
+        initial={false}
+        animate={{ left: pawnPos.x, top: pawnPos.y + 4 }}
+        transition={{ type: 'spring', stiffness: 70, damping: 15 }}
+      >
+        <motion.span
+          className="block text-3xl"
+          style={{ filter: 'drop-shadow(0 2px 1px rgba(0,0,0,.3))' }}
+          animate={{ y: [0, -5, 0] }}
+          transition={{ repeat: Infinity, duration: walking ? 0.4 : 1.4 }}
+        >
+          {charEmoji}
+        </motion.span>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** 宿場（封蝋スタンプ）。状態で みためが かわる */
+function MapStop({ stop, x, y, onSelect }: { stop: TownStop; x: number; y: number; onSelect: (index: number) => void }) {
+  const { globalIndex, cleared, perfect, unlocked, isFrontier } = stop;
   let sealStyle: CSSProperties;
   let content: ReactNode;
   if (cleared) {
@@ -424,7 +539,7 @@ function MapStop({ node, charEmoji, onSelect }: { node: StopNode; charEmoji: str
       borderColor: '#9c6a2a',
       boxShadow: '0 0 0 6px rgba(224,169,75,.32), 0 3px 0 rgba(90,55,20,.4)',
     };
-    content = '🧭';
+    content = '⛳';
   } else if (unlocked) {
     sealStyle = {
       background: 'radial-gradient(circle at 35% 30%, #fbf3df, #e7d3a8)',
@@ -432,7 +547,7 @@ function MapStop({ node, charEmoji, onSelect }: { node: StopNode; charEmoji: str
       borderColor: 'rgba(90,55,20,.5)',
       boxShadow: '0 3px 0 rgba(90,55,20,.3), inset 0 2px 4px rgba(255,255,255,.3)',
     };
-    content = i + 1;
+    content = globalIndex + 1;
   } else {
     sealStyle = {
       background: 'rgba(231,211,168,.6)',
@@ -446,28 +561,17 @@ function MapStop({ node, charEmoji, onSelect }: { node: StopNode; charEmoji: str
     <motion.button
       type="button"
       disabled={!unlocked}
-      onClick={() => onSelect(i)}
+      onClick={() => onSelect(globalIndex)}
       whileTap={unlocked ? { scale: 0.9 } : undefined}
       className="absolute flex items-center justify-center"
-      style={{ left: x, top: y, width: 56, height: 56, transform: 'translate(-50%,-50%)' }}
-      title={`もんだい ${i + 1}`}
+      style={{ left: x, top: y, width: 54, height: 54, transform: 'translate(-50%,-50%)' }}
+      title={`もんだい ${globalIndex + 1}`}
     >
-      {/* いまここ：旅人（キャラ）が 停留所の うえに 立つ */}
-      {isFrontier && (
-        <motion.span
-          className="absolute text-3xl"
-          style={{ top: -30, filter: 'drop-shadow(0 2px 1px rgba(0,0,0,.3))' }}
-          animate={{ y: [0, -4, 0] }}
-          transition={{ repeat: Infinity, duration: 1.2 }}
-        >
-          {charEmoji}
-        </motion.span>
-      )}
       <motion.span
         className="flex h-12 w-12 items-center justify-center rounded-full border-2 text-xl font-bold"
         style={sealStyle}
-        animate={isFrontier ? { scale: [1, 1.09, 1] } : {}}
-        transition={isFrontier ? { repeat: Infinity, duration: 1.5 } : {}}
+        animate={isFrontier ? { scale: [1, 1.08, 1] } : {}}
+        transition={isFrontier ? { repeat: Infinity, duration: 1.6 } : {}}
       >
         {content}
       </motion.span>
@@ -657,26 +761,32 @@ function AdventurePlay({
       </div>
       <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>やじるしを タップすると けせるよ（のこり {maxSlots - flatLen}）</p>
 
-      {/* やじるしパレット＝旅の どうぐばこ */}
+      {/* やじるしパレット＝旅の どうぐばこ。loopOnly の たには ループ箱だけ つかえる */}
       <div
         className="relative z-10 flex flex-col items-center gap-2 rounded-2xl border-2 p-3"
         style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
       >
-        <span className="text-xs font-bold" style={{ color: SEPIA }}>🧰 どうぐばこ（やじるし）</span>
-        <div className="grid grid-cols-4 gap-2">
-        {ARROWS.map((dir) => (
-          <motion.button
-            key={dir}
-            type="button"
-            onClick={() => addMove(dir)}
-            whileTap={{ scale: 0.9 }}
-            disabled={!canAdd}
-            className={`h-14 w-14 rounded-2xl ${accent.chip} text-2xl font-bold text-white shadow-md disabled:opacity-40`}
-          >
-            {DIR_ARROW[dir]}
-          </motion.button>
-        ))}
-        </div>
+        {quest.loopOnly ? (
+          <span className="text-xs font-bold" style={{ color: SEPIA }}>🔁 この たには ループ箱だけで すすむよ</span>
+        ) : (
+          <>
+            <span className="text-xs font-bold" style={{ color: SEPIA }}>🧰 どうぐばこ（やじるし）</span>
+            <div className="grid grid-cols-4 gap-2">
+            {ARROWS.map((dir) => (
+              <motion.button
+                key={dir}
+                type="button"
+                onClick={() => addMove(dir)}
+                whileTap={{ scale: 0.9 }}
+                disabled={!canAdd}
+                className={`h-14 w-14 rounded-2xl ${accent.chip} text-2xl font-bold text-white shadow-md disabled:opacity-40`}
+              >
+                {DIR_ARROW[dir]}
+              </motion.button>
+            ))}
+            </div>
+          </>
+        )}
         {quest.allowLoop && <LoopBuilder disabled={!canAdd} onAdd={addLoop} />}
       </div>
 
@@ -737,7 +847,7 @@ function AdventurePlay({
   );
 }
 
-/** クリア演出。ゾーンクリアや「あと○問で つぎのゾーン」を 予告する */
+/** クリア演出。ゾーンクリアや「あと○問で つぎのまち」を 予告する */
 function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; perfect: boolean; onContinue: () => void }) {
   // この時点で addQuestClear 済み。ゾーンの のこりを かぞえる。
   const zone = getZone(quest.zoneId);
@@ -752,7 +862,7 @@ function ClearOverlay({ quest, perfect, onContinue }: { quest: AdventureQuest; p
     preview = '🎉 ぜんぶの もんだいを クリア！ ぼうけんマスター だ！';
   } else if (remaining === 0) {
     preview = nextZone
-      ? `🏁 ${zone.name} クリア！ つぎは ${nextZone.emoji} ${nextZone.name} へ！`
+      ? `🏁 ${zone.name} クリア！ つぎは ${nextZone.emoji} ${nextZone.name} へ しゅっぱつ！`
       : `🏁 ${zone.name} クリア！`;
   } else {
     preview = `あと ${remaining}もんで ${zone.emoji} ${zone.name} クリア！`;

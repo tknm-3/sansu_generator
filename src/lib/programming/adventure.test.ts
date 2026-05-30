@@ -96,4 +96,34 @@ describe('ぼうけん 問題集', () => {
     const result = runProgram(q, toCommands(sol!));
     expect(isCleared(result), `${q.id} の 解が ゴールに つかない`).toBe(true);
   });
+
+  // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
+  // LoopBuilder の せいやく（1ループ＝1方向 × 2〜5かい）の はんいで 解けることを 確認する。
+  const loopOnly = all.filter((q) => q.loopOnly);
+
+  it('loopOnly は ループの たに（valley）に そろっている', () => {
+    expect(loopOnly.length).toBeGreaterThan(0);
+    for (const q of loopOnly) {
+      expect(q.allowLoop, `${q.id} は loopOnly なのに allowLoop でない`).toBe(true);
+    }
+  });
+
+  it.each(loopOnly)('$id は ループ箱だけ（1方向×2〜5）で 解ける', (q) => {
+    const sol = q.solution ?? solve(q)!;
+    // 最短解を「おなじ むきの れんぞく」で くぎる＝ループ箱の かたまり
+    const runs: { dir: Dir; len: number }[] = [];
+    for (const d of sol) {
+      const last = runs[runs.length - 1];
+      if (last && last.dir === d) last.len += 1;
+      else runs.push({ dir: d, len: 1 });
+    }
+    // どの かたまりも 2〜5かい に おさまれば ループ箱で 表現できる
+    for (const run of runs) {
+      expect(run.len, `${q.id} の ${run.dir} が ${run.len}かい連続（ループ箱2〜5に おさまらない）`).toBeGreaterThanOrEqual(2);
+      expect(run.len, `${q.id} の ${run.dir} が ${run.len}かい連続（ループ箱2〜5に おさまらない）`).toBeLessThanOrEqual(5);
+    }
+    // ループ箱の かず（かたまり数）が maxSlots に おさまる
+    const flatLen = runs.reduce((n, r) => n + r.len, 0);
+    expect(flatLen, `${q.id} の 解が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+  });
 });

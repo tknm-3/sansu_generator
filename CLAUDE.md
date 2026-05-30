@@ -42,6 +42,8 @@ src/
 - 分岐(arrow-branch)は「もし <むき> が かべ なら…」のセンサー条件＋くりかえし箱で、かべの形が変わっても同じプログラムで解ける体験を狙う（`lib/programming/branch.ts`）
 - 難易度は 単元×難易度ごとに クリア回数を記録し、規定回数で 次の難易度を解放（`lib/programming/progress.ts`）
 - ヒントは「まちがい」と言わず こどもの思考を後押しする文言にする（`buildHint`）
+- **問題・レベルを作る/直すときは `authoring-problems` スキルを見る**（アプリの目的・こども向け
+  文言ルール・出題のコツ・検証テスト）。新しいコツは同スキル下部の「追記ログ」に足していく。
 
 ## 現在のフェーズ
 `phase1-foundation-mvp` ブランチ。実装済み: 命名画面・ホーム・さくらんぼ計算ユニット。
@@ -54,23 +56,22 @@ npm run test     # テスト
 ```
 
 ## ブラウザ確認（スクリーンショット）
-実画面の見た目を確認したいときに使う。`cdn.playwright.dev` はネットワーク許可外で
-`npx playwright install` は失敗するが、Chromium が `/opt/pw-browsers` に
-プリインストール済みなので、それを使う（`playwright-core` は devDependency）。
-- 環境変数 `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers` は `.claude/settings.json` で設定済み。
-- 実行ファイルは `scripts/screenshot.mjs` が `/opt/pw-browsers` から自動検出する。
-```bash
-# 1) 別プロセスでサーバー起動
-npm run preview -- --port 4317 --host   # もしくは npm run dev（5173）
-# 2) スクショ
-npm run screenshot -- http://localhost:4317/ /tmp/home.png 800
-```
-localStorage シードや画面遷移が必要なときは `scripts/screenshot.mjs` の
-`capture({ url, out, initScript, steps })` をコードから使う（プログラミング進捗の
-解放などは `math-app:prog-progress` / `math-app:adventure-progress` をシードする）。
+実画面の見た目を確認したいときは **`screenshot-app` スキル**を使う
+（`.claude/skills/screenshot-app/`）。手順・localStorageシードキー・遷移文言の確定方法・
+スマホ実機での確認方法・はまりどころ（命名画面で止まる/真っ白/module not found）をまとめてある。
+- Chromium は `/opt/pw-browsers` にプリインストール済み（`PLAYWRIGHT_BROWSERS_PATH` は設定済み）。
+  `npx playwright install` はネット許可外で失敗するので使わない。
+- 基本は `scripts/screenshot.mjs` の `capture({ url, out, initScript, steps })` を使う。
 
 ## コンテキスト節約の原則
 - ファイル全体を読む前に `Grep` で関連行を特定する
 - `Read` は `offset`+`limit` で必要な範囲だけ読む
 - 変更の確認は `git diff` を先に使う
 - 200行超えるファイルは必要なセクションだけ読む
+
+## プルリク（PR）を出すときの方針
+- 作業中に**詰まったところ・はまった罠は、PRを出す前にスキル化する**
+  （`.claude/skills/<name>/SKILL.md`）。次回以降の自分・他セッションが同じ罠を踏まないように。
+- ノウハウや再現手順はスキルに書き、**CLAUDE.md は「どのスキルを見るか」のポインタに留める**
+  （肥大化を避ける）。手順・シード値・確定方法などの具体はスキル側へ。
+- 既存スキルに該当があれば追記、なければ新設。スキル化したら PR 本文にもひとこと触れる。
