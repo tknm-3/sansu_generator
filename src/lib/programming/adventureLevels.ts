@@ -31,6 +31,8 @@ export interface AdventureZone {
   /** ── 盤面の みため（ゾーンの せかいかんに あわせる）── */
   /** かべの 絵文字（森なら 木、さばくなら サボテン…） */
   wall: string;
+  /** かべの よびな（分岐ヒントで つかう。くもの てんごくなら「くも」。なければ「かべ」） */
+  wallName?: string;
   /** ふつうの マスの 色（Tailwind） */
   tile: string;
   /** かべマスの 色（Tailwind） */
@@ -39,11 +41,30 @@ export interface AdventureZone {
   board: string;
 }
 
+/** 冒険モードの 分岐（もしも）問題 の 穴埋め設定 */
+export interface AdventureBranchFill {
+  loopTimes: number;
+  /** 正解の センサーむき */
+  sensor: Dir;
+  /** 正解の thenむき */
+  thenDir: Dir;
+  /** 正解の elseむき */
+  elseDir: Dir;
+  /** true = こどもが うめる あな（省略すると true あつかい） */
+  holeSensor?: boolean;
+  holeThen?: boolean;
+  holeElse?: boolean;
+}
+
 /** 問題集の 1問。Level に ゾーン所属と 検証用の解を そえたもの */
 export interface AdventureQuest extends Level {
   zoneId: string;
   /** 検証・ヒント用の 解の一例（なければ solve() で 検証する） */
   solution?: Dir[];
+  /** 分岐（もしも）問題の とき 'branch'。なければ 通常の 矢印ならべ */
+  kind?: 'branch';
+  /** kind==='branch' のときの 穴埋め設定 */
+  branchFill?: AdventureBranchFill;
 }
 
 export const ADVENTURE_ZONES: AdventureZone[] = [
@@ -97,10 +118,32 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'ついに さいごの まほうの しろ。\nいままで おぼえた ちからを ぜんぶ つかって、おおきな たからを てに いれよう！',
     wall: '🧱', tile: 'bg-slate-100', wallTile: 'bg-slate-400', board: 'bg-slate-300/70',
   },
+  {
+    id: 'donguri',
+    name: 'どんぐりの くに',
+    emoji: '🌰',
+    bg: 'from-orange-100 to-yellow-50',
+    accent: 'orange',
+    tagline: 'どんぐりを ひろって りすに わたそう',
+    story: 'もりの りすが どんぐりを なくして こまっている。\nどんぐりを ひろって、りすの ところまで とどけよう！',
+    wall: '🌲', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-200/70',
+  },
+  {
+    id: 'kumo',
+    name: 'くもの てんごく',
+    emoji: '☁️',
+    bg: 'from-sky-100 to-cyan-50',
+    accent: 'sky',
+    tagline: 'もしも くもが あったら…どっちに すすむ？',
+    story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも くもが あったら…」の ルールで かしこく すすもう！',
+    wall: '☁️', wallName: 'くも', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-200/70',
+  },
 ];
 
 const GEM = '🎁';
 const HOME = '🏠';
+const ACORN = '🌰';
+const SQUIRREL = '🐿️';
 
 /**
  * 問題集の 本体。配列の じゅんばん = 出題じゅんばん。
@@ -291,6 +334,105 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     zombies: [{ kind: 'fixed', pos: r(2, 2) }, { kind: 'fixed', pos: r(3, 3) }],
     optimal: 20, maxSlots: 30, allowLoop: true, goalEmoji: HOME,
     prompt: '👑さいごの ぼうけん！ たからばこ2つを ぜんぶ とって おうちへ',
+  },
+
+  // ─── どんぐりの くに（adv-q31〜adv-q36）───
+  // どんぐり(🌰)を ひろって りす(🐿️)に とどける。かべ(🌲)を よけながら みちを さがそう。
+  {
+    id: 'adv-q31', zoneId: 'donguri', rows: 4, cols: 4, start: r(2, 0), goal: r(0, 3),
+    walls: [r(1, 1)],
+    gems: [r(3, 3)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'どんぐりを ひろって りすに わたそう！',
+  },
+  {
+    id: 'adv-q32', zoneId: 'donguri', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 2),
+    walls: [r(1, 2), r(2, 0)],
+    gems: [r(0, 3)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'かべを よけながら どんぐりを とりに いこう',
+  },
+  {
+    id: 'adv-q33', zoneId: 'donguri', rows: 4, cols: 4, start: r(3, 3), goal: r(0, 1),
+    walls: [r(2, 2), r(1, 3)],
+    gems: [r(3, 0)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 7, maxSlots: 14,
+    prompt: 'はじから はじへ！ どんぐりを とってから りすのところへ',
+  },
+  {
+    id: 'adv-q34', zoneId: 'donguri', rows: 5, cols: 5, start: r(2, 0), goal: r(2, 4),
+    walls: [r(0, 2), r(1, 3), r(3, 1), r(4, 2)],
+    gems: [r(0, 4)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 8, maxSlots: 16,
+    prompt: 'うえの どんぐりを とって みぎの りすに とどけよう',
+  },
+  {
+    id: 'adv-q35', zoneId: 'donguri', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 3),
+    walls: [r(1, 1), r(2, 3), r(3, 0)],
+    gems: [r(4, 0), r(1, 4)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 15, maxSlots: 18, allowLoop: true,
+    prompt: 'どんぐりが2つ！ ぜんぶ ひろって りすに わたそう',
+  },
+  {
+    id: 'adv-q36', zoneId: 'donguri', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(1, 2), r(2, 4), r(3, 1), r(4, 3)],
+    gems: [r(5, 4), r(2, 1)], gemEmoji: ACORN, goalEmoji: SQUIRREL,
+    optimal: 16, maxSlots: 22, allowLoop: true,
+    prompt: '🌰🌰2つの どんぐりを あつめて りすに とどける ラストステージ！',
+  },
+
+  // ─── くもの てんごく（adv-q37〜adv-q42）───
+  // ☁️が かべ。「もしも ☁️が あったら…」の ルールを 穴埋めで えらんで ゴールへ。
+  // ステージごとに 正解の むきが かわる（おなじ こたえの 丸おぼえでは 解けない）。
+  // 穴の かず: 1 → 1 → 1 → 2 → 2 → 3（全穴・ボス）と だんだん ふえる。
+  // 盤面は すべて「正解 1とおりだけ クリア・最短一致」を adventure.test.ts で検証ずみ。
+  {
+    id: 'adv-q37', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 2)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 6, sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true },
+    optimal: 6, maxSlots: 6,
+    prompt: 'どっちを しらべる？「もし [？] が ☁️ なら ↓、ちがえば →」',
+  },
+  {
+    id: 'adv-q38', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(2, 0)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 6, sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true },
+    optimal: 6, maxSlots: 6,
+    prompt: '☁️に あたったら どっちへ？「もし ↓ が ☁️ なら [？]、ちがえば ↓」',
+  },
+  {
+    id: 'adv-q39', zoneId: 'kumo', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
+    walls: [r(0, 1)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 6, sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true },
+    optimal: 6, maxSlots: 6,
+    prompt: '☁️が ないとき どっちへ？「もし ← が ☁️ なら ↓、ちがえば [？]」',
+  },
+  {
+    id: 'adv-q40', zoneId: 'kumo', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(3, 0)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 8, sensor: 'up', thenDir: 'right', elseDir: 'up', holeSensor: true, holeThen: true },
+    optimal: 8, maxSlots: 8,
+    prompt: 'うえへ のぼろう！「もし [？] が ☁️ なら [？]、ちがえば ↑」',
+  },
+  {
+    id: 'adv-q41', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 2)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 8, sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true, holeElse: true },
+    optimal: 8, maxSlots: 8,
+    prompt: '☁️のとき と そうでないとき！「もし → が ☁️ なら [？]、ちがえば [？]」',
+  },
+  {
+    id: 'adv-q42', zoneId: 'kumo', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 1), r(2, 4)], goalEmoji: '⭐',
+    kind: 'branch',
+    branchFill: { loopTimes: 8, sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true },
+    optimal: 8, maxSlots: 8,
+    prompt: '☁️を ぜんぶ うめてゴール！「もし [？] が ☁️ なら [？]、ちがえば [？]」',
   },
 ];
 

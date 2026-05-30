@@ -4,11 +4,13 @@ import {
   solve,
   runProgram,
   isCleared,
+  isPerfect,
   samePos,
   type Command,
   type Dir,
   type Pos,
 } from './engine';
+import { runBranch, type BranchCommand } from './branch';
 
 function toCommands(dirs: Dir[]): Command[] {
   return dirs.map((dir) => ({ kind: 'move' as const, dir }));
@@ -83,18 +85,53 @@ describe('ぼうけん 問題集', () => {
     );
   });
 
-  it.each(all)('$id は 解けて optimal が 最短と 一致する', (q) => {
+  const arrowQuests = all.filter((q) => q.kind !== 'branch');
+  const branchQuests = all.filter((q) => q.kind === 'branch');
+
+  it.each(arrowQuests)('$id は 解けて optimal が 最短と 一致する', (q) => {
     const sol = q.solution ?? solve(q);
     expect(sol, `${q.id} に 解が ない`).not.toBeNull();
-    // ぴったり賞が とれるよう、optimal は 最短手数と そろっている
     if (!q.solution) {
       expect(sol!.length, `${q.id} の optimal が 最短と ずれている`).toBe(q.optimal);
     }
-    // 解の てかずは maxSlots に おさまる
     expect(sol!.length, `${q.id} の 解が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
-    // じっさいに クリアできる
     const result = runProgram(q, toCommands(sol!));
     expect(isCleared(result), `${q.id} の 解が ゴールに つかない`).toBe(true);
+  });
+
+  it.each(branchQuests)('$id（分岐）は 正解プログラムで クリアできて optimal が ステップ数と 一致する', (q) => {
+    const fill = q.branchFill!;
+    expect(fill, `${q.id} に branchFill が ない`).toBeDefined();
+    const rule: BranchCommand = {
+      kind: 'if',
+      cond: { kind: 'wall', dir: fill.sensor },
+      then: [{ kind: 'move', dir: fill.thenDir }],
+      else: [{ kind: 'move', dir: fill.elseDir }],
+    };
+    const program: BranchCommand[] = [{ kind: 'repeat', times: fill.loopTimes, body: [rule] }];
+    const result = runBranch(q, program);
+    expect(isCleared(result), `${q.id} の 正解プログラムが クリアに ならない`).toBe(true);
+    expect(isPerfect(q, result), `${q.id} の ステップ数が optimal(${q.optimal})と ずれている（実際: ${result.steps}）`).toBe(true);
+  });
+
+  // 穴埋めは「あてずっぽうでも解ける」と 学びが うすい。穴の むきの 全組み合わせを ためし、
+  // クリアできるのは 正解の 1とおり だけ（＝一意解）であることを 保証する。
+  const DIRS: Dir[] = ['up', 'right', 'down', 'left'];
+  it.each(branchQuests)('$id（分岐）は 穴の くみあわせで 正解 1とおり だけ クリアできる（一意解）', (q) => {
+    const fill = q.branchFill!;
+    const sensorOpts = fill.holeSensor ? DIRS : [fill.sensor];
+    const thenOpts = fill.holeThen ? DIRS : [fill.thenDir];
+    const elseOpts = fill.holeElse ? DIRS : [fill.elseDir];
+    const solutions: string[] = [];
+    for (const s of sensorOpts) for (const t of thenOpts) for (const e of elseOpts) {
+      const program: BranchCommand[] = [{ kind: 'repeat', times: fill.loopTimes, body: [
+        { kind: 'if', cond: { kind: 'wall', dir: s }, then: [{ kind: 'move', dir: t }], else: [{ kind: 'move', dir: e }] },
+      ]}];
+      if (isCleared(runBranch(q, program))) solutions.push(`${s}/${t}/${e}`);
+    }
+    expect(solutions, `${q.id} は 正解いがいでも クリアできる: ${solutions.join(', ')}`).toEqual([
+      `${fill.sensor}/${fill.thenDir}/${fill.elseDir}`,
+    ]);
   });
 
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
