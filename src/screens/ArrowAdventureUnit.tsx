@@ -24,11 +24,13 @@ import {
 import {
   ADVENTURE_QUEST,
   ADVENTURE_ZONES,
+  buildBranchProgram,
   getZone,
   type AdventureQuest,
   type AdventureZone,
 } from '../lib/programming/adventureLevels';
 import { runBranch, buildBranchHint, type BranchCommand } from '../lib/programming/branch';
+import { runRelative, solveRelative, REL_ICON, REL_LABEL, type RelDir } from '../lib/programming/relativeEngine';
 import {
   addQuestClear,
   currentZoneId,
@@ -192,6 +194,8 @@ const REGION_TINT: Record<string, string> = {
   castle: 'rgba(96,116,150,.32)',
   donguri: 'rgba(200,130,60,.32)',
   kumo:    'rgba(80,160,200,.28)',
+  moon:    'rgba(70,80,150,.34)',
+  snow:    'rgba(150,190,220,.30)',
 };
 
 interface TownStop {
@@ -630,6 +634,9 @@ function AdventurePlay({
   if (quest.kind === 'branch') {
     return <BranchAdventurePlay quest={quest} index={index} charEmoji={charEmoji} onCleared={onCleared} onBack={onBack} />;
   }
+  if (quest.kind === 'relative') {
+    return <RelativeAdventurePlay quest={quest} index={index} charEmoji={charEmoji} onCleared={onCleared} onBack={onBack} />;
+  }
 
   const zone = getZone(quest.zoneId);
   const accent = ACCENT[zone.accent] ?? ACCENT.indigo;
@@ -884,7 +891,7 @@ function AdventurePlay({
   );
 }
 
-/** 冒険モードの 分岐（もしも）問題 プレイ画面 */
+/** 冒険モードの 分岐（もしも）問題 プレイ画面。1つ以上の フェーズ（ルール）を 穴埋めする */
 function BranchAdventurePlay({
   quest,
   index,
@@ -904,26 +911,34 @@ function BranchAdventurePlay({
   const wallName = zone.wallName ?? 'かべ';
   const fill = quest.branchFill!;
 
-  const [fillSensor, setFillSensor] = useState<Dir | null>(fill.holeSensor ? null : fill.sensor);
-  const [fillThen, setFillThen] = useState<Dir | null>(fill.holeThen ? null : fill.thenDir);
-  const [fillElse, setFillElse] = useState<Dir | null>(fill.holeElse ? null : fill.elseDir);
+  type PhaseVals = { sensor: Dir | null; then: Dir | null; else: Dir | null };
+  const [vals, setVals] = useState<PhaseVals[]>(() =>
+    fill.phases.map((ph) => ({
+      sensor: ph.rule.holeSensor ? null : ph.rule.sensor,
+      then: ph.rule.holeThen ? null : ph.rule.thenDir,
+      else: ph.rule.holeElse ? null : ph.rule.elseDir,
+    })),
+  );
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
-  const allFilled = fillSensor !== null && fillThen !== null && fillElse !== null;
+  const allFilled = vals.every((v) => v.sensor !== null && v.then !== null && v.else !== null);
 
   const program = useMemo<BranchCommand[]>(() => {
     if (!allFilled) return [];
-    const rule: BranchCommand = {
-      kind: 'if',
-      cond: { kind: 'wall', dir: fillSensor! },
-      then: [{ kind: 'move', dir: fillThen! }],
-      else: [{ kind: 'move', dir: fillElse! }],
-    };
-    return [{ kind: 'repeat', times: fill.loopTimes, body: [rule] }];
-  }, [allFilled, fillSensor, fillThen, fillElse, fill.loopTimes]);
+    return buildBranchProgram(fill, (i) => ({
+      sensor: vals[i].sensor!,
+      thenDir: vals[i].then!,
+      elseDir: vals[i].else!,
+    }));
+  }, [allFilled, vals, fill]);
+
+  function setField(pi: number, field: keyof PhaseVals, d: Dir) {
+    setVals((vs) => vs.map((v, i) => (i === pi ? { ...v, [field]: d } : v)));
+    setHint(null);
+  }
 
   function handleFinish(result: RunResult) {
     if (isCleared(result)) {
@@ -969,7 +984,12 @@ function BranchAdventurePlay({
   }
 
   function showMoreHint() {
-    const msg = `「もし ${DIR_ARROW[fill.sensor]}に すすめない なら ${DIR_ARROW[fill.thenDir]}、ちがえば ${DIR_ARROW[fill.elseDir]}」に なるように うめてみよう！`;
+    const parts = fill.phases.map((ph) =>
+      `「${DIR_ARROW[ph.rule.sensor]}に すすめなかったら ${DIR_ARROW[ph.rule.thenDir]}、すすめたら ${DIR_ARROW[ph.rule.elseDir]}」`,
+    );
+    const msg = parts.length > 1
+      ? `${parts.join(' → つぎに ')} の じゅんに なるように うめてみよう！`
+      : `${parts[0]} に なるように うめてみよう！`;
     setHint(msg);
     speakJa(msg);
   }
@@ -1019,41 +1039,50 @@ function BranchAdventurePlay({
         />
       </div>
 
-      {/* もしも ルール 穴埋めUI */}
+      {/* もしも ルール 穴埋めUI。フェーズが 2つなら ルールを 2つ ならべる */}
       <div
-        className="relative z-10 w-full max-w-sm rounded-2xl border-2 border-dashed p-3"
+        className="relative z-10 flex w-full max-w-sm flex-col gap-2 rounded-2xl border-2 border-dashed p-3"
         style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.7)' }}
       >
-        <p className="mb-2 text-center text-xs font-bold" style={{ color: SEPIA }}>
-          🔁 {fill.loopTimes}かい くりかえす：あなを タップして うめよう
+        <p className="text-center text-xs font-bold" style={{ color: SEPIA }}>
+          {fill.phases.length > 1 ? '🔁 2つの ルールを じゅんばんに：' : '🔁'} あなを タップして うめよう
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-sm font-bold" style={{ color: SEPIA }}>
-          <span>もし</span>
-          <BranchBlankPicker
-            value={fillSensor}
-            isHole={!!fill.holeSensor}
-            onChange={(d) => { setFillSensor(d); setHint(null); }}
-            disabled={!canEdit}
-            chipClass={accent.chip}
-          />
-          <span>に すすめない なら</span>
-          <BranchBlankPicker
-            value={fillThen}
-            isHole={!!fill.holeThen}
-            onChange={(d) => { setFillThen(d); setHint(null); }}
-            disabled={!canEdit}
-            chipClass={accent.chip}
-          />
-          <span>ちがえば</span>
-          <BranchBlankPicker
-            value={fillElse}
-            isHole={!!fill.holeElse}
-            onChange={(d) => { setFillElse(d); setHint(null); }}
-            disabled={!canEdit}
-            chipClass={accent.chip}
-          />
-        </div>
-        <p className="mt-2 text-center text-[11px]" style={{ color: 'rgba(123,90,58,.6)' }}>
+        {fill.phases.map((ph, pi) => (
+          <div key={pi} className="rounded-xl bg-white/50 px-2 py-2">
+            {fill.phases.length > 1 && (
+              <p className="mb-1 text-center text-[11px] font-bold" style={{ color: '#9a7c54' }}>
+                {pi + 1}つめの ルール（🔁{ph.loopTimes}かい）
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-sm font-bold" style={{ color: SEPIA }}>
+              <span>もし</span>
+              <BranchBlankPicker
+                value={vals[pi].sensor}
+                isHole={!!ph.rule.holeSensor}
+                onChange={(d) => setField(pi, 'sensor', d)}
+                disabled={!canEdit}
+                chipClass={accent.chip}
+              />
+              <span>に すすめなかったら</span>
+              <BranchBlankPicker
+                value={vals[pi].then}
+                isHole={!!ph.rule.holeThen}
+                onChange={(d) => setField(pi, 'then', d)}
+                disabled={!canEdit}
+                chipClass={accent.chip}
+              />
+              <span>、すすめたら</span>
+              <BranchBlankPicker
+                value={vals[pi].else}
+                isHole={!!ph.rule.holeElse}
+                onChange={(d) => setField(pi, 'else', d)}
+                disabled={!canEdit}
+                chipClass={accent.chip}
+              />
+            </div>
+          </div>
+        ))}
+        <p className="text-center text-[11px]" style={{ color: 'rgba(123,90,58,.6)' }}>
           ？を タップすると むきが かわるよ（↑→↓←）
         </p>
       </div>
@@ -1103,6 +1132,267 @@ function BranchAdventurePlay({
       </AnimatePresence>
     </div>
   );
+}
+
+/** 冒険モードの そうたい方向（ゆきのゾーン）問題 プレイ画面 */
+function RelativeAdventurePlay({
+  quest,
+  index,
+  charEmoji,
+  onCleared,
+  onBack,
+}: {
+  quest: AdventureQuest;
+  index: number;
+  charEmoji: string;
+  onCleared: () => void;
+  onBack: () => void;
+}) {
+  const zone = getZone(quest.zoneId);
+  const accent = ACCENT[zone.accent] ?? ACCENT.sky;
+  const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
+
+  const [cmds, setCmds] = useState<RelDir[]>([]);
+  const [attempts, setAttempts] = useState(0);
+  const [hint, setHint] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
+
+  const maxSlots = quest.maxSlots ?? 12;
+  const runner = useProgramRunner<RelDir>(quest, handleFinish, runRelative);
+  const canEdit = !runner.playing && !locked;
+  const canAdd = cmds.length < maxSlots && canEdit;
+
+  function handleFinish(result: RunResult) {
+    if (isCleared(result)) {
+      setLocked(true);
+      playSfx('correct');
+      confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
+      const perfect = isPerfect(quest, result);
+      const earned = addQuestClear(quest.id, perfect);
+      speakJa(buildPraise(perfect));
+      setHint(null);
+      playSfx('fanfare');
+      window.setTimeout(() => setOverlay({ perfect, earned }), 600);
+    } else {
+      const nextAttempt = attempts + 1;
+      setAttempts(nextAttempt);
+      const h = buildRelativeHint(quest, result, nextAttempt);
+      setHint(h);
+      speakJa(h);
+    }
+  }
+
+  function addCmd(c: RelDir) {
+    if (!canAdd) return;
+    playSfx('tap');
+    setCmds((cs) => [...cs, c]);
+    setHint(null);
+  }
+  function removeAt(i: number) {
+    if (!canEdit) return;
+    playSfx('tap');
+    setCmds((cs) => cs.filter((_, j) => j !== i));
+  }
+  function handleStart() {
+    if (!canEdit || cmds.length === 0) return;
+    playSfx('tap');
+    setHint(null);
+    runner.play(cmds);
+  }
+  function handleStep() {
+    if (!canEdit || cmds.length === 0) return;
+    playSfx('tap');
+    runner.step(cmds);
+  }
+  function handleReset() {
+    if (locked) return;
+    playSfx('tap');
+    runner.reset();
+    setHint(null);
+  }
+  function handleClearAll() {
+    if (!canEdit) return;
+    playSfx('tap');
+    setCmds([]);
+    runner.reset();
+    setHint(null);
+  }
+  function showMoreHint() {
+    const sol = quest.relSolution ?? solveRelative(quest);
+    if (sol && sol.length > 0) {
+      const msg = `さいしょは 「${REL_LABEL[sol[0]]}」から はじめると いいかも！`;
+      setHint(msg);
+      speakJa(msg);
+    }
+  }
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center gap-4 p-5" style={{ background: PARCHMENT }}>
+      <ParchmentTexture />
+
+      <div className="relative z-10 flex w-full max-w-sm items-center justify-between pr-12">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-xl border-[1.5px] px-3 py-2 text-sm font-bold"
+          style={{ background: 'rgba(255,255,255,.5)', borderColor: 'rgba(123,90,58,.35)', color: '#6b4f30' }}
+        >
+          ← ちずへ
+        </button>
+        <span className="text-sm font-bold" style={{ color: SEPIA }}>もんだい {index + 1} / {ADVENTURE_QUEST.length}</span>
+        <span className={`rounded-full ${accent.chip} px-2.5 py-1 text-xs font-bold text-white shadow-sm`}>
+          {zone.emoji} {zone.name}
+        </span>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+        <Ribbon width={270}>
+          <span className="text-base">{charEmoji} を {quest.goalEmoji ?? '🏔️'} まで はこぼう！</span>
+        </Ribbon>
+        {quest.prompt && (
+          <p className="mt-2 text-center text-sm font-bold" style={{ color: SEPIA }}>📜 {quest.prompt}</p>
+        )}
+        <p className="mt-1 text-center text-[11px] font-bold" style={{ color: '#9a7c54' }}>
+          💡 「みぎ」「ひだり」は キャラの めの まえ から みた むき！
+        </p>
+      </div>
+
+      <div
+        className="relative z-10 rounded-2xl border-2 p-2 shadow-md"
+        style={{ borderColor: 'rgba(123,90,58,.45)', background: 'rgba(255,250,235,.5)' }}
+      >
+        <span className="absolute left-1.5 top-1.5 text-xs">📍</span>
+        <span className="absolute right-1.5 top-1.5 text-xs">📌</span>
+        <ProgrammingGrid
+          level={quest}
+          charEmoji={charEmoji}
+          charPos={runner.charPos}
+          charFacing={runner.charFacing}
+          trail={runner.trail}
+          collected={runner.collected}
+          blockedCell={runner.blockedCell}
+          theme={theme}
+        />
+      </div>
+
+      {/* くみたてた めいれい */}
+      <div
+        className="relative z-10 flex min-h-[52px] w-full max-w-sm flex-wrap items-center gap-1 rounded-2xl border-2 border-dashed p-2"
+        style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
+      >
+        {cmds.length === 0 ? (
+          <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいが ならぶよ</span>
+        ) : (
+          cmds.map((c, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => removeAt(i)}
+              className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}
+            >
+              {REL_ICON[c]}
+            </button>
+          ))
+        )}
+      </div>
+      <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>めいれいを タップすると けせるよ（のこり {maxSlots - cmds.length}）</p>
+
+      {/* そうたい方向 どうぐばこ */}
+      <div
+        className="relative z-10 flex items-center justify-center gap-2 rounded-2xl border-2 p-3"
+        style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
+      >
+        {(['turn_left', 'forward', 'turn_right'] as RelDir[]).map((c) => (
+          <motion.button
+            key={c}
+            type="button"
+            onClick={() => addCmd(c)}
+            whileTap={{ scale: 0.9 }}
+            disabled={!canAdd}
+            className={`flex h-16 w-20 flex-col items-center justify-center rounded-2xl ${accent.chip} font-bold text-white shadow-md disabled:opacity-40`}
+          >
+            <span className="text-2xl">{REL_ICON[c]}</span>
+            <span className="text-[10px]">{REL_LABEL[c]}</span>
+          </motion.button>
+        ))}
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-sm gap-2">
+        <button
+          type="button"
+          onClick={handleStart}
+          disabled={!canEdit || cmds.length === 0}
+          className="flex-1 rounded-2xl bg-green-500 py-3 text-lg font-bold text-white shadow-[0_4px_0_#15803d] active:translate-y-1 disabled:opacity-40"
+        >
+          ▶ スタート
+        </button>
+        <button
+          type="button"
+          onClick={handleStep}
+          disabled={!canEdit || cmds.length === 0}
+          className="rounded-2xl bg-sky-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#0369a1] active:translate-y-1 disabled:opacity-40"
+        >
+          👣 1コマ
+        </button>
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={locked}
+          className="rounded-2xl bg-amber-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1 disabled:opacity-40"
+        >
+          ↺
+        </button>
+        <button
+          type="button"
+          onClick={handleClearAll}
+          disabled={!canEdit || cmds.length === 0}
+          className="rounded-2xl bg-rose-300 px-3 py-3 text-base font-bold text-white shadow-[0_4px_0_#9f1239] active:translate-y-1 disabled:opacity-40"
+          title="めいれいを ぜんぶ けす"
+        >
+          🗑️
+        </button>
+      </div>
+
+      {hint && (
+        <div className="relative z-10 w-full max-w-sm">
+          <HintBanner
+            charEmoji={charEmoji}
+            message={hint}
+            onMoreHint={showMoreHint}
+            moreHintLabel="さいしょの 1つ"
+          />
+        </div>
+      )}
+
+      <AnimatePresence>
+        {overlay && (
+          <ClearOverlay quest={quest} perfect={overlay.perfect} earned={overlay.earned} onContinue={onCleared} />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/** そうたい方向単元の 前向きヒント */
+function buildRelativeHint(quest: AdventureQuest, result: RunResult, attempt: number): string {
+  if (result.blockedStep >= 0) {
+    if (attempt <= 1) {
+      return `かべに あたって とまっちゃった！\nキャラは いま どっちを むいているかな？`;
+    }
+    return `すすむ さきに かべが あるよ。\n「みぎをむく」「ひだりをむく」で むきを かえてから すすんでみよう。`;
+  }
+  if (result.missedGems > 0) {
+    return `☃️を あと ${result.missedGems}こ とおりたいね。\n☃️を とおる みちを かんがえてみよう。`;
+  }
+  const dist = Math.abs(result.finalPos.r - quest.goal.r) + Math.abs(result.finalPos.c - quest.goal.c);
+  if (dist > 0) {
+    if (attempt <= 1) {
+      return `ゴールまで あと ${dist}マス！\nキャラの むきを よく みて、まえへ すすもう。`;
+    }
+    return `ゴールは いまの ばしょから どっちかな？\nさきに むきを かえてから まえへ すすむと いいよ。`;
+  }
+  return 'おしい！ もういちど みちを みなおしてみよう。';
 }
 
 /**

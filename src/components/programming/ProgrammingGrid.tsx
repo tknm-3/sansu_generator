@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { samePos, type Level, type Pos } from '../../lib/programming/engine';
+import { samePos, DIR_ARROW, type Dir, type Level, type Pos } from '../../lib/programming/engine';
 
 /** ゾーンの せかいかんに あわせた 盤面の みため */
 export interface GridTheme {
@@ -31,7 +31,17 @@ interface Props {
   zombiePositions?: Pos[];
   /** ゾーンごとの みため（なければ デフォルト） */
   theme?: GridTheme;
+  /** そうたい方向単元：キャラが むいている むき（しめすと 矢印バッジを だす） */
+  charFacing?: Dir;
 }
+
+/** むきバッジの ずらし量（セルの なかで キャラの むく ほうへ よせる） */
+const FACING_OFFSET: Record<Dir, { x: number; y: number }> = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
 
 function keyOf(p: Pos): string {
   return `${p.r},${p.c}`;
@@ -47,6 +57,7 @@ export function ProgrammingGrid({
   onCellClick,
   zombiePositions = [],
   theme,
+  charFacing,
 }: Props) {
   // モバイル幅に おさまるように セルサイズを きめる
   const cell = Math.min(Math.floor(300 / level.cols), Math.floor(300 / level.rows), 84);
@@ -139,6 +150,23 @@ export function ProgrammingGrid({
         >
           {charEmoji}
         </motion.span>
+        {/* むきバッジ：キャラが いま むいている ほうを しめす */}
+        {charFacing && (
+          <motion.span
+            className="pointer-events-none absolute flex items-center justify-center rounded-full bg-sky-500 font-bold text-white shadow"
+            style={{ width: cell * 0.36, height: cell * 0.36, fontSize: cell * 0.26, lineHeight: 1 }}
+            initial={false}
+            animate={{
+              left: `calc(50% + ${FACING_OFFSET[charFacing].x * cell * 0.34}px)`,
+              top: `calc(50% + ${FACING_OFFSET[charFacing].y * cell * 0.34}px)`,
+              x: '-50%',
+              y: '-50%',
+            }}
+            transition={{ type: 'tween', duration: 0.2 }}
+          >
+            {DIR_ARROW[charFacing]}
+          </motion.span>
+        )}
       </motion.div>
     </div>
   );

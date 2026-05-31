@@ -5,10 +5,22 @@
 > 体験設計（世界観・なぜ）は `design/adventure-philosophy.md`、文言ルールは親 SKILL.md を見る。
 
 ## 1. 全体像（3層）
-- **データ**: `src/lib/programming/adventureLevels.ts` … 5ゾーン＋30クエスト＋物語
+- **データ**: `src/lib/programming/adventureLevels.ts` … 9ゾーン＋54クエスト＋物語
 - **ロジック/永続化**: `src/lib/programming/progress.ts`（進捗・ぴったり賞・きらきら）/
-  `src/lib/programming/engine.ts`（実行・`solve()` BFS・`buildHint`/`buildPraise`）
+  `src/lib/programming/engine.ts`（矢印実行・`solve()` BFS・`buildHint`/`buildPraise`）/
+  `src/lib/programming/branch.ts`（もしも分岐＝`runBranch`）/
+  `src/lib/programming/relativeEngine.ts`（そうたい方向＝`runRelative`/`solveRelative`）
 - **UI**: `src/screens/ArrowAdventureUnit.tsx`（1ファイルにマップ＆プレイ画面が同居）
+
+### 問題の しゅるい（`AdventureQuest.kind`）
+- `undefined`（矢印ならべ）… `solve()` で検証。森・谷・さばく・ゾンビ・しろ・どんぐり。
+- `'branch'`（もしも穴埋め）… `branchFill.phases[]`（くりかえし×ルール1つ）。**1フェーズ=くも、
+  2フェーズ=つき（もしを2つ）**。文言は「<むき>に すすめなかったら <then>、すすめたら <else>」
+  （= sensor方向にかべ/そとがあれば then、なければ else）。`buildBranchProgram(fill, override?)`
+  でプログラム生成（UI・テスト共用）。穴埋めは**一意解をtestで保証**。
+- `'relative'`（そうたい方向）… ゆきゾーン。キャラのむき基準で `forward/turn_right/turn_left`。
+  `Level.startFacing` で初期むき指定。`relSolution` で検証、`solveRelative()` が最短手数。
+  UI は むきバッジ（`ProgrammingGrid` の `charFacing`）でキャラのむきを表示。
 
 難易度の段階分け（easy/normal/…）は**冒険モードには無い**。30問を順番に進む設計。
 （難易度アンロックは矢印ならべ等の他単元の話で、同じ progress.ts 内の別セクション）
