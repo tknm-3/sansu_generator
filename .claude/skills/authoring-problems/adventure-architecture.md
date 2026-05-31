@@ -5,7 +5,8 @@
 > 体験設計（世界観・なぜ）は `design/adventure-philosophy.md`、文言ルールは親 SKILL.md を見る。
 
 ## 1. 全体像（3層）
-- **データ**: `src/lib/programming/adventureLevels.ts` … 9ゾーン＋54クエスト＋物語
+- **データ**: `src/lib/programming/adventureLevels.ts` … 13ゾーン＋78クエスト＋物語
+  （ゾーン1つ＝6問。マップの宿場 `STOPS` が6つなので **1ゾーンは最大6問**）
 - **ロジック/永続化**: `src/lib/programming/progress.ts`（進捗・ぴったり賞・きらきら）/
   `src/lib/programming/engine.ts`（矢印実行・`solve()` BFS・`buildHint`/`buildPraise`）/
   `src/lib/programming/branch.ts`（もしも分岐＝`runBranch`）/

@@ -1,6 +1,6 @@
 /**
  * 「ぼうけんしよう」特別モードの 問題集データ。
- * 1問目から じゅんばんに むずかしくなる 約30問を、テーマごとの ゾーンに わけている。
+ * 1問目から じゅんばんに むずかしくなる 問題を、テーマごとの ゾーン（1ゾーン=6問）に わけている。
  *
  * 設計ルール（adventure.test.ts で 自動検証）:
  *  - すべての問題で maxSlots >= optimal（やじるしの かずが たりない事故を ふせぐ）
@@ -188,6 +188,46 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'まっしろな ゆきの くに。\nキャラクターが むいている ほうを きじゅんに、まえへ すすんだり むきを かえたりして てっぺんを めざそう！',
     wall: '❄️', wallName: 'ゆき', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-100/80',
   },
+  {
+    id: 'tower',
+    name: 'うずまきの とう',
+    emoji: '🌀',
+    bg: 'from-indigo-100 to-purple-50',
+    accent: 'indigo',
+    tagline: 'おなじ のぼりを くりかえして てっぺんへ！',
+    story: 'ぐるぐる まわる ふしぎな とう。\nおなじ うごきを 🔁ループ箱で まとめると、ながい みちも すくない ブロックで のぼれるよ。',
+    wall: '🧱', tile: 'bg-indigo-50', wallTile: 'bg-indigo-200', board: 'bg-indigo-200/70',
+  },
+  {
+    id: 'crystal',
+    name: 'すいしょうの どうくつ',
+    emoji: '💎',
+    bg: 'from-purple-100 to-fuchsia-50',
+    accent: 'violet',
+    tagline: 'まがる 坑道を ループと やじるしで すすもう',
+    story: 'きらきら ひかる すいしょうの どうくつ。\nまっすぐは 🔁ループ箱で まとめ、まがりかどは やじるしで。すいしょう💎を ひろって でぐちへ！',
+    wall: '🪨', tile: 'bg-purple-50', wallTile: 'bg-purple-300', board: 'bg-purple-200/70',
+  },
+  {
+    id: 'fog',
+    name: 'きりの まよいもり',
+    emoji: '🌫️',
+    bg: 'from-emerald-100 to-slate-100',
+    accent: 'emerald',
+    tagline: 'さきが みえない… もしの ルールで かしこく',
+    story: 'きりで さきが みえない まよいの もり。\n「もしも すすめない なら…」の ルールを 1つ きめれば、どんな みちでも すすめるよ。きのこ🍄を あつめよう！',
+    wall: '🌫️', wallName: 'きり', tile: 'bg-emerald-50', wallTile: 'bg-slate-300', board: 'bg-emerald-200/60',
+  },
+  {
+    id: 'sea',
+    name: 'かいていの しんでん',
+    emoji: '🔱',
+    bg: 'from-cyan-100 to-teal-50',
+    accent: 'sky',
+    tagline: 'むきを かえながら しんでんを すすもう',
+    story: 'うみの そこに ねむる ふるい しんでん。\nキャラの むき を きじゅんに「まえ・みぎむき・ひだりむき」で つうろを すすみ、たからを てに いれよう！',
+    wall: '🪸', wallName: 'さんご', tile: 'bg-cyan-50', wallTile: 'bg-teal-200', board: 'bg-cyan-200/70',
+  },
 ];
 
 const GEM = '🎁';
@@ -198,6 +238,12 @@ const FUEL = '🛸';
 const MOON = '🌙';
 const MOUNTAIN = '🏔️';
 const SNOWMAN = '☃️';
+const CROWN = '👑';
+const CRYSTAL = '💎';
+const MUSHROOM = '🍄';
+const COTTAGE = '🏡';
+const SHELL = '🐚';
+const TRIDENT = '🔱';
 
 /**
  * 問題集の 本体。配列の じゅんばん = 出題じゅんばん。
@@ -601,6 +647,191 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     relSolution: ['forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward'],
     optimal: 9, maxSlots: 12,
     prompt: '❄️ボス！☃️ゆきだるまを とって てっぺんの ゴールへ',
+  },
+
+  // ─── 🌀 うずまきの とう（adv-q55〜adv-q60）───
+  // loopOnly。ながい みちを すくない ループ箱（おなじ むき×2〜5）で のぼる。
+  // 「少ないブロックで 長い道」を 体験させる ねらい。optimal は solve() の 実測値。
+  {
+    id: 'adv-q55', zoneId: 'tower', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: 'うえ4かい、みぎ4かい。🔁ループ2こで のぼろう',
+  },
+  {
+    id: 'adv-q56', zoneId: 'tower', rows: 5, cols: 5, start: r(4, 4), goal: r(0, 0),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: 'うえ と ひだりを 🔁ループで まとめよう',
+  },
+  {
+    id: 'adv-q57', zoneId: 'tower', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [], optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: 'たかい とう！うえ5かい、みぎ5かい（🔁だけ）',
+  },
+  {
+    id: 'adv-q58', zoneId: 'tower', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [], gems: [r(5, 5)], gemEmoji: GEM, optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: 'みぎの たからばこ🎁を とってから のぼろう（🔁だけ）',
+  },
+  {
+    id: 'adv-q59', zoneId: 'tower', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 0),
+    walls: [], gems: [r(5, 5)], gemEmoji: GEM, optimal: 15, maxSlots: 18, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: 'みぎ→うえ→ひだり。3つの ループで ぐるっと のぼろう',
+  },
+  {
+    id: 'adv-q60', zoneId: 'tower', rows: 6, cols: 6, start: r(5, 0), goal: r(5, 5),
+    walls: [], gems: [r(0, 0), r(0, 5)], gemEmoji: GEM, optimal: 15, maxSlots: 20, allowLoop: true, loopOnly: true, goalEmoji: CROWN,
+    prompt: '🌀とうの ボス！たからばこ2つを とって ぐるっと いっしゅう（🔁だけ）',
+  },
+
+  // ─── 💎 すいしょうの どうくつ（adv-q61〜adv-q66）───
+  // allowLoop（ループ箱＋ふつうの矢印）。まがる 坑道を かべ(🪨)を よけて すすみ、
+  // すいしょう💎を ひろって でぐちへ。optimal は solve() の 実測値。
+  {
+    id: 'adv-q61', zoneId: 'crystal', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 1), r(2, 2), r(3, 3)], gems: [r(0, 4)], gemEmoji: CRYSTAL,
+    optimal: 8, maxSlots: 16, allowLoop: true, goalEmoji: HOME,
+    prompt: 'すいしょう💎を とってから でぐちへ',
+  },
+  {
+    id: 'adv-q62', zoneId: 'crystal', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(2, 1), r(2, 3)], gems: [r(2, 2)], gemEmoji: CRYSTAL,
+    optimal: 8, maxSlots: 14, allowLoop: true, goalEmoji: HOME,
+    prompt: 'まんなかの すいしょう💎を とおって',
+  },
+  {
+    id: 'adv-q63', zoneId: 'crystal', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 2), r(1, 2), r(2, 2)], gems: [r(4, 0)], gemEmoji: CRYSTAL,
+    optimal: 8, maxSlots: 16, allowLoop: true, goalEmoji: HOME,
+    prompt: 'かべを まわって したの すいしょう💎へ',
+  },
+  {
+    id: 'adv-q64', zoneId: 'crystal', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(2, 2), r(2, 3), r(3, 2), r(3, 3)], gems: [r(0, 5)], gemEmoji: CRYSTAL,
+    optimal: 10, maxSlots: 18, allowLoop: true, goalEmoji: HOME,
+    prompt: 'まんなかの おおきな いわを よけて すすもう',
+  },
+  {
+    id: 'adv-q65', zoneId: 'crystal', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(2, 0), r(2, 1), r(2, 2), r(2, 3)], gems: [r(5, 5)], gemEmoji: CRYSTAL,
+    optimal: 10, maxSlots: 18, allowLoop: true, goalEmoji: HOME,
+    prompt: 'よこの いわを まわりこんで すいしょう💎へ',
+  },
+  {
+    id: 'adv-q66', zoneId: 'crystal', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(1, 1), r(1, 2), r(3, 3), r(3, 4)], gems: [r(0, 5), r(5, 0)], gemEmoji: CRYSTAL,
+    optimal: 20, maxSlots: 26, allowLoop: true, goalEmoji: HOME,
+    prompt: '💎どうくつの ボス！すいしょう2つを とって でぐちへ',
+  },
+
+  // ─── 🌫️ きりの まよいもり（adv-q67〜adv-q72）───
+  // もしも穴埋め（くりかえし×ルール）。きりで さきが みえない＝1つの ルールで どんな
+  // かべでも すすめる「もし」の うれしさ。盤面は くも／つきゾーンの 検証ずみ配置を ベースに、
+  // きのこ🍄あつめ を くわえた もの。穴の 一意解は adventure.test.ts が 自動検証する。
+  {
+    id: 'adv-q67', zoneId: 'fog', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 2)], goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'どっちに すすめないか しらべよう「[？] に すすめなかったら ↓、すすめたら →」',
+  },
+  {
+    id: 'adv-q68', zoneId: 'fog', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(2, 0)], goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめなかったら どっちへ？「↓ に すすめなかったら [？]、すすめたら ↓」',
+  },
+  {
+    id: 'adv-q69', zoneId: 'fog', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 2), r(1, 2)], gems: [r(2, 3)], gemEmoji: MUSHROOM, goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true, holeThen: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: '🍄きのこを とって おうちへ「[？] に すすめなかったら [？]、すすめたら →」',
+  },
+  {
+    id: 'adv-q70', zoneId: 'fog', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
+    walls: [r(0, 1)], goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめるとき どっちへ？「← に すすめなかったら ↓、すすめたら [？]」',
+  },
+  {
+    id: 'adv-q71', zoneId: 'fog', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 0), r(1, 1), r(3, 3), r(4, 3)], gems: [r(0, 2)], gemEmoji: MUSHROOM, goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [
+      { loopTimes: 4, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true } },
+      { loopTimes: 4, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true } },
+    ] },
+    optimal: 8, maxSlots: 8,
+    prompt: '🍄を とりながら もしを 2つ！2つの あなを うめよう',
+  },
+  {
+    id: 'adv-q72', zoneId: 'fog', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(1, 0), r(1, 1), r(1, 2), r(0, 4), r(4, 4), r(5, 4)], gems: [r(0, 3)], gemEmoji: MUSHROOM, goalEmoji: COTTAGE,
+    kind: 'branch',
+    branchFill: { phases: [
+      { loopTimes: 5, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true } },
+      { loopTimes: 5, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true } },
+    ] },
+    optimal: 10, maxSlots: 10,
+    prompt: '🌫️もりの ボス！もしを 2つ くみあわせて きのこを とろう',
+  },
+
+  // ─── 🔱 かいていの しんでん（adv-q73〜adv-q78）───
+  // そうたい方向（キャラの むき が きじゅん）＋ かべ(🪸)＋ たからあつめ。ゆきゾーンの 一歩先。
+  // relSolution は solveRelative() の 最短解、optimal は その手数（adventure.test.ts で検証）。
+  {
+    id: 'adv-q73', zoneId: 'sea', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward'],
+    optimal: 3, maxSlots: 6,
+    prompt: 'まえへ すすんで しんでんを のぼろう',
+  },
+  {
+    id: 'adv-q74', zoneId: 'sea', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward'],
+    optimal: 7, maxSlots: 9,
+    prompt: 'うえまで いったら みぎを むいて すすもう',
+  },
+  {
+    id: 'adv-q75', zoneId: 'sea', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [r(2, 2)], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward'],
+    optimal: 9, maxSlots: 12,
+    prompt: 'さんご🪸を よけて てっぺんへ',
+  },
+  {
+    id: 'adv-q76', zoneId: 'sea', rows: 5, cols: 5, start: r(4, 1), goal: r(0, 3), startFacing: 'up',
+    walls: [r(2, 2)], gems: [r(2, 1)], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward'],
+    optimal: 7, maxSlots: 12,
+    prompt: '🐚かいがらを とってから しんでんへ',
+  },
+  {
+    id: 'adv-q77', zoneId: 'sea', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'right',
+    walls: [r(1, 2), r(2, 2)], gems: [r(4, 4)], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward', 'forward'],
+    optimal: 9, maxSlots: 14,
+    prompt: '🐚を とって さんごを まわりこもう',
+  },
+  {
+    id: 'adv-q78', zoneId: 'sea', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [r(3, 3)], gems: [r(0, 0), r(0, 3)], goalEmoji: TRIDENT, gemEmoji: SHELL,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'forward'],
+    optimal: 11, maxSlots: 20,
+    prompt: '🔱しんでんの ボス！かいがら2つを とって たからへ',
   },
 ];
 

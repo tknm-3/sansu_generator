@@ -167,7 +167,7 @@ function AdventureSlot({ onAdventure }: { onAdventure: () => void }) {
         <span className="text-5xl">🗺️</span>
         <div className="flex-1">
           <div className="text-xl font-bold">ぼうけんしよう <span className="text-sm">（とくべつ）</span></div>
-          <div className="text-sm opacity-90">30もんの ぼうけんに ちょうせん！</div>
+          <div className="text-sm opacity-90">{summary.total}もんの ぼうけんに ちょうせん！</div>
           <div className="mt-1 text-xs font-bold">
             ✨ {summary.clearedCount} / {summary.total} もん クリア
           </div>

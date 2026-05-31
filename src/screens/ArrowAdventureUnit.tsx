@@ -196,6 +196,10 @@ const REGION_TINT: Record<string, string> = {
   kumo:    'rgba(80,160,200,.28)',
   moon:    'rgba(70,80,150,.34)',
   snow:    'rgba(150,190,220,.30)',
+  tower:   'rgba(120,100,180,.30)',
+  crystal: 'rgba(150,90,180,.30)',
+  fog:     'rgba(120,150,130,.30)',
+  sea:     'rgba(60,150,170,.30)',
 };
 
 interface TownStop {
