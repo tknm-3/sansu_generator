@@ -164,8 +164,8 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     emoji: '☁️',
     bg: 'from-sky-100 to-cyan-50',
     accent: 'sky',
-    tagline: 'もしも くもが あったら…どっちに すすむ？',
-    story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも くもが あったら…」の ルールで かしこく すすもう！',
+    tagline: '☁️に すすめない とき…どっちへ いく？',
+    story: 'そらに うかぶ くもが かべに なっているよ。\n「もしも すすめない なら…」の ルールで かしこく すすもう！',
     wall: '☁️', wallName: 'くも', tile: 'bg-sky-50', wallTile: 'bg-sky-200', board: 'bg-sky-200/70',
   },
   {
