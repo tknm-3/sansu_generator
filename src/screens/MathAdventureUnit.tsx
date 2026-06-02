@@ -34,9 +34,9 @@ function HubScreen({ characterName, onSelectZone, onBack }: {
 }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-yellow-100 flex flex-col">
-      <header className="flex items-center gap-2 p-4">
-        <button onClick={onBack} className="text-2xl p-2 rounded-full hover:bg-amber-200">←</button>
-        <h1 className="text-2xl font-bold text-amber-800">📚 ふしぎな だいとしょかん</h1>
+      <header className="flex items-center gap-2 p-4 pr-16">
+        <button onClick={onBack} className="text-2xl p-2 rounded-full hover:bg-amber-200 shrink-0">←</button>
+        <h1 className="text-xl font-bold text-amber-800 truncate">📚 ふしぎな だいとしょかん</h1>
       </header>
 
       <p className="text-center text-amber-700 text-sm mb-2">
@@ -101,12 +101,12 @@ function MapScreen({ map, run, zone, onSelectNode, onBack }: {
 
   return (
     <div className={`min-h-screen bg-gradient-to-b ${zone.bgFrom} ${zone.bgTo} flex flex-col`}>
-      <header className="flex items-center gap-2 p-4">
+      <header className="flex items-center gap-2 p-4 pr-16">
         <button onClick={onBack} className="text-2xl p-2 rounded-full hover:bg-white/40">←</button>
-        <h1 className="text-xl font-bold text-gray-800">{zone.emoji} {zone.name}</h1>
-        <div className="ml-auto flex gap-1">
+        <h1 className="text-xl font-bold text-gray-800 truncate">{zone.emoji} {zone.name}</h1>
+        <div className="ml-auto flex gap-1 shrink-0">
           {Array.from({ length: run.maxHp }).map((_, i) => (
-            <span key={i} className={i < run.hp ? 'text-2xl' : 'text-2xl opacity-30'}>❤️</span>
+            <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-30'}>❤️</span>
           ))}
         </div>
       </header>
@@ -119,17 +119,21 @@ function MapScreen({ map, run, zone, onSelectNode, onBack }: {
               {layer.map((node) => {
                 const visited = run.visitedIds.includes(node.id);
                 const isCurrent = run.currentNodeId === node.id;
-                const reachable = run.currentNodeId
-                  ? (() => {
-                      const cur = nodes.find((n) => n.id === run.currentNodeId);
-                      return cur?.nextIds.includes(node.id) ?? false;
-                    })()
-                  : node.id === map.startId;
+                // 現在ノードが未訪問 → 自分自身が入れる次のターゲット
+                const isNextEntry = isCurrent && !visited;
+                // 現在ノードが訪問済み → その nextIds が次候補
+                const isNextInPath = !visited && (() => {
+                  const cur = nodes.find((n) => n.id === run.currentNodeId);
+                  return cur && run.visitedIds.includes(cur.id)
+                    ? cur.nextIds.includes(node.id)
+                    : false;
+                })();
+                const reachable = isNextEntry || isNextInPath;
 
                 return (
                   <motion.button
                     key={node.id}
-                    disabled={!reachable && !isCurrent}
+                    disabled={!reachable}
                     onClick={() => reachable && onSelectNode(node.id)}
                     whileTap={reachable ? { scale: 0.9 } : {}}
                     className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center text-2xl font-bold shadow transition-all ${
@@ -183,9 +187,9 @@ function BattleScreen({ question, run, node, onCorrect, onWrong }: {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-100 flex flex-col items-center">
-      <header className="w-full flex items-center justify-between p-4">
+      <header className="w-full flex items-center justify-between p-4 pr-16">
         <span className="text-sm font-bold text-gray-600">{nodeLabel}</span>
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0">
           {Array.from({ length: run.maxHp }).map((_, i) => (
             <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-30'}>❤️</span>
           ))}
@@ -204,18 +208,21 @@ function BattleScreen({ question, run, node, onCorrect, onWrong }: {
             {question.visual?.kind === 'equation' && (
               <div className="text-4xl font-bold text-gray-800 mb-2">{question.visual.text}</div>
             )}
-            {question.visual?.kind === 'objects' && (
-              <div className="mb-2">
-                <div className="text-3xl mb-1">
-                  {Array.from({ length: Math.min(question.visual.count, 10) }).map((_, i) => (
-                    <span key={i}>{question.visual!.kind === 'objects' ? (question.visual as { kind: 'objects'; emoji: string }).emoji : ''}</span>
-                  ))}
+            {question.visual?.kind === 'objects' && (() => {
+              const v = question.visual;
+              return (
+                <div className="mb-2">
+                  <div className="text-3xl mb-1 flex flex-wrap justify-center gap-0.5">
+                    {Array.from({ length: Math.min(v.count, 10) }).map((_, i) => (
+                      <span key={i}>{v.emoji}</span>
+                    ))}
+                  </div>
+                  {v.count > 10 && (
+                    <div className="text-lg text-gray-600">（{v.count}こ）</div>
+                  )}
                 </div>
-                {question.visual.count > 10 && (
-                  <div className="text-lg text-gray-600">（{question.visual.count}こ）</div>
-                )}
-              </div>
-            )}
+              );
+            })()}
             {question.visual?.kind === 'word' && (
               <div className="text-base text-gray-700 whitespace-pre-line text-left leading-relaxed">
                 {question.visual.text}
@@ -341,56 +348,68 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
     if (!map || !run) return;
     const node = getNode(map, nodeId);
 
-    const updatedRun: RunState = {
-      ...run,
-      currentNodeId: nodeId,
-      visitedIds: [...run.visitedIds, nodeId],
-    };
-
     if (node.kind === 'rest') {
-      const healed = { ...updatedRun, hp: Math.min(updatedRun.maxHp, updatedRun.hp + 1) };
+      const healed: RunState = {
+        ...run,
+        currentNodeId: nodeId,
+        visitedIds: [...run.visitedIds, nodeId],
+        hp: Math.min(run.maxHp, run.hp + 1),
+      };
       setRun(healed);
       saveRun(healed);
       return;
     }
 
     if (node.kind === 'treasure') {
-      setRun(updatedRun);
-      saveRun(updatedRun);
+      const updated: RunState = {
+        ...run,
+        currentNodeId: nodeId,
+        visitedIds: [...run.visitedIds, nodeId],
+      };
+      setRun(updated);
+      saveRun(updated);
       return;
     }
 
-    // battle / boss / mimic → 問題を出す
+    // battle / boss / mimic → 正解するまで visited に入れない（再挑戦できるように）
+    const withCurrent: RunState = { ...run, currentNodeId: nodeId };
     const zone = getZone(node.zoneId);
     const unitId = zone.unitIds[Math.floor(Math.random() * zone.unitIds.length)];
     const q = generateBattleQuestion(unitId);
     setQuestion(q);
     setActiveNode(node);
-    setRun(updatedRun);
-    saveRun(updatedRun);
+    setRun(withCurrent);
+    saveRun(withCurrent);
     setView('battle');
   }
 
   function handleCorrect() {
     if (!run || !activeNode || !map) return;
+    // 正解時にノードを visited に追加
+    const updated: RunState = {
+      ...run,
+      visitedIds: [...run.visitedIds, activeNode.id],
+    };
     const isBoss = activeNode.kind === 'boss';
     if (isBoss) {
-      const sparkles = calcSparkles(run.maxHp, run.hp);
+      const sparkles = calcSparkles(updated.maxHp, updated.hp);
       recordZoneClear(currentZone.id, sparkles === 3, sparkles);
       clearRun();
+      setRun(updated);
       setView('result');
     } else {
+      setRun(updated);
+      saveRun(updated);
       setView('map');
     }
   }
 
   function handleWrong() {
     if (!run || !activeNode) return;
-    const newHp = Math.max(0, run.hp - 1);
-    const updated = { ...run, hp: newHp };
+    // HP を減らして返す。currentNodeId はそのまま → マップで再挑戦可能
+    const updated: RunState = { ...run, hp: Math.max(0, run.hp - 1) };
     setRun(updated);
     saveRun(updated);
-    // HP0でも続行（案A）
     setTimeout(() => setView('map'), 1000);
   }
 
