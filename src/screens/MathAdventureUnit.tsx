@@ -1,5 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { setBgmTrack } from '../features/sound/bgm';
+import { playSfx } from '../features/sound/sfx';
+import { CHARACTER_DEFS } from '../features/character/characterDefs';
 import { BattleButtons } from '../components/BattleButtons';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -12,6 +17,7 @@ import {
   isZoneCleared,
   isZoneUnlocked,
   calcSparkles,
+  loadHistory,
 } from '../lib/adventure/progress';
 import type { AdventureMap, RunState, BattleQuestion, MapNode } from '../lib/adventure/types';
 
@@ -21,29 +27,109 @@ interface Props {
   onExit: () => void;
 }
 
-type View = 'hub' | 'map' | 'battle' | 'result';
-
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const PAPER = 'radial-gradient(125% 85% at 50% -10%, #fbf3df 0%, #f1e3c2 46%, #e7d3a8 100%)';
+const SEPIA = '#7a5a3a';
 const ZONE_IDS = MATH_ADVENTURE_ZONES.map((z) => z.id);
 
-// ─── Hub ─────────────────────────────────────────────────────────────────────
+function LibraryTexture() {
+  return (
+    <>
+      <svg className="pointer-events-none absolute inset-0 h-full w-full mix-blend-multiply" style={{ opacity: 0.08 }} aria-hidden>
+        <filter id="lib-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} stitchTiles="stitch" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#lib-grain)" />
+      </svg>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ boxShadow: 'inset 0 0 80px 20px rgba(120,80,30,.30), inset 0 0 20px 5px rgba(90,55,20,.18)' }}
+        aria-hidden
+      />
+    </>
+  );
+}
 
-function HubScreen({ characterName, onSelectZone, onBack }: {
+function Ribbon({ children, width = 260 }: { children: ReactNode; width?: number }) {
+  return (
+    <div className="relative" style={{ width }}>
+      <span className="absolute left-[-7px] top-3 h-4 w-4 rotate-45 bg-[#7e2a1a]" aria-hidden />
+      <span className="absolute right-[-7px] top-3 h-4 w-4 rotate-45 bg-[#7e2a1a]" aria-hidden />
+      <div
+        className="relative rounded-md border px-3 py-2 text-center font-bold tracking-widest text-[#fbe6c9]"
+        style={{
+          background: 'linear-gradient(#b9472f,#9c3622)',
+          borderColor: 'rgba(110,30,18,.6)',
+          boxShadow: '0 3px 0 rgba(110,30,18,.5), inset 0 1px 0 rgba(255,255,255,.18)',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── Hub (本棚) ────────────────────────────────────────────────────────────────
+
+function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
   characterName: string;
+  charEmoji: string;
   onSelectZone: (zoneIndex: number) => void;
   onBack: () => void;
 }) {
+  const history = loadHistory();
+  const clearedCount = history.zones.length;
+  const total = MATH_ADVENTURE_ZONES.length;
+  const percent = Math.round((clearedCount / total) * 100);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-yellow-100 flex flex-col">
-      <header className="flex items-center gap-2 p-4 pr-16">
-        <button onClick={onBack} className="text-2xl p-2 rounded-full hover:bg-amber-200 shrink-0">←</button>
-        <h1 className="text-xl font-bold text-amber-800 truncate">📚 ふしぎな だいとしょかん</h1>
-      </header>
+    <div className="relative min-h-screen flex flex-col" style={{ background: PAPER }}>
+      <LibraryTexture />
+      <div className="relative z-10 flex items-center justify-between px-4 pt-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-xl border-[1.5px] px-3 py-2 text-sm font-bold"
+          style={{ background: 'rgba(255,255,255,.5)', borderColor: 'rgba(123,90,58,.35)', color: '#6b4f30' }}
+        >
+          ← もどる
+        </button>
+        <span className="text-sm font-bold" style={{ color: SEPIA }}>
+          🔖 {clearedCount} / {total}さつ
+        </span>
+      </div>
 
-      <p className="text-center text-amber-700 text-sm mb-2">
-        {characterName}さん、ようこそ！えほんを えらんで ぼうけんしよう
-      </p>
+      <div className="relative z-10 mt-3 flex flex-col items-center gap-1 px-4">
+        <Ribbon width={300}>
+          <span className="text-lg">📚 ふしぎな だいとしょかん</span>
+        </Ribbon>
+        <p className="mt-1 text-sm font-bold" style={{ color: '#9a7c54' }}>
+          {charEmoji} {characterName}さん、ようこそ！
+        </p>
+        <p className="text-xs font-bold" style={{ color: SEPIA }}>
+          えほんを えらんで ぼうけんに でかけよう
+        </p>
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="relative z-10 mt-3 px-6 w-full max-w-md mx-auto">
+        <div className="mb-1 flex items-center justify-between text-[11px] font-bold" style={{ color: SEPIA }}>
+          <span>🗺️ よんだ えほん</span>
+          <span>{clearedCount}/{total}さつ・{percent}%</span>
+        </div>
+        <div className="h-3 w-full overflow-hidden rounded-full border"
+          style={{ background: 'rgba(255,255,255,.45)', borderColor: 'rgba(123,90,58,.35)' }}
+        >
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: 'linear-gradient(90deg,#e0a23a,#b9472f)' }}
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
+      <div className="relative z-10 mt-4 flex-1 overflow-y-auto px-4 pb-6">
         <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {MATH_ADVENTURE_ZONES.map((zone, i) => {
             const unlocked = isZoneUnlocked(i, ZONE_IDS);
@@ -51,20 +137,26 @@ function HubScreen({ characterName, onSelectZone, onBack }: {
             return (
               <motion.button
                 key={zone.id}
+                type="button"
                 disabled={!unlocked}
-                onClick={() => onSelectZone(i)}
+                onClick={() => { playSfx('tap'); onSelectZone(i); }}
                 whileTap={unlocked ? { scale: 0.94 } : {}}
-                className={`relative rounded-2xl p-4 text-left transition-all ${
-                  unlocked
-                    ? `bg-gradient-to-br ${zone.bgFrom} ${zone.bgTo} shadow-md hover:shadow-lg`
-                    : 'bg-gray-100 opacity-50 cursor-not-allowed'
-                }`}
+                className="relative rounded-2xl p-4 text-left"
+                style={{
+                  background: unlocked
+                    ? 'radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,245,220,.8))'
+                    : 'rgba(231,211,168,.5)',
+                  border: `2px solid ${unlocked ? 'rgba(123,90,58,.45)' : 'rgba(123,90,58,.2)'}`,
+                  boxShadow: unlocked ? '0 3px 0 rgba(90,55,20,.25), inset 0 1px 0 rgba(255,255,255,.6)' : 'none',
+                  opacity: unlocked ? 1 : 0.55,
+                }}
               >
                 <div className="text-3xl mb-1">{unlocked ? zone.emoji : '🔒'}</div>
-                <div className="text-xs font-bold text-gray-700 leading-tight">{zone.name}</div>
-                {cleared && (
-                  <span className="absolute top-2 right-2 text-sm">🔖</span>
+                <div className="text-xs font-bold leading-tight" style={{ color: SEPIA }}>{zone.name}</div>
+                {zone.tagline && unlocked && (
+                  <div className="mt-0.5 text-[10px]" style={{ color: '#9a7c54' }}>{zone.tagline}</div>
                 )}
+                {cleared && <span className="absolute top-2 right-2 text-sm">🔖</span>}
               </motion.button>
             );
           })}
@@ -76,94 +168,222 @@ function HubScreen({ characterName, onSelectZone, onBack }: {
 
 // ─── Map ──────────────────────────────────────────────────────────────────────
 
+const MAP_W = 320;
+const MAP_H = 440;
+
 const NODE_KIND_EMOJI: Record<string, string> = {
-  battle: '⚔️',
-  treasure: '🎁',
-  rest: '⛺',
-  boss: '👑',
-  mimic: '🎭',
+  battle: '⚔️', treasure: '🎁', rest: '⛺', boss: '👑', mimic: '🎭',
 };
 
-function MapScreen({ map, run, zone, onSelectNode, onBack }: {
+const SCATTER: { x: number; y: number; s: number }[] = [
+  { x: 60, y: 55, s: 22 }, { x: 260, y: 75, s: 18 }, { x: 30, y: 190, s: 20 },
+  { x: 295, y: 210, s: 16 }, { x: 160, y: 165, s: 18 }, { x: 80, y: 335, s: 20 },
+  { x: 240, y: 355, s: 22 }, { x: 160, y: 400, s: 16 }, { x: 140, y: 38, s: 14 },
+];
+
+function nodePos(node: MapNode, maxLayer: number): { x: number; y: number } {
+  const padTop = 44;
+  const padBot = 44;
+  const y = MAP_H - padBot - (node.layer / maxLayer) * (MAP_H - padTop - padBot);
+  const x = node.branch === -1 ? MAP_W / 2 : node.branch === 0 ? MAP_W * 0.28 : MAP_W * 0.72;
+  return { x, y };
+}
+
+function trailD(fp: { x: number; y: number }, tp: { x: number; y: number }): string {
+  const my = (fp.y + tp.y) / 2;
+  return `M ${fp.x} ${fp.y} C ${fp.x} ${my} ${tp.x} ${my} ${tp.x} ${tp.y}`;
+}
+
+function MapScreen({ map, run, zone, charEmoji, onSelectNode, onBack }: {
   map: AdventureMap;
   run: RunState;
   zone: ReturnType<typeof getZone>;
+  charEmoji: string;
   onSelectNode: (nodeId: string) => void;
   onBack: () => void;
 }) {
   const { nodes } = map;
   const maxLayer = Math.max(...nodes.map((n) => n.layer));
+  const tint = zone.tint ?? 'rgba(123,90,58,.20)';
 
-  const layers: MapNode[][] = [];
-  for (let l = 0; l <= maxLayer; l++) {
-    layers.push(nodes.filter((n) => n.layer === l));
+  const edges: { from: MapNode; to: MapNode }[] = [];
+  for (const n of nodes) {
+    for (const nextId of n.nextIds) {
+      const to = nodes.find((m) => m.id === nextId);
+      if (to) edges.push({ from: n, to });
+    }
   }
 
+  function isReachable(nodeId: string): boolean {
+    const isCurrent = run.currentNodeId === nodeId;
+    if (isCurrent && !run.visitedIds.includes(nodeId)) return true;
+    const cur = nodes.find((n) => n.id === run.currentNodeId);
+    return !!cur && run.visitedIds.includes(cur.id) && cur.nextIds.includes(nodeId);
+  }
+
+  const pawnNode = nodes.find((n) => n.id === run.currentNodeId) ?? nodes[0];
+  const pawnP = nodePos(pawnNode, maxLayer);
+
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${zone.bgFrom} ${zone.bgTo} flex flex-col`}>
-      <header className="flex items-center gap-2 p-4 pr-16">
-        <button onClick={onBack} className="text-2xl p-2 rounded-full hover:bg-white/40">←</button>
-        <h1 className="text-xl font-bold text-gray-800 truncate">{zone.emoji} {zone.name}</h1>
-        <div className="ml-auto flex gap-1 shrink-0">
+    <div className="relative min-h-screen flex flex-col" style={{ background: PAPER }}>
+      <LibraryTexture />
+      <div className="relative z-10 flex items-center justify-between px-4 pt-4 pr-16">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-xl border-[1.5px] px-3 py-2 text-sm font-bold"
+          style={{ background: 'rgba(255,255,255,.5)', borderColor: 'rgba(123,90,58,.35)', color: '#6b4f30' }}
+        >
+          ← としょかん
+        </button>
+        <div className="flex gap-1 shrink-0">
           {Array.from({ length: run.maxHp }).map((_, i) => (
-            <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-30'}>❤️</span>
+            <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-25'}>❤️</span>
           ))}
         </div>
-      </header>
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6 flex flex-col gap-3">
-        {[...layers].reverse().map((layer, revIdx) => {
-          const l = maxLayer - revIdx;
+      <div className="relative z-10 mt-3 flex flex-col items-center px-4">
+        <Ribbon width={270}>
+          <span className="text-base">{zone.emoji} {zone.name}</span>
+        </Ribbon>
+        {zone.tagline && (
+          <p className="mt-1 text-[11px] font-bold" style={{ color: '#9a7c54' }}>{zone.tagline}</p>
+        )}
+        {zone.story && (
+          <div
+            className="mt-2 max-w-sm rounded-xl border px-3 py-2 text-center text-xs font-bold leading-relaxed w-full"
+            style={{ background: 'rgba(255,250,235,.65)', borderColor: 'rgba(123,90,58,.3)', color: '#6b4f30', whiteSpace: 'pre-line' }}
+          >
+            📖 {zone.story}
+          </div>
+        )}
+      </div>
+
+      <div className="relative z-10 mt-3 mx-auto" style={{ width: MAP_W, height: MAP_H }}>
+        <div
+          className="absolute inset-0 rounded-[28px] border-2"
+          style={{
+            borderColor: 'rgba(123,90,58,.4)',
+            background: `radial-gradient(85% 75% at 50% 35%, ${tint}, rgba(255,250,235,.5) 82%)`,
+          }}
+        />
+        {zone.wall && SCATTER.map((s, i) => (
+          <span
+            key={i}
+            className="pointer-events-none absolute select-none"
+            style={{ left: s.x, top: s.y, fontSize: s.s, opacity: 0.18, transform: 'translate(-50%,-50%)' }}
+            aria-hidden
+          >
+            {zone.wall}
+          </span>
+        ))}
+        <svg className="pointer-events-none absolute inset-0" width={MAP_W} height={MAP_H} aria-hidden>
+          {edges.map(({ from, to }, i) => {
+            const fp = nodePos(from, maxLayer);
+            const tp = nodePos(to, maxLayer);
+            const bothVisited = run.visitedIds.includes(from.id) && run.visitedIds.includes(to.id);
+            return (
+              <path
+                key={i}
+                d={trailD(fp, tp)}
+                fill="none"
+                stroke={bothVisited ? '#b9472f' : SEPIA}
+                strokeWidth={bothVisited ? 3 : 2}
+                strokeLinecap="round"
+                strokeDasharray={bothVisited ? undefined : '2 10'}
+                opacity={0.5}
+              />
+            );
+          })}
+        </svg>
+        {nodes.map((node) => {
+          const { x, y } = nodePos(node, maxLayer);
+          const visited = run.visitedIds.includes(node.id);
+          const isCurrent = run.currentNodeId === node.id;
+          const reachable = isReachable(node.id);
+
+          let sealStyle: CSSProperties;
+          let content: ReactNode;
+          if (visited && !isCurrent) {
+            sealStyle = {
+              background: 'radial-gradient(circle at 35% 30%, #e7c46a, #b9472f)',
+              color: '#fff3d6',
+              borderColor: '#7e2a1a',
+              boxShadow: '0 3px 0 rgba(90,55,20,.35)',
+            };
+            content = '✅';
+          } else if (reachable) {
+            sealStyle = {
+              background: 'radial-gradient(circle at 35% 30%, #fff7e0, #e0a94b)',
+              color: '#6b4f30',
+              borderColor: '#9c6a2a',
+              boxShadow: '0 0 0 5px rgba(224,169,75,.28), 0 3px 0 rgba(90,55,20,.4)',
+            };
+            content = NODE_KIND_EMOJI[node.kind];
+          } else {
+            sealStyle = {
+              background: 'rgba(231,211,168,.5)',
+              color: 'rgba(123,90,58,.4)',
+              borderColor: 'rgba(123,90,58,.22)',
+            };
+            content = '🔒';
+          }
+
           return (
-            <div key={l} className="flex justify-center gap-4">
-              {layer.map((node) => {
-                const visited = run.visitedIds.includes(node.id);
-                const isCurrent = run.currentNodeId === node.id;
-                // 現在ノードが未訪問 → 自分自身が入れる次のターゲット
-                const isNextEntry = isCurrent && !visited;
-                // 現在ノードが訪問済み → その nextIds が次候補
-                const isNextInPath = !visited && (() => {
-                  const cur = nodes.find((n) => n.id === run.currentNodeId);
-                  return cur && run.visitedIds.includes(cur.id)
-                    ? cur.nextIds.includes(node.id)
-                    : false;
-                })();
-                const reachable = isNextEntry || isNextInPath;
-
-                return (
-                  <motion.button
-                    key={node.id}
-                    disabled={!reachable}
-                    onClick={() => reachable && onSelectNode(node.id)}
-                    whileTap={reachable ? { scale: 0.9 } : {}}
-                    className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center text-2xl font-bold shadow transition-all ${
-                      isCurrent
-                        ? 'bg-white ring-4 ring-yellow-400 scale-110'
-                        : visited
-                        ? 'bg-white/40 text-gray-500'
-                        : reachable
-                        ? 'bg-white shadow-lg hover:scale-105 cursor-pointer'
-                        : 'bg-white/20 cursor-not-allowed opacity-60'
-                    }`}
-                  >
-                    <span>{visited && !isCurrent ? '✅' : NODE_KIND_EMOJI[node.kind]}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
+            <motion.button
+              key={node.id}
+              type="button"
+              disabled={!reachable}
+              onClick={() => { if (reachable) { playSfx('tap'); onSelectNode(node.id); } }}
+              whileTap={reachable ? { scale: 0.88 } : {}}
+              className="absolute flex items-center justify-center"
+              style={{ left: x, top: y, width: 52, height: 52, transform: 'translate(-50%,-50%)' }}
+            >
+              <motion.span
+                className="flex h-11 w-11 items-center justify-center rounded-full border-2 text-xl font-bold"
+                style={sealStyle}
+                animate={reachable && !visited ? { scale: [1, 1.07, 1] } : {}}
+                transition={reachable && !visited ? { repeat: Infinity, duration: 1.6 } : {}}
+              >
+                {content}
+              </motion.span>
+            </motion.button>
           );
         })}
+
+        <motion.div
+          className="pointer-events-none absolute z-10"
+          style={{ transform: 'translate(-50%,-100%)' }}
+          animate={{ left: pawnP.x, top: pawnP.y + 4 }}
+          transition={{ type: 'spring', stiffness: 80, damping: 15 }}
+        >
+          <motion.span
+            className="block text-3xl"
+            style={{ filter: 'drop-shadow(0 2px 2px rgba(0,0,0,.35))' }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ repeat: Infinity, duration: 1.4 }}
+          >
+            {charEmoji}
+          </motion.span>
+        </motion.div>
       </div>
+
+      <p className="relative z-10 mt-2 pb-4 text-center text-[10px] tracking-wider" style={{ color: '#9a7c54' }}>
+        ✅クリア済み　⚔️バトル　⛺やすみ(HP+1)　🎁たからばこ　👑ラスボス
+      </p>
     </div>
   );
 }
 
 // ─── Battle ───────────────────────────────────────────────────────────────────
 
-function BattleScreen({ question, run, node, onCorrect, onWrong }: {
+function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong }: {
   question: BattleQuestion;
   run: RunState;
   node: MapNode;
+  zone: ReturnType<typeof getZone>;
+  charEmoji: string;
   onCorrect: () => void;
   onWrong: () => void;
 }) {
@@ -175,38 +395,53 @@ function BattleScreen({ question, run, node, onCorrect, onWrong }: {
     setChosen(index);
     setLocked(true);
     if (index === question.answerIndex) {
-      setTimeout(onCorrect, 800);
+      playSfx('correct');
+      setTimeout(onCorrect, 900);
     } else {
-      setTimeout(onWrong, 800);
+      playSfx('wrong');
+      setTimeout(onWrong, 900);
     }
   }, [locked, question.answerIndex, onCorrect, onWrong]);
 
-  const nodeLabel = node.kind === 'boss' ? '👑 ラスボス！' : NODE_KIND_EMOJI[node.kind] + ' バトル';
   const isCorrect = chosen === question.answerIndex;
   const isWrong = chosen !== null && !isCorrect;
+  const nodeLabel = node.kind === 'boss' ? '👑 ラスボス！' : NODE_KIND_EMOJI[node.kind];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-purple-100 flex flex-col items-center">
-      <header className="w-full flex items-center justify-between p-4 pr-16">
-        <span className="text-sm font-bold text-gray-600">{nodeLabel}</span>
+    <div className="relative min-h-screen flex flex-col items-center" style={{ background: PAPER }}>
+      <LibraryTexture />
+      <header className="relative z-10 w-full flex items-center justify-between px-4 pt-4 pr-16">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{charEmoji}</span>
+          <span
+            className="text-sm font-bold px-2 py-1 rounded-lg"
+            style={{ background: 'rgba(255,255,255,.65)', color: SEPIA, border: '1px solid rgba(123,90,58,.3)' }}
+          >
+            {zone.emoji} {nodeLabel}
+          </span>
+        </div>
         <div className="flex gap-1 shrink-0">
           {Array.from({ length: run.maxHp }).map((_, i) => (
-            <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-30'}>❤️</span>
+            <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-25'}>❤️</span>
           ))}
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 w-full max-w-sm">
-        {/* 問題表示 */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-5 px-5 w-full max-w-sm">
         <AnimatePresence mode="wait">
           <motion.div
             key={question.promptText}
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-6 shadow-lg w-full text-center"
+            className="w-full rounded-3xl p-6 text-center shadow-md"
+            style={{
+              background: 'rgba(255,250,235,.92)',
+              border: '2px solid rgba(123,90,58,.4)',
+              boxShadow: '0 4px 0 rgba(90,55,20,.2), inset 0 1px 0 rgba(255,255,255,.7)',
+            }}
           >
             {question.visual?.kind === 'equation' && (
-              <div className="text-4xl font-bold text-gray-800 mb-2">{question.visual.text}</div>
+              <div className="text-4xl font-bold mb-2" style={{ color: SEPIA }}>{question.visual.text}</div>
             )}
             {question.visual?.kind === 'objects' && (() => {
               const v = question.visual;
@@ -217,40 +452,36 @@ function BattleScreen({ question, run, node, onCorrect, onWrong }: {
                       <span key={i}>{v.emoji}</span>
                     ))}
                   </div>
-                  {v.count > 10 && (
-                    <div className="text-lg text-gray-600">（{v.count}こ）</div>
-                  )}
+                  {v.count > 10 && <div className="text-lg" style={{ color: SEPIA }}>（{v.count}こ）</div>}
                 </div>
               );
             })()}
             {question.visual?.kind === 'word' && (
-              <div className="text-base text-gray-700 whitespace-pre-line text-left leading-relaxed">
+              <div className="text-base text-left leading-relaxed whitespace-pre-line" style={{ color: SEPIA }}>
                 {question.visual.text}
               </div>
             )}
             {!question.visual && (
-              <div className="text-2xl font-bold text-gray-800">{question.promptText}</div>
+              <div className="text-2xl font-bold" style={{ color: SEPIA }}>{question.promptText}</div>
             )}
             {question.visual && (
-              <div className="text-lg text-gray-600 mt-2">{question.promptText}</div>
+              <div className="text-lg mt-2 font-bold" style={{ color: '#9a7c54' }}>{question.promptText}</div>
             )}
           </motion.div>
         </AnimatePresence>
 
-        {/* 結果フィードバック */}
         <AnimatePresence>
           {chosen !== null && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className={`text-3xl font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-400'}`}
+              className={`text-2xl font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}
             >
               {isCorrect ? '🎉 せいかい！' : `こたえは ${question.choices[question.answerIndex]} だよ`}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* 選択肢 */}
         <BattleButtons
           choices={question.choices}
           onPick={handlePick}
@@ -265,9 +496,11 @@ function BattleScreen({ question, run, node, onCorrect, onWrong }: {
 
 // ─── Result ───────────────────────────────────────────────────────────────────
 
-function ResultScreen({ run, zoneName, onContinue, onHub }: {
+function ResultScreen({ run, zoneName, zoneEmoji, charEmoji, onContinue, onHub }: {
   run: RunState;
   zoneName: string;
+  zoneEmoji: string;
+  charEmoji: string;
   onContinue: () => void;
   onHub: () => void;
 }) {
@@ -275,44 +508,54 @@ function ResultScreen({ run, zoneName, onContinue, onHub }: {
   const perfect = sparkles === 3;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-amber-100 flex flex-col items-center justify-center gap-6 p-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center gap-5 p-6" style={{ background: PAPER }}>
+      <LibraryTexture />
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-        className="text-6xl"
+        className="relative z-10 text-7xl"
       >
         {perfect ? '🏆' : '🎊'}
       </motion.div>
-      <h2 className="text-3xl font-bold text-amber-800 text-center">
-        {zoneName} クリア！
-      </h2>
-      <div className="flex gap-2 text-4xl">
+      <div className="relative z-10 flex flex-col items-center gap-2">
+        <span className="text-3xl">{charEmoji}</span>
+        <Ribbon width={290}>
+          <span className="text-base">{zoneEmoji} {zoneName} よみおわり！</span>
+        </Ribbon>
+      </div>
+      <div className="relative z-10 flex gap-2 text-4xl">
         {Array.from({ length: 3 }).map((_, i) => (
           <motion.span
             key={i}
             initial={{ scale: 0 }}
             animate={{ scale: i < sparkles ? 1 : 0.5 }}
             transition={{ delay: i * 0.2 }}
-            className={i < sparkles ? '' : 'opacity-30'}
+            className={i < sparkles ? '' : 'opacity-25'}
           >
             ✨
           </motion.span>
         ))}
       </div>
       {perfect && (
-        <p className="text-emerald-600 font-bold text-lg">ぴったり賞！ノーミスで クリア！</p>
+        <p className="relative z-10 font-bold text-lg" style={{ color: '#b9472f' }}>
+          💎 ぴったり賞！ ノーミスで よみきった！
+        </p>
       )}
-      <div className="flex flex-col gap-3 w-full max-w-xs">
+      <div className="relative z-10 flex flex-col gap-3 w-full max-w-xs">
         <button
+          type="button"
           onClick={onContinue}
-          className="bg-amber-500 text-white rounded-2xl py-4 text-xl font-bold shadow-lg hover:bg-amber-600 transition-colors"
+          className="rounded-2xl py-4 text-xl font-bold text-[#fbe6c9] shadow-lg"
+          style={{ background: 'linear-gradient(#b9472f,#9c3622)', boxShadow: '0 4px 0 rgba(90,30,10,.4)' }}
         >
-          つぎの ゾーンへ →
+          つぎの えほんへ →
         </button>
         <button
+          type="button"
           onClick={onHub}
-          className="bg-white text-amber-700 rounded-2xl py-3 text-lg font-bold shadow hover:bg-amber-50 transition-colors"
+          className="rounded-2xl py-3 text-lg font-bold shadow"
+          style={{ background: 'rgba(255,250,235,.9)', border: '2px solid rgba(123,90,58,.4)', color: SEPIA }}
         >
           としょかんに もどる
         </button>
@@ -323,7 +566,10 @@ function ResultScreen({ run, zoneName, onContinue, onHub }: {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function MathAdventureUnit({ characterName, onExit }: Props) {
+type View = 'hub' | 'map' | 'battle' | 'result';
+
+export function MathAdventureUnit({ characterName, characterId, onExit }: Props) {
+  const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
   const [view, setView] = useState<View>('hub');
   const [zoneIndex, setZoneIndex] = useState(0);
   const [map, setMap] = useState<AdventureMap | null>(null);
@@ -331,12 +577,13 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
   const [question, setQuestion] = useState<BattleQuestion | null>(null);
   const [activeNode, setActiveNode] = useState<MapNode | null>(null);
 
+  useEffect(() => { setBgmTrack('home'); }, []);
+
   const currentZone = MATH_ADVENTURE_ZONES[zoneIndex];
 
   function startZone(idx: number) {
     const zone = MATH_ADVENTURE_ZONES[idx];
-    const rng = Math.random;
-    const newMap = generateMap(zone, rng);
+    const newMap = generateMap(zone);
     const newRun = makeInitialRun(zone.id, newMap.startId);
     setZoneIndex(idx);
     setMap(newMap);
@@ -350,8 +597,7 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
 
     if (node.kind === 'rest') {
       const healed: RunState = {
-        ...run,
-        currentNodeId: nodeId,
+        ...run, currentNodeId: nodeId,
         visitedIds: [...run.visitedIds, nodeId],
         hp: Math.min(run.maxHp, run.hp + 1),
       };
@@ -362,8 +608,7 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
 
     if (node.kind === 'treasure') {
       const updated: RunState = {
-        ...run,
-        currentNodeId: nodeId,
+        ...run, currentNodeId: nodeId,
         visitedIds: [...run.visitedIds, nodeId],
       };
       setRun(updated);
@@ -371,7 +616,6 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
       return;
     }
 
-    // battle / boss / mimic → 正解するまで visited に入れない（再挑戦できるように）
     const withCurrent: RunState = { ...run, currentNodeId: nodeId };
     const zone = getZone(node.zoneId);
     const unitId = zone.unitIds[Math.floor(Math.random() * zone.unitIds.length)];
@@ -385,13 +629,10 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
 
   function handleCorrect() {
     if (!run || !activeNode || !map) return;
-    // 正解時にノードを visited に追加
-    const updated: RunState = {
-      ...run,
-      visitedIds: [...run.visitedIds, activeNode.id],
-    };
-    const isBoss = activeNode.kind === 'boss';
-    if (isBoss) {
+    const updated: RunState = { ...run, visitedIds: [...run.visitedIds, activeNode.id] };
+    if (activeNode.kind === 'boss') {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      playSfx('fanfare');
       const sparkles = calcSparkles(updated.maxHp, updated.hp);
       recordZoneClear(currentZone.id, sparkles === 3, sparkles);
       clearRun();
@@ -406,7 +647,6 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
 
   function handleWrong() {
     if (!run || !activeNode) return;
-    // HP を減らして返す。currentNodeId はそのまま → マップで再挑戦可能
     const updated: RunState = { ...run, hp: Math.max(0, run.hp - 1) };
     setRun(updated);
     saveRun(updated);
@@ -417,6 +657,7 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
     return (
       <HubScreen
         characterName={characterName}
+        charEmoji={charEmoji}
         onSelectZone={startZone}
         onBack={onExit}
       />
@@ -429,6 +670,7 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
         map={map}
         run={run}
         zone={currentZone}
+        charEmoji={charEmoji}
         onSelectNode={enterNode}
         onBack={() => setView('hub')}
       />
@@ -441,6 +683,8 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
         question={question}
         run={run}
         node={activeNode}
+        zone={currentZone}
+        charEmoji={charEmoji}
         onCorrect={handleCorrect}
         onWrong={handleWrong}
       />
@@ -452,13 +696,12 @@ export function MathAdventureUnit({ characterName, onExit }: Props) {
       <ResultScreen
         run={run}
         zoneName={currentZone.name}
+        zoneEmoji={currentZone.emoji}
+        charEmoji={charEmoji}
         onContinue={() => {
           const next = zoneIndex + 1;
-          if (next < MATH_ADVENTURE_ZONES.length) {
-            startZone(next);
-          } else {
-            setView('hub');
-          }
+          if (next < MATH_ADVENTURE_ZONES.length) startZone(next);
+          else setView('hub');
         }}
         onHub={() => setView('hub')}
       />
