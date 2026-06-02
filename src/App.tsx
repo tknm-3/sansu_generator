@@ -350,12 +350,10 @@ export default function App() {
         characterName={character.name}
         characterId={character.id}
         stampTotal={stampTotal}
-        onSelectUnit={(unitId) => {
-          if (unitId === 'math-adventure') { setScreen({ kind: 'mathAdventure' }); return; }
-          setScreen({ kind: 'unit', unitId });
-        }}
+        onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
         onStartChallenge={() => setScreen({ kind: 'challenge' })}
         onStartMission={() => setScreen({ kind: 'mission' })}
+        onStartAdventure={() => setScreen({ kind: 'mathAdventure' })}
         onOpenCollection={() => setScreen({ kind: 'collection' })}
         onOpenStampBook={() => setScreen({ kind: 'stampBook' })}
         onOpenProgress={() => setScreen({ kind: 'progress' })}

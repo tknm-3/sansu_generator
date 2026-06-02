@@ -26,6 +26,10 @@ export interface AdventureZoneDef {
   bgTo: string;
   unitIds: string[];
   layerCount: number;
+  tagline?: string;
+  story?: string;
+  wall?: string;
+  tint?: string;
 }
 
 export interface MapNode {

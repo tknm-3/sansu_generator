@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { getUnitsByCategory } from '../data/units';
 import { hasMissionToday } from './MissionScreen';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
+import { loadHistory } from '../lib/adventure/progress';
+import { MATH_ADVENTURE_ZONES } from '../lib/adventure/zones';
 
 interface Props {
   characterName: string;
@@ -10,6 +12,7 @@ interface Props {
   onSelectUnit: (unitId: string) => void;
   onStartChallenge: () => void;
   onStartMission: () => void;
+  onStartAdventure: () => void;
   onOpenCollection: () => void;
   onOpenStampBook?: () => void;
   onOpenProgress: () => void;
@@ -34,6 +37,7 @@ export function HomeScreen({
   onSelectUnit,
   onStartChallenge,
   onStartMission,
+  onStartAdventure,
   onOpenCollection,
   onOpenStampBook,
   onOpenProgress,
@@ -107,6 +111,8 @@ export function HomeScreen({
         </motion.button>
       </div>
 
+      <MathAdventureSlot onAdventure={onStartAdventure} />
+
       <p className="text-amber-700 font-bold">がくしゅう</p>
       <div className="flex flex-wrap justify-center gap-4">
         {getUnitsByCategory('sansu').map((u, index) => (
@@ -128,5 +134,35 @@ export function HomeScreen({
         ))}
       </div>
     </div>
+  );
+}
+
+function MathAdventureSlot({ onAdventure }: { onAdventure: () => void }) {
+  const history = loadHistory();
+  const clearedCount = history.zones.length;
+  const totalZones = MATH_ADVENTURE_ZONES.length;
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onAdventure}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.03, y: -3 }}
+      whileTap={{ scale: 0.96 }}
+      className="w-full max-w-sm rounded-3xl bg-gradient-to-r from-amber-400 to-yellow-300 p-5 text-left text-amber-900 shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-5xl">📚</span>
+        <div className="flex-1">
+          <div className="text-xl font-bold">ふしぎな だいとしょかん <span className="text-sm font-normal opacity-80">（とくべつ）</span></div>
+          <div className="text-sm opacity-80">{totalZones}さつの えほんで ぼうけんしよう！</div>
+          <div className="mt-1 text-xs font-bold">
+            🔖 {clearedCount} / {totalZones} さつ クリア
+          </div>
+        </div>
+        <span className="text-2xl">▶</span>
+      </div>
+    </motion.button>
   );
 }
