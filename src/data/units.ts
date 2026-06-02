@@ -207,6 +207,14 @@ export const UNITS: UnitMeta[] = [
     },
   },
   {
+    id: 'math-adventure',
+    category: 'sansu',
+    title: 'だいとしょかん',
+    grade: '年長〜小2',
+    curriculum: '算数冒険モード：10の合成〜2桁計算まで 10ゾーン',
+    emoji: '📚',
+  },
+  {
     id: 'arrow-adventure',
     category: 'programming',
     title: 'ぼうけんしよう',
