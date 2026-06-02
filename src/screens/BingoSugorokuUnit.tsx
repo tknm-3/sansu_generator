@@ -639,15 +639,15 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                       className={`
                         relative flex flex-col items-center justify-center rounded text-center overflow-hidden
                         ${isGoal    ? 'bg-yellow-300 border-2 border-yellow-500'
-                          : isMultOf10 ? 'bg-amber-100 border border-amber-300'
-                          : isZorome   ? 'bg-violet-50 border border-violet-200'
-                          : 'bg-white border border-gray-100'}
+                          : isMultOf10 ? 'bg-amber-100 border border-amber-400'
+                          : isZorome   ? 'bg-violet-50 border border-violet-300'
+                          : 'bg-white border border-gray-200'}
                         ${isHighlight ? 'ring-2 ring-rose-500 z-10' : ''}
                       `}
                     >
                       <span className={`
-                        leading-none font-bold select-none
-                        ${isGoal ? 'text-yellow-700 text-[11px]' : isMultOf10 ? 'text-amber-700 text-[10px]' : isZorome ? 'text-violet-600 text-[10px]' : 'text-gray-600 text-[9px] font-extrabold'}
+                        leading-none font-black select-none
+                        ${isGoal ? 'text-yellow-800 text-[12px]' : isMultOf10 ? 'text-amber-800 text-[11px]' : isZorome ? 'text-violet-700 text-[11px]' : 'text-gray-800 text-[11px]'}
                       `}>
                         {isGoal ? '🏁' : n}
                       </span>
