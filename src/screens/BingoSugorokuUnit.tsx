@@ -18,6 +18,9 @@ const PLAYER_STYLES = [
 
 const DICE_FACE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
+const CHARACTERS = ['🐶', '🐱', '🐰', '🐸', '🦊', '🐼', '🐨', '🐯', '🦁', '🐻'];
+const DEFAULT_CHARACTERS = ['🐶', '🐱', '🐰', '🐸'];
+
 const DEFAULT_NAMES    = ['こども', 'パパ', 'ママ', 'ゲスト'];
 const DEFAULT_NUMBERS  = [
   [3, 15, 27, 42, 56, 63, 71, 85, 94],
@@ -34,6 +37,7 @@ interface Player {
   checked: boolean[];  // どのマスに穴が開いたか
   position: number;    // 0=スタート前, 1-100
   doneLines: number[]; // ビンゴ達成済みライン番号
+  character: string;   // コマのキャラクター絵文字
 }
 
 // ── ボード計算 ──────────────────────────────────────────────────────────────
@@ -158,10 +162,10 @@ function BingoCardDisplay({
               animate={isFlash ? { scale: [1, 1.4, 1] } : {}}
               transition={{ duration: 0.35 }}
               className={`
-                aspect-square flex items-center justify-center text-xs font-bold rounded
+                aspect-square flex items-center justify-center text-sm font-extrabold rounded
                 ${isChecked
                   ? `${s.bg} text-white shadow-sm`
-                  : 'bg-white text-gray-700 border border-gray-200'}
+                  : 'bg-white text-gray-800 border border-gray-200'}
                 ${isFlash ? 'ring-2 ring-yellow-400' : ''}
               `}
             >
@@ -195,11 +199,13 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [setupIdx, setSetupIdx] = useState(0);
   const [editName, setEditName] = useState('');
   const [editNumbers, setEditNumbers] = useState<Set<number>>(new Set());
+  const [editCharacter, setEditCharacter] = useState<string>(CHARACTERS[0]);
 
   // ── ゲーム状態 ──
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [diceValue, setDiceValue] = useState<number | null>(null);
+  const [diceShaking, setDiceShaking] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
   const [showBingo, setShowBingo] = useState<{ name: string; count: number } | null>(null);
@@ -213,6 +219,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   function startSetupCard(idx: number) {
     setEditName(DEFAULT_NAMES[idx] ?? `プレイヤー${idx + 1}`);
     setEditNumbers(new Set(DEFAULT_NUMBERS[idx] ?? []));
+    setEditCharacter(DEFAULT_CHARACTERS[idx] ?? CHARACTERS[idx % CHARACTERS.length]);
     setSetupIdx(idx);
     setPhase('setup-cards');
   }
@@ -226,6 +233,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       checked: Array(9).fill(false),
       position: 0,
       doneLines: [],
+      character: editCharacter,
     };
 
     setPlayers(prev => {
@@ -289,12 +297,12 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       setPlayers([...state]);
 
       if (current < to) {
-        timerRef.current = setTimeout(step, 220);
+        timerRef.current = setTimeout(step, 350);
       } else {
         timerRef.current = setTimeout(() => {
           setHighlightSquare(null);
           onComplete(state);
-        }, 300);
+        }, 500);
       }
     }
 
@@ -304,16 +312,20 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   function handleRoll() {
     if (isAnimating || phase !== 'game') return;
     setIsAnimating(true);
+    setDiceShaking(true);
 
-    // サイコロ演出
-    let rolling = 0;
-    const rollInterval = setInterval(() => {
+    // サイコロ演出: 速度に緩急をつけて全部で20回
+    const ROLL_TOTAL = 20;
+    const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
+
+    const doRoll = (i: number) => {
       setDiceValue(Math.ceil(Math.random() * 6));
-      rolling++;
-      if (rolling >= 8) {
-        clearInterval(rollInterval);
+      if (i < ROLL_TOTAL - 1) {
+        timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
+      } else {
         const roll = Math.ceil(Math.random() * 6);
         setDiceValue(roll);
+        setDiceShaking(false);
 
         const p = players[currentIdx];
         const from = p.position;
@@ -343,7 +355,8 @@ export function BingoSugorokuUnit({ onExit }: Props) {
           }
         });
       }
-    }, 80);
+    };
+    doRoll(0);
   }
 
   function checkGameOver(ps: Player[], pos: number) {
@@ -437,6 +450,29 @@ export function BingoSugorokuUnit({ onExit }: Props) {
             className="w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-lg font-bold focus:border-rose-400 outline-none"
             maxLength={8}
           />
+        </div>
+
+        {/* キャラクター選択 */}
+        <div className="w-full max-w-lg">
+          <p className="text-sm font-bold text-gray-600 mb-2">コマのキャラクターをえらんでね</p>
+          <div className="grid grid-cols-5 gap-2">
+            {CHARACTERS.map(c => (
+              <motion.button
+                key={c}
+                type="button"
+                onClick={() => setEditCharacter(c)}
+                whileTap={{ scale: 0.85 }}
+                className={`
+                  aspect-square text-3xl flex items-center justify-center rounded-2xl border-4 transition-all
+                  ${editCharacter === c
+                    ? 'border-rose-500 bg-rose-100 shadow-md scale-110'
+                    : 'border-transparent bg-gray-50 hover:bg-amber-50'}
+                `}
+              >
+                {c}
+              </motion.button>
+            ))}
+          </div>
         </div>
 
         {/* 数字ピッカー */}
@@ -611,7 +647,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                     >
                       <span className={`
                         leading-none font-bold select-none
-                        ${isGoal ? 'text-yellow-700 text-[9px]' : isMultOf10 ? 'text-amber-700 text-[8px]' : isZorome ? 'text-violet-600 text-[8px]' : 'text-gray-500 text-[7px]'}
+                        ${isGoal ? 'text-yellow-700 text-[11px]' : isMultOf10 ? 'text-amber-700 text-[10px]' : isZorome ? 'text-violet-600 text-[10px]' : 'text-gray-600 text-[9px] font-extrabold'}
                       `}>
                         {isGoal ? '🏁' : n}
                       </span>
@@ -622,11 +658,13 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                           {players_here.map(pi => (
                             <motion.div
                               key={pi}
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="w-2 h-2 rounded-full border border-white shadow-sm flex-shrink-0"
-                              style={{ backgroundColor: PLAYER_STYLES[pi % PLAYER_STYLES.length].token }}
-                            />
+                              initial={{ scale: 0, y: -4 }}
+                              animate={{ scale: 1, y: 0 }}
+                              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                              className="text-[11px] leading-none flex-shrink-0 drop-shadow"
+                            >
+                              {players[pi]?.character ?? '🐶'}
+                            </motion.div>
                           ))}
                         </div>
                       )}
@@ -666,9 +704,17 @@ export function BingoSugorokuUnit({ onExit }: Props) {
           <span className="font-bold text-gray-700">{current?.name} のばん</span>
         </div>
 
-        <div className="text-5xl leading-none">
+        <motion.div
+          className="text-7xl leading-none select-none"
+          animate={diceShaking
+            ? { rotate: [-12, 12, -10, 10, -6, 6, 0], scale: [1, 1.25, 1.1, 1.25, 1.1, 1.2, 1] }
+            : diceValue
+              ? { scale: [1.4, 1], rotate: [0, 0] }
+              : {}}
+          transition={{ duration: diceShaking ? 0.18 : 0.3 }}
+        >
           {diceValue ? DICE_FACE[diceValue] : '🎲'}
-        </div>
+        </motion.div>
 
         <motion.button
           type="button"
