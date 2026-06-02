@@ -24,6 +24,7 @@ import { ProgrammingHomeScreen } from './screens/ProgrammingHomeScreen';
 import { ArrowSequenceUnit } from './screens/ArrowSequenceUnit';
 import { ArrowDebugUnit } from './screens/ArrowDebugUnit';
 import { ArrowAdventureUnit } from './screens/ArrowAdventureUnit';
+import { MathAdventureUnit } from './screens/MathAdventureUnit';
 import { ArrowBranchUnit } from './screens/ArrowBranchUnit';
 import { ArrowMakerUnit } from './screens/ArrowMakerUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
@@ -50,6 +51,7 @@ const PROFILE_KEY = 'math-app:profile';
 
 type Screen =
   | { kind: 'categorySelect' }
+  | { kind: 'mathAdventure' }
   | { kind: 'home' }
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
@@ -324,13 +326,27 @@ export default function App() {
       );
     }
 
+    if (screen.kind === 'mathAdventure') {
+      return (
+        <MathAdventureUnit
+          key={refresh}
+          characterName={character.name}
+          characterId={character.id}
+          onExit={() => setScreen({ kind: 'home' })}
+        />
+      );
+    }
+
     return (
       <HomeScreen
         key={refresh}
         characterName={character.name}
         characterId={character.id}
         stampTotal={stampTotal}
-        onSelectUnit={(unitId) => setScreen({ kind: 'unit', unitId })}
+        onSelectUnit={(unitId) => {
+          if (unitId === 'math-adventure') { setScreen({ kind: 'mathAdventure' }); return; }
+          setScreen({ kind: 'unit', unitId });
+        }}
         onStartChallenge={() => setScreen({ kind: 'challenge' })}
         onStartMission={() => setScreen({ kind: 'mission' })}
         onOpenCollection={() => setScreen({ kind: 'collection' })}
