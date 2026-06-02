@@ -36,6 +36,7 @@ import { CharacterCollection } from './features/character/CharacterCollection';
 import { CharacterDetail } from './features/character/CharacterDetail';
 import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
+import { BingoSugorokuUnit } from './screens/BingoSugorokuUnit';
 import { setBgmTrack } from './features/sound/bgm';
 import { loadCharacter, getCharName, saveCharacterNameForId } from './features/character/character';
 import { CHARACTER_DEFS } from './features/character/characterDefs';
@@ -53,6 +54,7 @@ type Screen =
   | { kind: 'home' }
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
+  | { kind: 'bingoSugoroku' }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
   | { kind: 'progAdventure' }
   | { kind: 'progMaker' }
@@ -131,6 +133,7 @@ export default function App() {
     setCategory(cat);
     if (cat === 'katachi') setScreen({ kind: 'katachiHome' });
     else if (cat === 'programming') setScreen({ kind: 'programmingHome' });
+    else if (cat === 'family') setScreen({ kind: 'bingoSugoroku' });
     else setScreen({ kind: 'home' });
   }
 
@@ -165,6 +168,10 @@ export default function App() {
         case 'shape-tangram':   return <ShapeFitUnit        key={refresh} variant="tangram" hard={hard} expert={expert} {...sharedProps} />;
         default:                return <MakeTenUnit         key={refresh} {...sharedProps} />;
       }
+    }
+
+    if (screen.kind === 'bingoSugoroku') {
+      return <BingoSugorokuUnit key={refresh} onExit={() => setScreen({ kind: 'categorySelect' })} />;
     }
 
     if (screen.kind === 'programmingHome') {

@@ -34,6 +34,15 @@ const CATEGORIES = [
     shadow: '#3730a3',
     button: 'bg-indigo-500',
   },
+  {
+    id: 'family' as Category,
+    label: 'みんなであそぶ',
+    emoji: '🎲',
+    description: 'ビンゴすごろく で かぞく たいけつ！',
+    bg: 'from-rose-300 to-orange-200',
+    shadow: '#c2410c',
+    button: 'bg-rose-500',
+  },
 ] as const;
 
 export function CategorySelectScreen({ onSelect, onMaker }: Props) {

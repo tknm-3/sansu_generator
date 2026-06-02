@@ -1,4 +1,4 @@
-export type Category = 'sansu' | 'katachi' | 'programming';
+export type Category = 'sansu' | 'katachi' | 'programming' | 'family';
 
 export interface UnitMeta {
   id: string;
@@ -213,6 +213,15 @@ export const UNITS: UnitMeta[] = [
     grade: '小1〜小2',
     curriculum: 'プログラミング総合：問題集モード（ゾーンを じゅんに 解放）。いつでも あそべる',
     emoji: '🗺️',
+  },
+  // ── ファミリー カテゴリ ──
+  {
+    id: 'bingo-sugoroku',
+    category: 'family',
+    title: 'ビンゴすごろく',
+    grade: '年長〜小3',
+    curriculum: 'かぞく ゲーム：100マスすごろく＋ビンゴ の ドキドキ たいけつ！',
+    emoji: '🎲',
   },
 ];
 
