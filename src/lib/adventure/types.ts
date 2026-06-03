@@ -2,10 +2,13 @@ import type { ExplainStep } from '../math/explain';
 
 export type NodeKind = 'battle' | 'treasure' | 'rest' | 'boss' | 'mimic';
 
+export type ShapeTransform = { rotate: number; flipX: boolean };
+
 export type BattleVisual =
   | { kind: 'equation'; text: string }
   | { kind: 'objects'; emoji: string; count: number; addCount?: number }
-  | { kind: 'word'; text: string; emoji: string };
+  | { kind: 'word'; text: string; emoji: string }
+  | { kind: 'shape-rotation'; shapeId: string; rotationLabel: string };
 
 export interface BattleQuestion {
   unitId: string;
@@ -14,6 +17,8 @@ export interface BattleQuestion {
   choices: string[];
   answerIndex: number;
   explainSteps: ExplainStep[];
+  /** shape-rotation バトル用: 選択肢ごとの変換情報 */
+  choiceTransforms?: ShapeTransform[];
 }
 
 export type ItemKind = 'magnifier' | 'cookie';
