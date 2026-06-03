@@ -1195,23 +1195,26 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
 
   // ─── 🌀 ループの なかの ループ（adv-q103〜adv-q108）ネストループ 入門 ───
   {
+    // 超入門: loop(2){loop(2){forward}, turn_right} = 2まい すすんで まがる を 2かい
+    // = 3×3の 2辺（L字形）。walls:[] で maxSlots:2 の制約が 自然に ネストループを 強制。
     id: 'adv-q103', zoneId: 'nloop_a', rows: 3, cols: 3,
-    start: r(0, 0), goal: r(2, 0), startFacing: 'right',
+    start: r(0, 0), goal: r(2, 2), startFacing: 'right',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ループの なかに ループを いれてみよう！ 2まい すすんで まがる を 2かい くりかえすよ',
+  },
+  {
+    // 入門2: loop(3){loop(2){forward}, turn_right} = 3辺を まわる。
     // まんなかを ふさぐ＝まっすぐ したへ いけない。四角の ふちを まわる ネストループ だけ。
+    id: 'adv-q104', zoneId: 'nloop_a', rows: 3, cols: 3,
+    start: r(0, 0), goal: r(2, 0), startFacing: 'right',
     walls: [r(1, 0), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
-    prompt: 'ループの なかに ループを いれてみよう！',
-  },
-  {
-    id: 'adv-q104', zoneId: 'nloop_a', rows: 3, cols: 3,
-    start: r(0, 0), goal: r(2, 0), startFacing: 'right',
-    walls: [], gems: [r(0, 2)], goalEmoji: '🌊', gemEmoji: '⭐',
-    kind: 'relative', allowLoop: true,
-    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '⭐を とりながら ゴールへ！ ネストループで みちを えがこう',
+    prompt: '3かい くりかえすと もとの 行に もどってくるよ！',
   },
   {
     id: 'adv-q105', zoneId: 'nloop_a', rows: 3, cols: 3,
