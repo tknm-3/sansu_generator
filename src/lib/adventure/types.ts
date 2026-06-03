@@ -1,4 +1,6 @@
 import type { ExplainStep } from '../math/explain';
+import type { PatternItem } from '../geometry/pattern';
+import type { SceneObj } from '../geometry/spatial';
 
 export type NodeKind = 'battle' | 'treasure' | 'rest' | 'boss' | 'mimic';
 
@@ -8,7 +10,10 @@ export type BattleVisual =
   | { kind: 'equation'; text: string }
   | { kind: 'objects'; emoji: string; count: number; addCount?: number }
   | { kind: 'word'; text: string; emoji: string }
-  | { kind: 'shape-rotation'; shapeId: string; rotationLabel: string };
+  | { kind: 'shape-rotation'; shapeId: string; rotationLabel: string }
+  | { kind: 'shape-compose'; questionSvg: string; choiceSvgs: string[] }
+  | { kind: 'shape-pattern'; sequence: (PatternItem | null)[]; choiceItems: PatternItem[] }
+  | { kind: 'shape-spatial'; objects: SceneObj[] };
 
 export interface BattleQuestion {
   unitId: string;

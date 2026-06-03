@@ -66,8 +66,9 @@ npx vitest run src/lib/adventure/adapters.test.ts
    - `id`, `name`, `emoji`, `unitIds`, `layerCount`, `tagline`, `story`, `wall`, `tint`
 2. `unitIds` に書いた各 `unitId` ごとに `adapters.ts` にアダプター関数を書く
    - 関数シグネチャ: `(rng?: () => number) => BattleQuestion`
-   - `BattleVisual` の `kind` は `equation` / `objects` / `word` / `shape-rotation` から選ぶ
-   - 視覚的なSVGが必要なら `word` kind でテキスト代替が最速（例: `shapeComposeToBattle`）
+   - `BattleVisual` の `kind` を選ぶ（下の表）
+   - **図形単元は ぜったいに `word`（テキスト）で代替しない**。標準単元と同じSVGビジュアルを
+     渡す（理由は §8）。共有描画は `src/components/shapes/ShapeVisuals.tsx`。
 3. `ADAPTERS` マップに追加したアダプターを登録する
 4. テストを実行して `zone adapter coverage` が通ることを確認
 
@@ -77,11 +78,30 @@ npx vitest run src/lib/adventure/adapters.test.ts
 |---|---|---|
 | `equation` | 計算式（`3 ＋ 5`） | `text: string` |
 | `objects` | 絵文字を並べる（`🟡×6`) | `emoji`, `count`, `addCount?` |
-| `word` | 文章問題・テキスト系ビジュアル | `text`, `emoji` |
-| `shape-rotation` | 図形の回転問題 | `shapeId`, `rotationLabel` |
+| `word` | 文章問題（さんすう専用。図形では使わない）| `text`, `emoji` |
+| `shape-rotation` | 図形の回転 | `shapeId`, `rotationLabel`（＋`choiceTransforms`）|
+| `shape-compose` | かたちをあわせる | `questionSvg`, `choiceSvgs`（生SVG）|
+| `shape-pattern` | つぎはどれ | `sequence`, `choiceItems`（`PatternItem`）|
+| `shape-spatial` | どこにいる | `objects`（`SceneObj[]`。選択肢はテキスト）|
 
-`shape-rotation` を使う場合は `choiceTransforms` も設定し、
-`BattleScreen` の分岐レンダリングを確認すること。
+`shape-rotation` / `shape-compose` / `shape-pattern` は選択肢も図形なので、
+`BattleScreen` の `ShapeChoiceGrid`（2×2のSVGボタン）でレンダリングする。
+`shape-spatial` は選択肢が動物名（テキスト）なので `BattleButtons` のまま。
+
+## 8. 図形バトルは ぜったいに 図形で見せる（テキスト代替の禁止）
+
+としょかんモードの図形問題は、過去 `word` kind でテキストに潰していたため
+（例: `あか○ → あお△ → ？`、`🐱ねこ 🐶いぬ`）**視覚的にわかりにくかった**。
+かたち単元はそもそも「目で見て考える」のが学びの本体なので、テキスト化は学びを殺す。
+
+- **必ず標準単元と同じSVGビジュアルを渡す**。描画は `src/components/shapes/ShapeVisuals.tsx`
+  に一元化（`ComposeSvg` / `PatternIcon` / `PatternSequence` / `SpatialScene`）。
+  標準単元（`ShapeComposeUnit` 等）も としょかんバトルも この共有部品を使う＝**単一実装**。
+- 図形の選択肢は `BattleScreen` の `ShapeChoiceGrid` を使う（回転と共用の2×2グリッド）。
+  選択肢ラベルが意味を持たない単元（pattern は「かたち1」等）は不正解時の文言を
+  「これが こたえ！」にする（`こたえは <ラベル>` は無意味になるため）。
+- 回帰防止: `adapters.test.ts` の「図形バトルは視覚的なビジュアルで出す」が、
+  各図形アダプターが `shape-*` kind＋SVG/図形データを返すことを検査する。`word` に戻すと落ちる。
 
 ## 7. 既存アダプター一覧（2026-06 時点）
 

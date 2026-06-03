@@ -7,7 +7,8 @@ import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { ShapeHintGate } from '../components/ShapeHintGate';
-import { generatePatternProblem, type PatternItem, type PatternProblem, type ColorKey, type ShapeType } from '../lib/geometry/pattern';
+import { PatternIcon, PatternSequence } from '../components/shapes/ShapeVisuals';
+import { generatePatternProblem, type PatternProblem } from '../lib/geometry/pattern';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'shape-pattern';
@@ -17,66 +18,6 @@ interface Props {
   characterId: string;
   hard?: boolean;
   onExit: () => void;
-}
-
-const COLOR_MAP: Record<ColorKey, string> = {
-  red:    '#f87171',
-  blue:   '#60a5fa',
-  yellow: '#fbbf24',
-  green:  '#34d399',
-};
-
-function starPoints(cx: number, cy: number, outerR: number, innerR: number, pts: number): string {
-  const arr: string[] = [];
-  for (let i = 0; i < pts * 2; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (i * Math.PI) / pts - Math.PI / 2;
-    arr.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
-  }
-  return arr.join(' ');
-}
-
-function ShapeIcon({ item, size = 44 }: { item: PatternItem; size?: number }) {
-  const fill = COLOR_MAP[item.color];
-  const c = size / 2;
-  const r = size / 2 - 3;
-  const shapeEl = (() => {
-    switch (item.shape as ShapeType) {
-      case 'circle':
-        return <circle cx={c} cy={c} r={r} fill={fill} stroke="white" strokeWidth="2" />;
-      case 'triangle':
-        return <polygon points={`${c},3 ${size - 3},${size - 3} 3,${size - 3}`} fill={fill} stroke="white" strokeWidth="2" />;
-      case 'square':
-        return <rect x="3" y="3" width={size - 6} height={size - 6} rx="3" fill={fill} stroke="white" strokeWidth="2" />;
-      case 'star':
-        return <polygon points={starPoints(c, c, r, r * 0.42, 5)} fill={fill} stroke="white" strokeWidth="2" />;
-    }
-  })();
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {shapeEl}
-    </svg>
-  );
-}
-
-function SequenceDisplay({ sequence }: { sequence: (PatternItem | null)[] }) {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {sequence.map((item, i) => (
-        <div key={i} className="flex flex-col items-center gap-0.5">
-          {item ? (
-            <div className="rounded-xl bg-white shadow border border-purple-100 p-1.5">
-              <ShapeIcon item={item} size={40} />
-            </div>
-          ) : (
-            <div className="w-14 h-14 rounded-xl border-4 border-dashed border-purple-300 flex items-center justify-center text-purple-400 text-2xl font-bold">
-              ？
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export function ShapePatternUnit({ hard = false, onExit }: Props) {
@@ -153,7 +94,7 @@ export function ShapePatternUnit({ hard = false, onExit }: Props) {
       </motion.h2>
 
       <div className="rounded-3xl bg-white shadow-lg px-6 py-5 w-full max-w-sm flex flex-col items-center gap-3">
-        <SequenceDisplay sequence={problem.sequence} />
+        <PatternSequence sequence={problem.sequence} />
       </div>
 
       <p className="text-purple-700 font-bold">「？」に はいるのは どれ？</p>
@@ -168,7 +109,7 @@ export function ShapePatternUnit({ hard = false, onExit }: Props) {
             whileTap={{ scale: 0.95 }}
             className="rounded-2xl bg-white border-2 border-purple-200 p-4 flex items-center justify-center shadow-md"
           >
-            <ShapeIcon item={choice} size={52} />
+            <PatternIcon item={choice} size={52} />
           </motion.button>
         ))}
       </div>
@@ -192,10 +133,10 @@ export function ShapePatternUnit({ hard = false, onExit }: Props) {
       {reviewing && (
         <ShapeHintGate
           message={'まえから じゅんばんに みてみよう。\nおなじ ならびが くりかえして いるよ。\nつぎに くるのは どれかな？'}
-          context={<div className="rounded-3xl bg-white shadow px-5 py-4 max-w-sm"><SequenceDisplay sequence={problem.sequence} /></div>}
+          context={<div className="rounded-3xl bg-white shadow px-5 py-4 max-w-sm"><PatternSequence sequence={problem.sequence} /></div>}
           count={problem.choices.length}
           answerIndex={problem.answerIndex}
-          renderChoice={(idx) => <ShapeIcon item={problem.choices[idx]} size={48} />}
+          renderChoice={(idx) => <PatternIcon item={problem.choices[idx]} size={48} />}
           onSolved={registerCorrect}
         />
       )}

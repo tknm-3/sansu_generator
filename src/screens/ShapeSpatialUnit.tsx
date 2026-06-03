@@ -7,7 +7,8 @@ import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { ShapeHintGate } from '../components/ShapeHintGate';
-import { generateSpatialProblem, type SpatialProblem, type SceneObj } from '../lib/geometry/spatial';
+import { SpatialScene } from '../components/shapes/ShapeVisuals';
+import { generateSpatialProblem, type SpatialProblem } from '../lib/geometry/spatial';
 
 const QUESTIONS_PER_UNIT = 3;
 const SKILL_ID = 'shape-spatial';
@@ -17,52 +18,6 @@ interface Props {
   characterId: string;
   hard?: boolean;
   onExit: () => void;
-}
-
-const CELL = 72;
-const PAD = 16;
-const OBJ_R = 26;
-
-function SceneDisplay({ objects }: { objects: SceneObj[] }) {
-  const cols = Math.max(...objects.map((o) => o.col)) + 1;
-  const rows = Math.max(...objects.map((o) => o.row)) + 1;
-  const w = cols * CELL + PAD * 2;
-  const h = rows * CELL + PAD * 2;
-
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-      {Array.from({ length: rows }, (_, r) =>
-        Array.from({ length: cols }, (_, c) => (
-          <rect
-            key={`${r}-${c}`}
-            x={PAD + c * CELL}
-            y={PAD + r * CELL}
-            width={CELL}
-            height={CELL}
-            fill="#f0fdf4"
-            stroke="#86efac"
-            strokeWidth="1.5"
-            rx="8"
-          />
-        ))
-      )}
-      {objects.map((obj) => {
-        const cx = PAD + obj.col * CELL + CELL / 2;
-        const cy = PAD + obj.row * CELL + CELL / 2;
-        return (
-          <g key={obj.name}>
-            <circle cx={cx} cy={cy} r={OBJ_R} fill="white" stroke="#6ee7b7" strokeWidth="2" />
-            <text x={cx} y={cy + 2} fontSize="22" textAnchor="middle" dominantBaseline="middle">
-              {obj.emoji}
-            </text>
-            <text x={cx} y={cy + OBJ_R + 11} fontSize="10" textAnchor="middle" fill="#374151" fontFamily="sans-serif">
-              {obj.name}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
 }
 
 export function ShapeSpatialUnit({ hard = false, onExit }: Props) {
@@ -139,7 +94,7 @@ export function ShapeSpatialUnit({ hard = false, onExit }: Props) {
       </motion.h2>
 
       <div className="rounded-3xl bg-white shadow-lg px-4 py-5 flex flex-col items-center gap-3 overflow-x-auto">
-        <SceneDisplay objects={problem.objects} />
+        <SpatialScene objects={problem.objects} />
       </div>
 
       <p className="text-lg font-bold text-sky-800 text-center">{problem.question}</p>
@@ -178,7 +133,7 @@ export function ShapeSpatialUnit({ hard = false, onExit }: Props) {
       {reviewing && (
         <ShapeHintGate
           message={`${problem.question}\nえを ゆびで さして、ばしょを たしかめよう。\n「ひだり・みぎ・うえ・した」を よく みてね。`}
-          context={<div className="rounded-3xl bg-white shadow px-4 py-4 overflow-x-auto"><SceneDisplay objects={problem.objects} /></div>}
+          context={<div className="rounded-3xl bg-white shadow px-4 py-4 overflow-x-auto"><SpatialScene objects={problem.objects} /></div>}
           count={problem.choices.length}
           answerIndex={problem.answerIndex}
           renderChoice={(idx) => <span className="text-xl font-bold text-sky-900 px-2 py-1">{problem.choices[idx]}</span>}
