@@ -1175,8 +1175,9 @@ function RelativeAdventurePlay({
   const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
   const maxSlots = quest.maxSlots ?? 12;
-  // くりかえしの なかみは 専用の上限を もうけず、全体の枠(maxSlots)を 共有する
-  const maxBodyLen = maxSlots;
+  // くりかえしの なかみは トップレベルの枠(maxSlots)とは別の generous な枠で 管理する。
+  // loopOnly クエストは maxSlots が「ループ1個ぶん」で小さいので、そこに 縛らない。
+  const maxBodyLen = 12;
   const runner = useProgramRunner<RelCommand>(quest, handleFinish, runRelative);
   const canEdit = !runner.playing && !locked;
   const inLoop = loopStack.length > 0;
