@@ -17,18 +17,18 @@ import { samePos, type Dir, type Level, type Pos, type RunResult } from './engin
 /** 相対方向の 命令 */
 export type RelDir = 'forward' | 'turn_right' | 'turn_left';
 
-/** ループ命令（N回 くりかえす） */
-export type RelLoop = { kind: 'loop'; times: number; body: RelDir[] };
+/** ループ命令（N回 くりかえす）。body は ネストループを ふくめる */
+export type RelLoop = { kind: 'loop'; times: number; body: RelCommand[] };
 
 /** そうたい方向の 命令（1ステップ または ループ）*/
 export type RelCommand = RelDir | RelLoop;
 
-/** ループを ふくむ 命令列を フラットな RelDir[] に ひらく */
+/** ループを ふくむ 命令列を フラットな RelDir[] に ひらく（ネストも 再帰展開） */
 export function flattenRel(cmds: RelCommand[]): RelDir[] {
   const out: RelDir[] = [];
   for (const c of cmds) {
     if (typeof c === 'string') out.push(c);
-    else for (let i = 0; i < c.times; i++) out.push(...c.body);
+    else for (let i = 0; i < c.times; i++) out.push(...flattenRel(c.body));
   }
   return out;
 }

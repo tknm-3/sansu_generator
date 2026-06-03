@@ -205,6 +205,8 @@ const REGION_TINT: Record<string, string> = {
   rloop_b: 'rgba(120,90,190,.30)',
   proc_a:  'rgba(220,130,60,.28)',
   proc_b:  'rgba(200,80,100,.28)',
+  nloop_a: 'rgba(60,150,130,.28)',
+  nloop_b: 'rgba(100,70,180,.30)',
 };
 
 interface TownStop {
@@ -1164,20 +1166,25 @@ function RelativeAdventurePlay({
   const accent = ACCENT[zone.accent] ?? ACCENT.sky;
   const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
 
+  type LoopBuild = { times: number; body: RelCommand[] };
   const [cmds, setCmds] = useState<RelCommand[]>([]);
-  const [editingLoopIdx, setEditingLoopIdx] = useState<number | null>(null);
+  const [loopStack, setLoopStack] = useState<LoopBuild[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
   const maxSlots = quest.maxSlots ?? 12;
+  const maxBodyLen = 4;
   const runner = useProgramRunner<RelCommand>(quest, handleFinish, runRelative);
   const canEdit = !runner.playing && !locked;
-  const inLoop = editingLoopIdx !== null;
-  const currentLoop = inLoop ? (cmds[editingLoopIdx!] as RelLoop | undefined) : undefined;
-  const bodyLen = currentLoop?.body.length ?? 0;
-  const canAdd = canEdit && (inLoop ? bodyLen < 4 : cmds.length < maxSlots);
+  const inLoop = loopStack.length > 0;
+  const innermost = loopStack[loopStack.length - 1];
+  const bodyLen = innermost?.body.length ?? 0;
+  const canAdd = canEdit && (inLoop ? bodyLen < maxBodyLen : cmds.length < maxSlots);
+  const canAddLoop = canEdit && !!quest.allowLoop && loopStack.length < 2 && (
+    loopStack.length === 0 ? cmds.length < maxSlots : bodyLen < maxBodyLen
+  );
 
   function handleFinish(result: RunResult) {
     if (isCleared(result)) {
@@ -1202,37 +1209,45 @@ function RelativeAdventurePlay({
   function addCmd(c: RelDir) {
     if (!canAdd) return;
     playSfx('tap');
-    if (inLoop && editingLoopIdx !== null) {
-      setCmds((cs) => cs.map((cmd, i) => {
-        if (i !== editingLoopIdx || typeof cmd === 'string') return cmd;
-        return { ...(cmd as RelLoop), body: [...(cmd as RelLoop).body, c] };
-      }));
+    if (inLoop) {
+      setLoopStack(stack => {
+        const ns = [...stack];
+        const last = ns[ns.length - 1];
+        ns[ns.length - 1] = { ...last, body: [...last.body, c] };
+        return ns;
+      });
     } else {
-      setCmds((cs) => [...cs, c]);
+      setCmds(cs => [...cs, c]);
       setHint(null);
     }
   }
   function addLoop(times: number) {
-    if (!canEdit || inLoop || cmds.length >= maxSlots) return;
+    if (!canAddLoop) return;
     playSfx('tap');
-    const newIdx = cmds.length;
-    setCmds((cs) => [...cs, { kind: 'loop', times, body: [] } as RelLoop]);
-    setEditingLoopIdx(newIdx);
+    setLoopStack(stack => [...stack, { times, body: [] }]);
     setHint(null);
   }
   function finishLoop() {
-    if (editingLoopIdx === null) return;
+    if (!inLoop) return;
     playSfx('tap');
-    const loop = cmds[editingLoopIdx] as RelLoop;
-    if (loop.body.length === 0) {
-      setCmds((cs) => cs.filter((_, i) => i !== editingLoopIdx));
-    }
-    setEditingLoopIdx(null);
+    setLoopStack(stack => {
+      const ns = [...stack];
+      const finished = ns.pop()!;
+      if (finished.body.length === 0) return ns;
+      const loop: RelLoop = { kind: 'loop', times: finished.times, body: finished.body };
+      if (ns.length === 0) {
+        setCmds(cs => [...cs, loop]);
+      } else {
+        const last = ns[ns.length - 1];
+        ns[ns.length - 1] = { ...last, body: [...last.body, loop] };
+      }
+      return ns;
+    });
   }
   function removeAt(i: number) {
     if (!canEdit || inLoop) return;
     playSfx('tap');
-    setCmds((cs) => cs.filter((_, j) => j !== i));
+    setCmds(cs => cs.filter((_, j) => j !== i));
   }
   function handleStart() {
     if (!canEdit || cmds.length === 0 || inLoop) return;
@@ -1249,14 +1264,14 @@ function RelativeAdventurePlay({
     if (locked) return;
     playSfx('tap');
     runner.reset();
-    setEditingLoopIdx(null);
+    setLoopStack([]);
     setHint(null);
   }
   function handleClearAll() {
     if (!canEdit) return;
     playSfx('tap');
     setCmds([]);
-    setEditingLoopIdx(null);
+    setLoopStack([]);
     runner.reset();
     setHint(null);
   }
@@ -1270,6 +1285,42 @@ function RelativeAdventurePlay({
       speakJa(msg);
     }
   }
+
+  // 完成した RelCommand の 再帰レンダラー
+  function renderRelCmd(c: RelCommand, key: number | string): ReactNode {
+    if (typeof c === 'string') {
+      return (
+        <span key={key} className={`rounded px-1 py-0.5 text-sm font-bold text-white ${accent.chip}`}>
+          {REL_ICON[c]}
+        </span>
+      );
+    }
+    return (
+      <div key={key} className={`flex items-center gap-0.5 rounded-lg border-2 ${accent.border} bg-white/40 px-1 py-0.5`}>
+        <span className="text-[9px] font-bold" style={{ color: '#7a5a3a' }}>🔁×{c.times}</span>
+        {c.body.map((bc, bi) => renderRelCmd(bc, bi))}
+      </div>
+    );
+  }
+
+  // 組み立て中のループスタックを ネスト表示
+  function renderLoopBuilding(depth: number): ReactNode {
+    if (depth >= loopStack.length) return null;
+    const lv = loopStack[depth];
+    const isInnermost = depth === loopStack.length - 1;
+    return (
+      <div className={`flex flex-wrap items-center gap-0.5 rounded-xl border-2 ring-2 ring-white ring-offset-1 ${accent.border} bg-white/80 px-1.5 py-0.5`}>
+        <span className="text-[10px] font-bold mr-0.5" style={{ color: '#7a5a3a' }}>🔁×{lv.times}</span>
+        {lv.body.map((bc, bi) => renderRelCmd(bc, bi))}
+        {!isInnermost && renderLoopBuilding(depth + 1)}
+        {isInnermost && Array.from({ length: Math.max(0, maxBodyLen - lv.body.length) }).map((_, ei) => (
+          <span key={`ph-${ei}`} className="rounded border border-dashed border-gray-300 px-1 py-0.5 text-sm text-gray-300">？</span>
+        ))}
+      </div>
+    );
+  }
+
+  const loopDepthLabel = loopStack.length >= 2 ? 'ネストループ' : 'ループ';
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-4 p-5" style={{ background: PARCHMENT }}>
@@ -1325,48 +1376,30 @@ function RelativeAdventurePlay({
         className="relative z-10 flex min-h-[52px] w-full max-w-sm flex-wrap items-center gap-1 rounded-2xl border-2 border-dashed p-2"
         style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
       >
-        {cmds.length === 0 ? (
+        {cmds.length === 0 && !inLoop ? (
           <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいが ならぶよ</span>
         ) : (
-          cmds.map((c, i) => {
-            if (typeof c === 'string') {
-              return (
-                <button key={i} type="button" onClick={() => removeAt(i)}
-                  className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}>
-                  {REL_ICON[c]}
-                </button>
-              );
-            }
-            const isEditing = editingLoopIdx === i;
-            return (
-              <div key={i}
-                className={`flex items-center gap-0.5 rounded-xl border-2 px-1.5 py-0.5 ${accent.border} ${isEditing ? 'ring-2 ring-white bg-white/80' : 'bg-white/50'}`}
-                onClick={() => !inLoop && removeAt(i)}
-                style={{ cursor: inLoop ? 'default' : 'pointer' }}>
-                <span className="text-[10px] font-bold mr-0.5" style={{ color: '#7a5a3a' }}>🔁×{c.times}</span>
-                {c.body.map((bc, bi) => (
-                  <span key={bi} className={`rounded px-1 py-0.5 text-sm font-bold text-white ${accent.chip}`}>{REL_ICON[bc]}</span>
-                ))}
-                {isEditing && Array.from({ length: 4 - c.body.length }).map((_, ei) => (
-                  <span key={`ph-${ei}`} className="rounded border border-dashed border-gray-300 px-1 py-0.5 text-sm text-gray-300">？</span>
-                ))}
-              </div>
-            );
-          })
+          <>
+            {cmds.map((c, i) => (
+              <span key={i} onClick={() => removeAt(i)} style={{ cursor: inLoop ? 'default' : 'pointer' }}>
+                {renderRelCmd(c, i)}
+              </span>
+            ))}
+            {inLoop && renderLoopBuilding(0)}
+          </>
         )}
       </div>
-      <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>めいれいを タップすると けせるよ（のこり {maxSlots - cmds.length}）</p>
+      <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>
+        {inLoop
+          ? `${loopDepthLabel}の なかみを えらんでね（のこり ${maxBodyLen - bodyLen}）`
+          : `めいれいを タップすると けせるよ（のこり ${maxSlots - cmds.length}）`}
+      </p>
 
       {/* そうたい方向 どうぐばこ */}
       <div
         className="relative z-10 flex flex-col items-center gap-2 rounded-2xl border-2 p-3"
         style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
       >
-        {inLoop && (
-          <p className="text-xs font-bold" style={{ color: '#7a5a3a' }}>
-            🔁 ループの なかみを えらんでね（のこり {4 - bodyLen} こ）
-          </p>
-        )}
         <div className="flex items-center justify-center gap-2">
           {(['turn_left', 'forward', 'turn_right'] as RelDir[]).map((c) => (
             <motion.button
@@ -1393,16 +1426,18 @@ function RelativeAdventurePlay({
             </motion.button>
           )}
         </div>
-        {quest.allowLoop && !inLoop && (
+        {canAddLoop && (
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold" style={{ color: '#9a7c54' }}>ループ→</span>
+            <span className="text-[10px] font-bold" style={{ color: '#9a7c54' }}>
+              {loopStack.length >= 1 ? 'ネスト→' : 'ループ→'}
+            </span>
             {([2, 3, 4, 5] as const).map((n) => (
               <motion.button
                 key={n}
                 type="button"
                 onClick={() => addLoop(n)}
                 whileTap={{ scale: 0.9 }}
-                disabled={cmds.length >= maxSlots || !canEdit}
+                disabled={!canAddLoop}
                 className={`flex h-12 w-14 flex-col items-center justify-center rounded-2xl border-2 ${accent.border} ${accent.soft} font-bold ${accent.text} shadow-sm disabled:opacity-40`}
               >
                 <span className="text-base">🔁</span>
@@ -1441,7 +1476,7 @@ function RelativeAdventurePlay({
         <button
           type="button"
           onClick={handleClearAll}
-          disabled={!canEdit || cmds.length === 0}
+          disabled={!canEdit || (cmds.length === 0 && !inLoop)}
           className="rounded-2xl bg-rose-300 px-3 py-3 text-base font-bold text-white shadow-[0_4px_0_#9f1239] active:translate-y-1 disabled:opacity-40"
           title="めいれいを ぜんぶ けす"
         >
