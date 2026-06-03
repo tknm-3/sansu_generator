@@ -21,6 +21,17 @@ export const BOARD_GRID: number[][] = (() => {
   return g;
 })();
 
+/** ゲーム開始時にボーナスマスをランダムに配置（5〜95 の範囲で count 個） */
+export function generateBonusSquares(count: number = 5): number[] {
+  const pool: number[] = [];
+  for (let n = 5; n <= 95; n++) pool.push(n);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count).sort((a, b) => a - b);
+}
+
 export function getNewBingos(player: Player): number[] {
   return BINGO_LINES.flatMap((line, i) => {
     if (player.doneLines.includes(i)) return [];
@@ -75,4 +86,17 @@ export function processAllBingos(
     }
   });
   return { updated, events };
+}
+
+/** 各マスにビンゴカードを持つプレイヤーのインデックスリストを返す */
+export function buildSquareOwnerMap(players: Player[]): Map<number, number[]> {
+  const map = new Map<number, number[]>();
+  players.forEach((p, pi) => {
+    p.numbers.forEach(n => {
+      const arr = map.get(n) ?? [];
+      arr.push(pi);
+      map.set(n, arr);
+    });
+  });
+  return map;
 }
