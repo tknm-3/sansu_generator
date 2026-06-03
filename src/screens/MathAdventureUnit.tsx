@@ -6,6 +6,7 @@ import { setBgmTrack } from '../features/sound/bgm';
 import { playSfx } from '../features/sound/sfx';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
 import { BattleButtons } from '../components/BattleButtons';
+import { ShapeSvg } from '../components/shapes/ShapeSvg';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
 import { generateBattleQuestion } from '../lib/adventure/adapters';
@@ -461,6 +462,19 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
                 {question.visual.text}
               </div>
             )}
+            {question.visual?.kind === 'shape-rotation' && (() => {
+              const v = question.visual;
+              return (
+                <div className="flex items-center gap-3 justify-center mb-1">
+                  <ShapeSvg shapeId={v.shapeId} transform={{ rotate: 0, flipX: false }} size={70} color="#f59e0b" />
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xl">➡️</span>
+                    <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(255,250,235,.9)', color: SEPIA }}>{v.rotationLabel}</span>
+                  </div>
+                  <div className="w-16 h-16 rounded-xl border-2 border-dashed flex items-center justify-center text-2xl" style={{ borderColor: 'rgba(123,90,58,.4)', color: 'rgba(123,90,58,.5)' }}>？</div>
+                </div>
+              );
+            })()}
             {!question.visual && (
               <div className="text-2xl font-bold" style={{ color: SEPIA }}>{question.promptText}</div>
             )}
@@ -477,18 +491,48 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
               animate={{ scale: 1 }}
               className={`text-2xl font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}
             >
-              {isCorrect ? '🎉 せいかい！' : `こたえは ${question.choices[question.answerIndex]} だよ`}
+              {isCorrect ? '🎉 せいかい！' : (question.visual?.kind === 'shape-rotation' ? 'これが こたえ！' : `こたえは ${question.choices[question.answerIndex]} だよ`)}
             </motion.div>
           )}
         </AnimatePresence>
 
-        <BattleButtons
-          choices={question.choices}
-          onPick={handlePick}
-          disabled={locked}
-          correctIndex={chosen !== null ? question.answerIndex : undefined}
-          wrongIndex={isWrong ? chosen! : undefined}
-        />
+        {question.visual?.kind === 'shape-rotation' && question.choiceTransforms ? (
+          <div className="grid grid-cols-2 gap-3 w-full">
+            {question.choiceTransforms.map((transform, idx) => {
+              const isChosenCorrect = chosen === idx && idx === question.answerIndex;
+              const isChosenWrong = chosen === idx && idx !== question.answerIndex;
+              const isAnswer = chosen !== null && idx === question.answerIndex;
+              let borderColor = 'rgba(123,90,58,.35)';
+              if (isChosenCorrect || isAnswer) borderColor = '#16a34a';
+              else if (isChosenWrong) borderColor = '#dc2626';
+              return (
+                <motion.button
+                  key={idx}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => handlePick(idx)}
+                  whileTap={!locked ? { scale: 0.92 } : {}}
+                  className="rounded-2xl p-3 flex items-center justify-center"
+                  style={{
+                    background: isChosenCorrect || isAnswer ? 'rgba(220,252,231,.9)' : isChosenWrong ? 'rgba(254,226,226,.9)' : 'rgba(255,250,235,.92)',
+                    border: `2.5px solid ${borderColor}`,
+                    boxShadow: '0 3px 0 rgba(90,55,20,.2)',
+                  }}
+                >
+                  <ShapeSvg shapeId={(question.visual as { kind: 'shape-rotation'; shapeId: string; rotationLabel: string }).shapeId} transform={transform} size={64} color="#60a5fa" />
+                </motion.button>
+              );
+            })}
+          </div>
+        ) : (
+          <BattleButtons
+            choices={question.choices}
+            onPick={handlePick}
+            disabled={locked}
+            correctIndex={chosen !== null ? question.answerIndex : undefined}
+            wrongIndex={isWrong ? chosen! : undefined}
+          />
+        )}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { missingToTen, makeAnswerChoices, explainMakeTen } from '../math/makeTen
 import { generateCarryProblem, explainCherry } from '../math/cherryCalc';
 import { generateBigAddition, explainBigAddition } from '../math/bigAddition';
 import { generateWordProblem, type WordVariant, type WordVerdict } from '../math/wordProblem';
+import { generateRotationProblem } from '../geometry/rotation';
 
 /** 3択の数値配列に4つ目のダミー選択肢を追加してシャッフル。answerIndex を返す */
 function toFourChoices(
@@ -110,6 +111,19 @@ export function wordToBattle(
 
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
+export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
+  const p = generateRotationProblem(false);
+  return {
+    unitId: 'shape-rotation',
+    promptText: p.transform.flipX ? 'うらがえしたら どのかたち？' : 'まわしたら どのかたち？',
+    visual: { kind: 'shape-rotation', shapeId: p.shapeId, rotationLabel: p.rotationLabel },
+    choices: p.choices.map((_, i) => `かたち${i + 1}`),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+    choiceTransforms: p.choices,
+  };
+}
+
 const ADAPTERS: Record<string, AdapterFn> = {
   'make-ten': makeTenToBattle,
   'addition': additionToBattle,
@@ -118,6 +132,7 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'big-addition': bigAdditionToBattle,
   'word-addition': (rng) => wordToBattle('word-addition', rng),
   'word-subtraction': (rng) => wordToBattle('word-subtraction', rng),
+  'shape-rotation': shapeRotationToBattle,
 };
 
 export function generateBattleQuestion(
