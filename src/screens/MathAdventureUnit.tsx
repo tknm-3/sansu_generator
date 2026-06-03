@@ -7,6 +7,7 @@ import { playSfx } from '../features/sound/sfx';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
 import { BattleButtons } from '../components/BattleButtons';
 import { ShapeSvg } from '../components/shapes/ShapeSvg';
+import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
 import { generateBattleQuestion } from '../lib/adventure/adapters';
@@ -538,6 +539,69 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
   );
 }
 
+// ─── Hint ────────────────────────────────────────────────────────────────────
+
+function HintScreen({ question, run, zone, onRetry }: {
+  question: BattleQuestion;
+  run: RunState;
+  zone: ReturnType<typeof getZone>;
+  onRetry: () => void;
+}) {
+  const hasSteps = question.explainSteps.length > 0;
+
+  if (hasSteps) {
+    return (
+      <div className="relative min-h-screen" style={{ background: PAPER }}>
+        <LibraryTexture />
+        <div className="relative z-10">
+          <StepExplainer
+            gate
+            steps={question.explainSteps}
+            problem={question.promptText}
+            onClose={onRetry}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center gap-6 p-6" style={{ background: PAPER }}>
+      <LibraryTexture />
+      <div className="relative z-10 flex gap-1">
+        {Array.from({ length: run.maxHp }).map((_, i) => (
+          <span key={i} className={i < run.hp ? 'text-xl' : 'text-xl opacity-25'}>❤️</span>
+        ))}
+      </div>
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative z-10 text-6xl"
+      >
+        🤔
+      </motion.div>
+      <div
+        className="relative z-10 rounded-3xl p-5 text-center max-w-sm w-full"
+        style={{ background: 'rgba(255,250,235,.92)', border: '2px solid rgba(123,90,58,.4)', boxShadow: '0 4px 0 rgba(90,55,20,.2)' }}
+      >
+        <p className="text-base font-bold mb-1" style={{ color: '#9a7c54' }}>{zone.emoji} {question.promptText}</p>
+        <p className="text-lg font-bold" style={{ color: SEPIA }}>
+          こたえは <span className="text-2xl">{question.choices[question.answerIndex]}</span> だよ！
+        </p>
+      </div>
+      <motion.button
+        type="button"
+        onClick={onRetry}
+        whileTap={{ scale: 0.94 }}
+        className="relative z-10 rounded-2xl py-4 px-8 text-xl font-bold text-[#fbe6c9]"
+        style={{ background: 'linear-gradient(#b9472f,#9c3622)', boxShadow: '0 4px 0 rgba(90,30,10,.4)' }}
+      >
+        もう一回 チャレンジ！
+      </motion.button>
+    </div>
+  );
+}
+
 // ─── Result ───────────────────────────────────────────────────────────────────
 
 function ResultScreen({ run, zoneName, zoneEmoji, charEmoji, onContinue, onHub }: {
@@ -610,7 +674,7 @@ function ResultScreen({ run, zoneName, zoneEmoji, charEmoji, onContinue, onHub }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-type View = 'hub' | 'map' | 'battle' | 'result';
+type View = 'hub' | 'map' | 'battle' | 'hint' | 'result';
 
 export function MathAdventureUnit({ characterName, characterId, onExit }: Props) {
   const charEmoji = CHARACTER_DEFS.find((d) => d.id === characterId)?.emoji ?? '🐰';
@@ -694,7 +758,7 @@ export function MathAdventureUnit({ characterName, characterId, onExit }: Props)
     const updated: RunState = { ...run, hp: Math.max(0, run.hp - 1) };
     setRun(updated);
     saveRun(updated);
-    setTimeout(() => setView('map'), 1000);
+    setView('hint');
   }
 
   if (view === 'hub') {
@@ -731,6 +795,17 @@ export function MathAdventureUnit({ characterName, characterId, onExit }: Props)
         charEmoji={charEmoji}
         onCorrect={handleCorrect}
         onWrong={handleWrong}
+      />
+    );
+  }
+
+  if (view === 'hint' && question && run) {
+    return (
+      <HintScreen
+        question={question}
+        run={run}
+        zone={currentZone}
+        onRetry={() => setView('battle')}
       />
     );
   }
