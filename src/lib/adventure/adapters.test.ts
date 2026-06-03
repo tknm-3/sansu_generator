@@ -6,6 +6,9 @@ import {
   cherryCalcToBattle,
   bigAdditionToBattle,
   wordToBattle,
+  shapeComposeToBattle,
+  shapePatternToBattle,
+  shapeSpatialToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -65,6 +68,51 @@ describe('battle adapters', () => {
         expect(q.answerIndex).toBeLessThan(3);
       }
     });
+  });
+});
+
+// としょかんモードの図形問題は「テキスト代替(word)」ではなく
+// 図形をそのまま見せるビジュアルで出題する（視覚的にわかるように）。
+describe('図形バトルは視覚的なビジュアルで出す', () => {
+  it('shapeCompose: お題と選択肢の両方がSVGコンテンツを持つ', () => {
+    for (let i = 0; i < 20; i++) {
+      const q = shapeComposeToBattle();
+      expect(q.visual?.kind).toBe('shape-compose');
+      if (q.visual?.kind !== 'shape-compose') throw new Error('kind mismatch');
+      expect(q.visual.questionSvg).toMatch(/<(polygon|rect|circle)/);
+      expect(q.visual.choiceSvgs).toHaveLength(q.choices.length);
+      for (const svg of q.visual.choiceSvgs) {
+        expect(svg).toMatch(/<(polygon|rect|circle)/);
+      }
+    }
+  });
+
+  it('shapePattern: 並びと選択肢を図形データで持つ（？を1つ含む）', () => {
+    for (let i = 0; i < 20; i++) {
+      const q = shapePatternToBattle();
+      expect(q.visual?.kind).toBe('shape-pattern');
+      if (q.visual?.kind !== 'shape-pattern') throw new Error('kind mismatch');
+      expect(q.visual.sequence.filter((x) => x === null)).toHaveLength(1);
+      expect(q.visual.choiceItems.length).toBeGreaterThan(0);
+      for (const item of q.visual.choiceItems) {
+        expect(item).toHaveProperty('shape');
+        expect(item).toHaveProperty('color');
+      }
+    }
+  });
+
+  it('shapeSpatial: グリッド配置オブジェクトを持つ', () => {
+    for (let i = 0; i < 20; i++) {
+      const q = shapeSpatialToBattle();
+      expect(q.visual?.kind).toBe('shape-spatial');
+      if (q.visual?.kind !== 'shape-spatial') throw new Error('kind mismatch');
+      expect(q.visual.objects.length).toBeGreaterThan(0);
+      for (const obj of q.visual.objects) {
+        expect(obj).toHaveProperty('emoji');
+        expect(typeof obj.col).toBe('number');
+        expect(typeof obj.row).toBe('number');
+      }
+    }
   });
 });
 

@@ -7,6 +7,7 @@ import { speakJa } from '../features/speech/tts';
 import { loadJson, saveJson } from '../lib/storage';
 import { addStamp, EMPTY_STAMPS, STAMP_KEY, type StampState } from '../features/rewards/stamps';
 import { ShapeHintGate } from '../components/ShapeHintGate';
+import { ComposeSvg } from '../components/shapes/ShapeVisuals';
 import { generateComposeProblem, type ComposeProblem } from '../lib/geometry/compose';
 
 const QUESTIONS_PER_UNIT = 3;
@@ -17,17 +18,6 @@ interface Props {
   characterId: string;
   hard?: boolean;
   onExit: () => void;
-}
-
-function SvgChoice({ svg, size = 120 }: { svg: string; size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size * 0.7}
-      viewBox="0 0 200 120"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
 }
 
 export function ShapeComposeUnit({ hard = false, onExit }: Props) {
@@ -106,7 +96,7 @@ export function ShapeComposeUnit({ hard = false, onExit }: Props) {
 
       {/* お題 */}
       <div className="rounded-3xl bg-white shadow-lg px-8 py-5 flex items-center justify-center">
-        <SvgChoice svg={problem.questionSvg} size={160} />
+        <ComposeSvg svg={problem.questionSvg} size={160} />
       </div>
 
       <p className="text-teal-700 font-bold">こたえは どれ？</p>
@@ -122,7 +112,7 @@ export function ShapeComposeUnit({ hard = false, onExit }: Props) {
             whileTap={{ scale: 0.95 }}
             className="rounded-2xl bg-white border-2 border-teal-200 p-3 flex flex-col items-center gap-1 shadow-md"
           >
-            <SvgChoice svg={choice.svg} size={110} />
+            <ComposeSvg svg={choice.svg} size={110} />
             <span className="text-xs text-teal-700 font-bold">{choice.label}</span>
           </motion.button>
         ))}
@@ -147,12 +137,12 @@ export function ShapeComposeUnit({ hard = false, onExit }: Props) {
       {reviewing && (
         <ShapeHintGate
           message={'おだいの かたちを よく みてね。\n2つの かたちを あわせると どの かたちに なるかな？'}
-          context={<div className="rounded-3xl bg-white shadow px-6 py-4"><SvgChoice svg={problem.questionSvg} size={150} /></div>}
+          context={<div className="rounded-3xl bg-white shadow px-6 py-4"><ComposeSvg svg={problem.questionSvg} size={150} /></div>}
           count={problem.choices.length}
           answerIndex={problem.answerIndex}
           renderChoice={(idx) => (
             <div className="flex flex-col items-center gap-1">
-              <SvgChoice svg={problem.choices[idx].svg} size={96} />
+              <ComposeSvg svg={problem.choices[idx].svg} size={96} />
               <span className="text-xs text-teal-700 font-bold">{problem.choices[idx].label}</span>
             </div>
           )}

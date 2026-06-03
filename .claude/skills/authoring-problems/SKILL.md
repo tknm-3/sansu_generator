@@ -129,6 +129,14 @@ npx vitest run                                          # 全部
   気づきにくい。今後は `adapters.test.ts` の `zone adapter coverage` テスト
   （`npx vitest run src/lib/adventure/adapters.test.ts`）が全ゾーンの unitId を実呼び出しして
   検知する。詳細は `math-adventure-architecture.md`。
+- [2026-06-03] としょかん冒険/図形バトルの視覚化: かたち単元（compose/pattern/spatial）が
+  `adapters.ts` で `word`（テキスト）kind に潰され「視覚的にわかりにくい」状態だった
+  （例: `あか○ → あお△ → ？`）。**図形は目で見て考えるのが学びの本体**なのでテキスト化は厳禁。
+  標準単元のSVG描画を `src/components/shapes/ShapeVisuals.tsx` に一元化し、標準単元・としょかん
+  バトルの両方で同じ部品を使う（単一実装）。`BattleVisual` に `shape-compose`/`shape-pattern`/
+  `shape-spatial` kind を追加、選択肢が図形のものは `BattleScreen` の `ShapeChoiceGrid`（回転と共用）
+  で描く。回帰防止テストは `adapters.test.ts`「図形バトルは視覚的なビジュアルで出す」。
+  詳細は `math-adventure-architecture.md` §8。
 - [2026-06-03] 冒険/そうたい×ループ・ネストループ: **「コの字／かいだん／ジグザグ／四角の ふち」と
   prompt で うたう問題は、かべで みちを しぼらないと まっすぐ や L字で ショートカットできてしまう**
   （`walls:[]` のままだと学びが薄い）。relSolution が ゴールに着くだけでは不十分。対策:

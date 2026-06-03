@@ -7,6 +7,7 @@ import { playSfx } from '../features/sound/sfx';
 import { CHARACTER_DEFS } from '../features/character/characterDefs';
 import { BattleButtons } from '../components/BattleButtons';
 import { ShapeSvg } from '../components/shapes/ShapeSvg';
+import { ComposeSvg, PatternSequence, PatternIcon, SpatialScene } from '../components/shapes/ShapeVisuals';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -380,6 +381,46 @@ function MapScreen({ map, run, zone, charEmoji, onSelectNode, onBack }: {
 
 // ─── Battle ───────────────────────────────────────────────────────────────────
 
+/** 図形選択肢を 2×2 グリッドのSVGボタンで描く（回転・くみあわせ・つぎはどれ で共用）。*/
+function ShapeChoiceGrid({ count, answerIndex, chosen, locked, onPick, children }: {
+  count: number;
+  answerIndex: number;
+  chosen: number | null;
+  locked: boolean;
+  onPick: (index: number) => void;
+  children: (idx: number) => ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3 w-full">
+      {Array.from({ length: count }).map((_, idx) => {
+        const isChosenCorrect = chosen === idx && idx === answerIndex;
+        const isChosenWrong = chosen === idx && idx !== answerIndex;
+        const isAnswer = chosen !== null && idx === answerIndex;
+        let borderColor = 'rgba(123,90,58,.35)';
+        if (isChosenCorrect || isAnswer) borderColor = '#16a34a';
+        else if (isChosenWrong) borderColor = '#dc2626';
+        return (
+          <motion.button
+            key={idx}
+            type="button"
+            disabled={locked}
+            onClick={() => onPick(idx)}
+            whileTap={!locked ? { scale: 0.92 } : {}}
+            className="rounded-2xl p-3 flex items-center justify-center"
+            style={{
+              background: isChosenCorrect || isAnswer ? 'rgba(220,252,231,.9)' : isChosenWrong ? 'rgba(254,226,226,.9)' : 'rgba(255,250,235,.92)',
+              border: `2.5px solid ${borderColor}`,
+              boxShadow: '0 3px 0 rgba(90,55,20,.2)',
+            }}
+          >
+            {children(idx)}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
 function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong }: {
   question: BattleQuestion;
   run: RunState;
@@ -476,6 +517,21 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
                 </div>
               );
             })()}
+            {question.visual?.kind === 'shape-compose' && (
+              <div className="flex justify-center mb-1">
+                <ComposeSvg svg={question.visual.questionSvg} size={170} />
+              </div>
+            )}
+            {question.visual?.kind === 'shape-pattern' && (
+              <div className="mb-1">
+                <PatternSequence sequence={question.visual.sequence} iconSize={36} />
+              </div>
+            )}
+            {question.visual?.kind === 'shape-spatial' && (
+              <div className="flex justify-center mb-1 overflow-x-auto">
+                <SpatialScene objects={question.visual.objects} />
+              </div>
+            )}
             {!question.visual && (
               <div className="text-2xl font-bold" style={{ color: SEPIA }}>{question.promptText}</div>
             )}
@@ -492,48 +548,51 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
               animate={{ scale: 1 }}
               className={`text-2xl font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}
             >
-              {isCorrect ? '🎉 せいかい！' : (question.visual?.kind === 'shape-rotation' ? 'これが こたえ！' : `こたえは ${question.choices[question.answerIndex]} だよ`)}
+              {isCorrect ? '🎉 せいかい！' : (question.visual?.kind === 'shape-rotation' || question.visual?.kind === 'shape-pattern' ? 'これが こたえ！' : `こたえは ${question.choices[question.answerIndex]} だよ`)}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {question.visual?.kind === 'shape-rotation' && question.choiceTransforms ? (
-          <div className="grid grid-cols-2 gap-3 w-full">
-            {question.choiceTransforms.map((transform, idx) => {
-              const isChosenCorrect = chosen === idx && idx === question.answerIndex;
-              const isChosenWrong = chosen === idx && idx !== question.answerIndex;
-              const isAnswer = chosen !== null && idx === question.answerIndex;
-              let borderColor = 'rgba(123,90,58,.35)';
-              if (isChosenCorrect || isAnswer) borderColor = '#16a34a';
-              else if (isChosenWrong) borderColor = '#dc2626';
-              return (
-                <motion.button
-                  key={idx}
-                  type="button"
-                  disabled={locked}
-                  onClick={() => handlePick(idx)}
-                  whileTap={!locked ? { scale: 0.92 } : {}}
-                  className="rounded-2xl p-3 flex items-center justify-center"
-                  style={{
-                    background: isChosenCorrect || isAnswer ? 'rgba(220,252,231,.9)' : isChosenWrong ? 'rgba(254,226,226,.9)' : 'rgba(255,250,235,.92)',
-                    border: `2.5px solid ${borderColor}`,
-                    boxShadow: '0 3px 0 rgba(90,55,20,.2)',
-                  }}
-                >
-                  <ShapeSvg shapeId={(question.visual as { kind: 'shape-rotation'; shapeId: string; rotationLabel: string }).shapeId} transform={transform} size={64} color="#60a5fa" />
-                </motion.button>
-              );
-            })}
-          </div>
-        ) : (
-          <BattleButtons
-            choices={question.choices}
-            onPick={handlePick}
-            disabled={locked}
-            correctIndex={chosen !== null ? question.answerIndex : undefined}
-            wrongIndex={isWrong ? chosen! : undefined}
-          />
-        )}
+        {(() => {
+          const v = question.visual;
+          const gridProps = {
+            answerIndex: question.answerIndex,
+            chosen,
+            locked,
+            onPick: handlePick,
+          };
+          if (v?.kind === 'shape-rotation' && question.choiceTransforms) {
+            const transforms = question.choiceTransforms;
+            return (
+              <ShapeChoiceGrid count={transforms.length} {...gridProps}>
+                {(idx) => <ShapeSvg shapeId={v.shapeId} transform={transforms[idx]} size={64} color="#60a5fa" />}
+              </ShapeChoiceGrid>
+            );
+          }
+          if (v?.kind === 'shape-compose') {
+            return (
+              <ShapeChoiceGrid count={v.choiceSvgs.length} {...gridProps}>
+                {(idx) => <ComposeSvg svg={v.choiceSvgs[idx]} size={120} />}
+              </ShapeChoiceGrid>
+            );
+          }
+          if (v?.kind === 'shape-pattern') {
+            return (
+              <ShapeChoiceGrid count={v.choiceItems.length} {...gridProps}>
+                {(idx) => <PatternIcon item={v.choiceItems[idx]} size={48} />}
+              </ShapeChoiceGrid>
+            );
+          }
+          return (
+            <BattleButtons
+              choices={question.choices}
+              onPick={handlePick}
+              disabled={locked}
+              correctIndex={chosen !== null ? question.answerIndex : undefined}
+              wrongIndex={isWrong ? chosen! : undefined}
+            />
+          );
+        })()}
       </div>
     </div>
   );
