@@ -6,6 +6,7 @@ import {
   cherryCalcToBattle,
   bigAdditionToBattle,
   wordToBattle,
+  generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
 import { MATH_ADVENTURE_ZONES } from './zones';
@@ -64,6 +65,19 @@ describe('battle adapters', () => {
         expect(q.answerIndex).toBeLessThan(3);
       }
     });
+  });
+});
+
+describe('zone adapter coverage', () => {
+  it('全ゾーンの unitId にアダプターが登録されている', () => {
+    for (const zone of MATH_ADVENTURE_ZONES) {
+      for (const unitId of zone.unitIds) {
+        expect(
+          () => generateBattleQuestion(unitId),
+          `zone "${zone.id}" の unitId "${unitId}" にアダプターがない`,
+        ).not.toThrow();
+      }
+    }
   });
 });
 
