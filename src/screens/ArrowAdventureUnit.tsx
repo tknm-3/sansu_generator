@@ -1175,7 +1175,8 @@ function RelativeAdventurePlay({
   const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
   const maxSlots = quest.maxSlots ?? 12;
-  const maxBodyLen = 4;
+  // くりかえしの なかみは 専用の上限を もうけず、全体の枠(maxSlots)を 共有する
+  const maxBodyLen = maxSlots;
   const runner = useProgramRunner<RelCommand>(quest, handleFinish, runRelative);
   const canEdit = !runner.playing && !locked;
   const inLoop = loopStack.length > 0;
@@ -1313,9 +1314,9 @@ function RelativeAdventurePlay({
         <span className="text-[10px] font-bold mr-0.5" style={{ color: '#7a5a3a' }}>🔁×{lv.times}</span>
         {lv.body.map((bc, bi) => renderRelCmd(bc, bi))}
         {!isInnermost && renderLoopBuilding(depth + 1)}
-        {isInnermost && Array.from({ length: Math.max(0, maxBodyLen - lv.body.length) }).map((_, ei) => (
-          <span key={`ph-${ei}`} className="rounded border border-dashed border-gray-300 px-1 py-0.5 text-sm text-gray-300">？</span>
-        ))}
+        {isInnermost && lv.body.length < maxBodyLen && (
+          <span className="rounded border border-dashed border-gray-300 px-1 py-0.5 text-sm text-gray-300">？</span>
+        )}
       </div>
     );
   }
