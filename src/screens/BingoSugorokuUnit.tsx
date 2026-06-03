@@ -67,7 +67,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (setupIdx + 1 < playerCount) {
       startSetupCard(setupIdx + 1);
     } else {
-      setBonusSquares(new Set(generateBonusSquares(5)));
+      setBonusSquares(new Set(generateBonusSquares(8)));
       setPhase('game');
     }
   }
