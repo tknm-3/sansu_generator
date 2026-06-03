@@ -22,7 +22,7 @@ export const BOARD_GRID: number[][] = (() => {
 })();
 
 /** ゲーム開始時にボーナスマスをランダムに配置（5〜95 の範囲で count 個） */
-export function generateBonusSquares(count: number = 5): number[] {
+export function generateBonusSquares(count: number = 8): number[] {
   const pool: number[] = [];
   for (let n = 5; n <= 95; n++) pool.push(n);
   for (let i = pool.length - 1; i > 0; i--) {
