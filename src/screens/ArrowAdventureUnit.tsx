@@ -367,7 +367,7 @@ function AdventureMap({
       </div>
 
       {/* ワールド地図：まちの ならび（いま どこに いるか）*/}
-      <div className="relative z-10 mt-3 flex items-end gap-1.5">
+      <div className="relative z-10 mt-3 flex flex-wrap justify-center items-end gap-1.5 max-w-xs px-2">
         {ADVENTURE_ZONES.map((z, i) => {
           const st = getZoneStatus(z.id);
           const reached = st === 'cleared' || st === 'current';
