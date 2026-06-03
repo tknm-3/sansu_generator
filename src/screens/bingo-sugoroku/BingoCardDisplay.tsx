@@ -22,7 +22,7 @@ export function BingoCardDisplay({
     <div className={`
       rounded-xl p-1.5 border-2 transition-all
       ${isCurrent ? `${s.border} shadow-md` : 'border-gray-200'}
-      ${reach.length > 0 ? 'ring-2 ring-yellow-400' : ''}
+      ${reach.length > 0 ? `ring-2 ${s.ring}` : ''}
       ${s.light}
     `}>
       <div className="flex items-center justify-between mb-0.5">
@@ -39,9 +39,9 @@ export function BingoCardDisplay({
 
       <div className="grid grid-cols-3 gap-px">
         {player.numbers.map((n, i) => {
-          const isChecked  = player.checked[i];
-          const isFlash    = flashSquares.has(i);
-          const isCenter   = i === 4;
+          const isChecked = player.checked[i];
+          const isFlash   = flashSquares.has(i);
+          const isCenter  = i === 4;
           return (
             <motion.div
               key={i}
@@ -52,7 +52,7 @@ export function BingoCardDisplay({
                 ${isCenter && isChecked ? 'bg-yellow-400 text-yellow-900'
                   : isChecked           ? `${s.bg} text-white`
                   :                       'bg-white text-gray-800 border border-gray-200'}
-                ${isFlash ? 'ring-2 ring-yellow-400' : ''}
+                ${isFlash ? `ring-2 ${s.ring}` : ''}
               `}
             >
               {isCenter ? '★' : n}
@@ -62,7 +62,7 @@ export function BingoCardDisplay({
       </div>
 
       {reach.length > 0 && (
-        <div className="mt-1 text-xs font-bold text-yellow-700 bg-yellow-100 rounded px-1 py-0.5 text-center">
+        <div className={`mt-1 text-xs font-bold ${s.text} ${s.light} rounded px-1 py-0.5 text-center border ${s.border}`}>
           🎯 {reach.slice(0, 3).join(' か ')} でビンゴ！
         </div>
       )}

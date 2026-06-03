@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Player } from './types';
+import { PLAYER_STYLES } from './types';
 
 // ── ゴール演出 ──────────────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ export function GoalOverlay({ show }: { show: { name: string; character: string 
   );
 }
 
-// ── ボーナスタイム イントロ ──────────────────────────────────────────────────
+// ── ボーナスマス イントロ ──────────────────────────────────────────────────
 
 export function BonusIntroOverlay({
   show, players, bonusPlayerIdx,
@@ -50,19 +51,20 @@ export function BonusIntroOverlay({
   players: Player[];
   bonusPlayerIdx: number | null;
 }) {
+  const s = bonusPlayerIdx !== null ? PLAYER_STYLES[bonusPlayerIdx % PLAYER_STYLES.length] : null;
   return (
     <AnimatePresence>
-      {show && bonusPlayerIdx !== null && (
+      {show && bonusPlayerIdx !== null && s && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
           <motion.div initial={{ scale: 0.3, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0.3 }}
             transition={{ type: 'spring', stiffness: 250 }}
             className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 text-center shadow-2xl">
             <motion.div animate={{ scale: [1,1.2,1], rotate: [0,10,-10,0] }} transition={{ repeat: Infinity, duration: 0.8 }}
-              className="text-7xl mb-3">🚀</motion.div>
-            <div className="text-4xl font-bold text-white mb-2 drop-shadow">ボーナスタイム！</div>
+              className="text-7xl mb-3">⭐</motion.div>
+            <div className="text-4xl font-bold text-white mb-2 drop-shadow">ボーナスマス！</div>
             <div className="text-xl font-bold text-yellow-100 mb-1">{players[bonusPlayerIdx]?.name} の チャンス！</div>
-            <div className="text-lg text-white/90 font-bold">すすむマスを じぶんで えらべる！</div>
+            <div className="text-lg text-white/90 font-bold">ビンゴカードの すきな マスを ぬりつぶせる！</div>
           </motion.div>
         </motion.div>
       )}
@@ -70,7 +72,7 @@ export function BonusIntroOverlay({
   );
 }
 
-// ── ボーナスタイム 数字選択 ──────────────────────────────────────────────────
+// ── ボーナスマス ビンゴカード選択 ──────────────────────────────────────────
 
 export function BonusPickOverlay({
   show, players, bonusPlayerIdx, onPick,
@@ -78,29 +80,47 @@ export function BonusPickOverlay({
   show: boolean;
   players: Player[];
   bonusPlayerIdx: number | null;
-  onPick: (n: number) => void;
+  onPick: (cellIdx: number) => void;
 }) {
+  const p = bonusPlayerIdx !== null ? players[bonusPlayerIdx] : null;
+  const s = bonusPlayerIdx !== null ? PLAYER_STYLES[bonusPlayerIdx % PLAYER_STYLES.length] : null;
+
   return (
     <AnimatePresence>
-      {show && bonusPlayerIdx !== null && (
+      {show && p && s && bonusPlayerIdx !== null && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 flex flex-col items-center justify-center bg-black/50 z-50 p-4">
+          className="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50 p-4">
           <motion.div initial={{ scale: 0.8, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8 }}
             transition={{ type: 'spring', stiffness: 200 }}
-            className="bg-white rounded-3xl p-6 text-center shadow-2xl w-full max-w-sm">
-            <div className="text-4xl mb-2">🚀</div>
-            <div className="text-2xl font-bold text-orange-600 mb-1">ボーナスタイム！</div>
-            <div className="text-lg font-bold text-gray-700 mb-4">
-              {players[bonusPlayerIdx]?.character} {players[bonusPlayerIdx]?.name}
-              <br />すすむマスを えらんでね！
+            className="bg-white rounded-3xl p-6 text-center shadow-2xl w-full max-w-xs">
+            <div className="text-4xl mb-2">⭐</div>
+            <div className="text-2xl font-bold text-orange-600 mb-1">ボーナスマス！</div>
+            <div className="text-base font-bold text-gray-700 mb-4">
+              {p.character} {p.name}<br />
+              <span className="text-sm text-gray-500">ぬりつぶすマスを えらんでね！</span>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[1,2,3,4,5,6].map(n => (
-                <motion.button key={n} type="button" onClick={() => onPick(n)} whileTap={{ scale: 0.88 }}
-                  className="aspect-square rounded-2xl bg-orange-400 text-white text-3xl font-bold shadow-[0_4px_0_#c2410c] active:translate-y-1 transition-transform">
-                  {n}
-                </motion.button>
-              ))}
+            <div className="grid grid-cols-3 gap-2 mx-auto" style={{ maxWidth: 200 }}>
+              {p.numbers.map((n, i) => {
+                const isChecked = p.checked[i];
+                const isCenter  = i === 4;
+                return (
+                  <motion.button
+                    key={i}
+                    type="button"
+                    disabled={isChecked}
+                    onClick={() => !isChecked && onPick(i)}
+                    whileTap={!isChecked ? { scale: 0.88 } : undefined}
+                    className={`
+                      aspect-square rounded-2xl text-sm font-extrabold transition-all
+                      ${isChecked
+                        ? `${s.bg} text-white opacity-50 cursor-not-allowed`
+                        : `bg-white border-2 ${s.border} ${s.text} shadow hover:scale-105 cursor-pointer`}
+                    `}
+                  >
+                    {isCenter ? '★' : n}
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         </motion.div>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { PLAYER_STYLES, CHARACTERS } from './types';
+import { PLAYER_STYLES, CHARACTERS, generateRandomBingoNumbers } from './types';
 
 // ── 数字選択ピッカー ────────────────────────────────────────────────────────
 
@@ -48,6 +48,10 @@ export function SetupCardsScreen({
   const others  = [...editNumbers].filter(n => n !== 1).sort((a, b) => a - b);
   const preview = [...others.slice(0,4), -1, ...others.slice(4)]; // -1 = 中央★
 
+  function handleRandom() {
+    setEditNumbers(new Set(generateRandomBingoNumbers()));
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center gap-4 bg-gradient-to-b from-rose-100 to-orange-50 p-4 overflow-y-auto">
       <div className="flex items-center gap-3 w-full max-w-lg">
@@ -75,13 +79,19 @@ export function SetupCardsScreen({
       </div>
 
       <div className="w-full max-w-lg">
-        <p className="text-sm font-bold text-gray-600 mb-1">
-          すきな数字を 8つ えらんでね
-          <span className="text-yellow-700 ml-1">（まんなかは ★ = 1 が自動でつく）</span>
-          <span className={`ml-2 font-bold ${editNumbers.size === 8 ? 'text-emerald-600' : 'text-rose-500'}`}>
-            （{editNumbers.size} / 8）
-          </span>
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm font-bold text-gray-600">
+            すきな数字を 8つ えらんでね
+            <span className="text-yellow-700 ml-1 text-xs">（まんなかは ★ 固定）</span>
+            <span className={`ml-2 font-bold ${editNumbers.size === 8 ? 'text-emerald-600' : 'text-rose-500'}`}>
+              （{editNumbers.size} / 8）
+            </span>
+          </p>
+          <motion.button type="button" onClick={handleRandom} whileTap={{ scale: 0.9 }}
+            className={`flex-shrink-0 rounded-xl px-3 py-1 text-sm font-bold text-white ${s.bg} shadow`}>
+            🎲 ランダム
+          </motion.button>
+        </div>
         <NumberPicker selected={editNumbers} onToggle={n => {
           setEditNumbers(prev => {
             const next = new Set(prev);

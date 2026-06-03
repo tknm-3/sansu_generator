@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
-import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, DEFAULT_NUMBERS, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers } from './bingo-sugoroku/logic';
+import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { SetupCountScreen, SetupCardsScreen } from './bingo-sugoroku/SetupScreens';
 import { GoalOverlay, BonusIntroOverlay, BonusPickOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
@@ -30,6 +30,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [flashCards, setFlashCards]     = useState<Map<number, Set<number>>>(new Map());
   const [movingSquare, setMovingSquare] = useState<number | null>(null);
   const [flashedSquare, setFlashedSquare] = useState<number | null>(null);
+  const [bonusSquares, setBonusSquares] = useState<Set<number>>(new Set());
 
   // ── オーバーレイ状態 ──
   const [showBingo, setShowBingo]       = useState<{ name: string; count: number } | null>(null);
@@ -44,7 +45,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
   function startSetupCard(idx: number) {
     setEditName(DEFAULT_NAMES[idx] ?? `プレイヤー${idx + 1}`);
-    setEditNumbers(new Set(DEFAULT_NUMBERS[idx] ?? []));
+    setEditNumbers(new Set(generateRandomBingoNumbers()));
     setEditCharacter(DEFAULT_CHARS[idx] ?? CHARACTERS[idx % CHARACTERS.length]);
     setSetupIdx(idx);
     setPhase('setup-cards');
@@ -55,27 +56,30 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     const others = [...editNumbers].filter(n => n !== 1).sort((a, b) => a - b);
     const nums = [...others.slice(0,4), 1, ...others.slice(4)];
     const preChecked = Array(9).fill(false);
-    preChecked[4] = true; // 中央 1 は最初からチェック済み
+    preChecked[4] = true;
 
     const newPlayer: Player = {
       name: editName || DEFAULT_NAMES[setupIdx] || `プレイヤー${setupIdx + 1}`,
       numbers: nums, checked: preChecked, position: 1, doneLines: [],
-      character: editCharacter, bonusUsed: false,
-      bonusTriggerPos: 35 + Math.floor(Math.random() * 21),
+      character: editCharacter,
     };
     setPlayers(prev => { const next = [...prev]; next[setupIdx] = newPlayer; return next; });
-    if (setupIdx + 1 < playerCount) { startSetupCard(setupIdx + 1); } else { setPhase('game'); }
+    if (setupIdx + 1 < playerCount) {
+      startSetupCard(setupIdx + 1);
+    } else {
+      setBonusSquares(new Set(generateBonusSquares(5)));
+      setPhase('game');
+    }
   }
 
   // ── ゲームロジック ───────────────────────────────────────────────────────
 
-  /** マスを踏んで全員のビンゴカードに反映、着地したマスがビンゴカードにあれば光らせる */
   function applyMark(square: number, ps: Player[]) {
     const { updated, flashMap } = markBingoNumber(square, ps);
     setFlashCards(flashMap);
     setTimeout(() => setFlashCards(new Map()), 700);
     if (flashMap.size > 0) {
-      setFlashedSquare(square); // ビンゴカードに影響したマスをボード上で光らせる
+      setFlashedSquare(square);
       setTimeout(() => setFlashedSquare(null), 1300);
     }
     return updated;
@@ -102,14 +106,12 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     timerRef.current = setTimeout(step, 100);
   }, []);
 
-  /** 着地後の処理: マーク → 全員ビンゴ判定 → リーチ/ビンゴ読み上げ → ビンゴボーナス or 次へ */
   function handleAfterLand(movedPlayers: Player[], square: number, pIdx: number) {
     const before    = movedPlayers;
     const afterMark = applyMark(square, movedPlayers);
     const { updated, events } = processAllBingos(afterMark);
     setPlayers(updated);
 
-    // リーチ・ビンゴを読み上げ
     const newReachNames = afterMark
       .filter((p, i) => getReachNumbers(before[i]).length === 0 && getReachNumbers(p).length > 0)
       .map(p => p.name);
@@ -123,7 +125,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
     const myBingo = events.find(e => e.playerIdx === pIdx);
     if (myBingo) {
-      // ビンゴ演出 → ボーナス移動
       setShowBingo({ name: updated[pIdx].name, count: myBingo.count });
       timerRef.current = setTimeout(() => {
         setShowBingo(null);
@@ -133,7 +134,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
           const { updated: u2, events: ev2 } = processAllBingos(afterMark2);
           setPlayers(u2);
           if (ev2.length > 0) setTimeout(() => speakJa(ev2.map(e => u2[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
-          checkGameOver(u2, bonus);
+          checkBonusOrProceed(u2, bonus, pIdx);
         });
       }, 2200);
     } else {
@@ -165,8 +166,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   }
 
   function checkBonusOrProceed(ps: Player[], pos: number, pIdx: number) {
-    const p = ps[pIdx];
-    if (!p.bonusUsed && pos >= p.bonusTriggerPos && pos < 100) {
+    if (bonusSquares.has(pos) && pos < 100) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
       setIsAnimating(false);
@@ -176,16 +176,49 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     }
   }
 
-  function handleBonusPick(roll: number) {
+  /** ボーナスマスで選んだビンゴカードのセルをチェックしてビンゴ判定 */
+  function handleBonusPick(cellIdx: number) {
     setChoosingBonus(false);
     const pIdx = bonusPlayerIdx ?? currentIdx;
     setBonusPlayerIdx(null);
     setIsAnimating(true);
-    const up = players.map((pl, i) => i === pIdx ? { ...pl, bonusUsed: true } : pl);
-    setPlayers(up);
-    const from = up[pIdx].position;
-    const to   = Math.min(from + roll, 100);
-    animateMove(up, pIdx, from, to, mp => handleAfterLand(mp, to, pIdx));
+
+    const up = players.map((pl, i) => {
+      if (i !== pIdx) return pl;
+      const newChecked = [...pl.checked];
+      newChecked[cellIdx] = true;
+      return { ...pl, checked: newChecked };
+    });
+
+    // 選んだセルをフラッシュ
+    const flashSet = new Set<number>([cellIdx]);
+    setFlashCards(new Map([[pIdx, flashSet]]));
+    setTimeout(() => setFlashCards(new Map()), 700);
+
+    const { updated, events } = processAllBingos(up);
+    setPlayers(updated);
+
+    if (events.length > 0) {
+      setTimeout(() => speakJa(events.map(e => updated[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
+      const myBingo = events.find(e => e.playerIdx === pIdx);
+      if (myBingo) {
+        setShowBingo({ name: updated[pIdx].name, count: myBingo.count });
+        timerRef.current = setTimeout(() => {
+          setShowBingo(null);
+          const bonus = Math.min(updated[pIdx].position + myBingo.count * 10, 100);
+          animateMove(updated, pIdx, updated[pIdx].position, bonus, (afterBonus) => {
+            const afterMark2 = applyMark(bonus, afterBonus);
+            const { updated: u2, events: ev2 } = processAllBingos(afterMark2);
+            setPlayers(u2);
+            if (ev2.length > 0) setTimeout(() => speakJa(ev2.map(e => u2[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
+            checkGameOver(u2, bonus);
+          });
+        }, 2200);
+        return;
+      }
+    }
+
+    checkGameOver(updated, updated[pIdx].position);
   }
 
   function checkGameOver(ps: Player[], pos: number) {
@@ -236,7 +269,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         </div>
         <div className="flex gap-4">
           <motion.button type="button" whileTap={{ scale: 0.95 }} className="rounded-2xl bg-rose-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#be123c]"
-            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setPhase('setup-count'); }}>
+            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setBonusSquares(new Set()); setPhase('setup-count'); }}>
             もう1かい！
           </motion.button>
           <button type="button" onClick={onExit} className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-gray-600 border-2 border-gray-200">おわり</button>
@@ -256,6 +289,9 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   // 現在のプレイヤーのリーチ数字 → ボード上でハイライト
   const reachSquares = new Set(current ? getReachNumbers(current) : []);
 
+  // ビンゴカードに含まれるマス → オーナー（プレイヤーインデックス）のリスト
+  const squareOwners = buildSquareOwnerMap(players);
+
   const blocked = isAnimating || showBonusIntro || choosingBonus || !!showGoal;
 
   return (
@@ -272,30 +308,67 @@ export function BingoSugorokuUnit({ onExit }: Props) {
           <div className="flex-1 min-h-0 rounded-2xl bg-white shadow-inner overflow-hidden p-1">
             <div className="w-full h-full" style={{ display:'grid', gridTemplateRows:'repeat(10,1fr)', gridTemplateColumns:'repeat(10,1fr)', gap:'1px' }}>
               {BOARD_GRID.flatMap((row, ri) => row.map((n, ci) => {
-                const isMultOf10  = n % 10 === 0;
-                const isZorome    = n > 10 && n < 100 && Math.floor(n/10) === n % 10;
                 const isGoal      = n === 100;
+                const isBonus     = bonusSquares.has(n);
                 const playersHere = playerPositions.get(n) ?? [];
                 const isMoving    = movingSquare === n;
-                const isFlashed   = flashedSquare === n;   // ビンゴカードが光ったマス
-                const isReach     = reachSquares.has(n);   // 現プレイヤーのリーチマス
+                const isFlashed   = flashedSquare === n;
+                const isReach     = reachSquares.has(n);
+                const owners      = squareOwners.get(n) ?? [];
+
+                // チェック済みのオーナーは除外（チェック済みはすでに色がついている）
+                const checkedOwners   = owners.filter(pi =>  players[pi]?.checked[players[pi].numbers.indexOf(n)]);
+
+                // 背景色の決定: ゴール > ボーナス > ビンゴマス（オーナー1人） > その他
+                let bgClass = 'bg-white border border-gray-200';
+                if (isGoal) {
+                  bgClass = 'bg-yellow-300 border-2 border-yellow-500';
+                } else if (isBonus) {
+                  bgClass = 'bg-amber-200 border-2 border-amber-500';
+                } else if (owners.length === 1) {
+                  const s = PLAYER_STYLES[owners[0] % PLAYER_STYLES.length];
+                  bgClass = checkedOwners.length > 0
+                    ? `${s.bg} border border-white/30`
+                    : `${s.light} border ${s.border}`;
+                } else if (owners.length > 1) {
+                  bgClass = 'bg-gray-50 border border-gray-300';
+                } else if (isReach) {
+                  bgClass = 'bg-yellow-50 border border-yellow-300';
+                }
+
+                const ringClass = isFlashed
+                  ? 'ring-4 ring-yellow-400 z-20'
+                  : isMoving
+                  ? 'ring-2 ring-rose-400/60 z-10'
+                  : '';
 
                 return (
-                  <div key={`${ri}-${ci}`} className={`
-                    relative flex items-center justify-center rounded text-center overflow-hidden
-                    ${isGoal      ? 'bg-yellow-300 border-2 border-yellow-500'
-                      : isMultOf10  ? 'bg-amber-100 border border-amber-400'
-                      : isZorome    ? 'bg-violet-50 border border-violet-300'
-                      : isReach     ? 'bg-yellow-50 border border-yellow-300'
-                      :               'bg-white border border-gray-200'}
-                    ${isFlashed   ? 'ring-4 ring-yellow-400 z-20'
-                      : isMoving  ? 'ring-2 ring-rose-400/60 z-10'
-                      :             ''}
-                  `}>
-                    <span className={`leading-none font-black select-none text-[13px]
-                      ${isGoal ? 'text-yellow-800' : isMultOf10 ? 'text-amber-800' : isZorome ? 'text-violet-700' : isReach ? 'text-yellow-700' : 'text-gray-800'}`}>
-                      {isGoal ? '🏁' : n}
+                  <div key={`${ri}-${ci}`} className={`relative flex items-center justify-center rounded text-center overflow-hidden ${bgClass} ${ringClass}`}>
+                    {/* マス番号 */}
+                    <span className={`leading-none font-black select-none text-[10px]
+                      ${isGoal    ? 'text-yellow-800'
+                      : isBonus   ? 'text-amber-800'
+                      : checkedOwners.length > 0 && owners.length === 1 ? 'text-white'
+                      : owners.length === 1 ? PLAYER_STYLES[owners[0] % PLAYER_STYLES.length].text
+                      : 'text-gray-700'}`}>
+                      {isGoal ? '🏁' : isBonus ? '⭐' : n}
                     </span>
+
+                    {/* 複数オーナーの場合: 下部に小さいカラードット */}
+                    {owners.length > 1 && (
+                      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-px pb-px">
+                        {owners.map(pi => (
+                          <span key={pi} className={`w-1.5 h-1.5 rounded-full ${PLAYER_STYLES[pi % PLAYER_STYLES.length].bg} ${players[pi]?.checked[players[pi].numbers.indexOf(n)] ? 'opacity-100' : 'opacity-50'}`} />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* リーチ印 */}
+                    {isReach && !isGoal && owners.length === 0 && (
+                      <span className="text-[5px] absolute bottom-0 left-0 leading-none text-yellow-500">★</span>
+                    )}
+
+                    {/* プレイヤーコマ */}
                     {playersHere.length > 0 && (
                       <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-0">
                         {playersHere.map(pi => (
@@ -306,8 +379,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                         ))}
                       </div>
                     )}
-                    {isReach && !isGoal && <span className="text-[5px] absolute bottom-0 left-0 leading-none text-yellow-500">★</span>}
-                    {isZorome && !isGoal && <span className="text-[6px] absolute top-0 right-0 leading-none">⭐</span>}
                   </div>
                 );
               }))}
