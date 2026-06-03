@@ -12,7 +12,8 @@
  */
 import type { Dir, Level, Pos } from './engine';
 import type { BranchCommand } from './branch';
-import type { RelDir } from './relativeEngine';
+import type { RelCommand } from './relativeEngine';
+import type { ProcMainCmd } from './procEngine';
 
 const r = (row: number, col: number): Pos => ({ r: row, c: col });
 
@@ -89,12 +90,18 @@ export interface AdventureQuest extends Level {
   zoneId: string;
   /** 検証・ヒント用の 解の一例（なければ solve() で 検証する） */
   solution?: Dir[];
-  /** 問題の しゅるい。'branch'=もしも穴埋め、'relative'=そうたい方向。なければ 矢印ならべ */
-  kind?: 'branch' | 'relative';
+  /** 問題の しゅるい。'branch'=もしも穴埋め、'relative'=そうたい方向、'proc'=てじゅん。なければ 矢印ならべ */
+  kind?: 'branch' | 'relative' | 'proc';
   /** kind==='branch' のときの 穴埋め設定 */
   branchFill?: AdventureBranchFill;
-  /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ） */
-  relSolution?: RelDir[];
+  /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ。ループも ふくめられる） */
+  relSolution?: RelCommand[];
+  /** kind==='proc' のとき: てじゅんの 固定した 中身（proc_a で みせる・proc_b で正解）*/
+  procDef?: import('./relativeEngine').RelDir[];
+  /** kind==='proc' のとき: 固定した メインプログラム（proc_b で みせる）*/
+  procMain?: ProcMainCmd[];
+  /** proc_a の 検証用 最適解（メインプログラムの 最短手順。call を ふくむ）*/
+  procMainSolution?: ProcMainCmd[];
 }
 
 export const ADVENTURE_ZONES: AdventureZone[] = [
@@ -227,6 +234,66 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     tagline: 'むきを かえながら しんでんを すすもう',
     story: 'うみの そこに ねむる ふるい しんでん。\nキャラの むき を きじゅんに「まえ・みぎむき・ひだりむき」で つうろを すすみ、たからを てに いれよう！',
     wall: '🪸', wallName: 'さんご', tile: 'bg-cyan-50', wallTile: 'bg-teal-200', board: 'bg-cyan-200/70',
+  },
+  {
+    id: 'rloop_a',
+    name: 'まわれ！ きじちょう',
+    emoji: '🔄',
+    bg: 'from-lime-100 to-teal-50',
+    accent: 'lime',
+    tagline: 'ループで めいれいを まとめて らくらく クリア！',
+    story: 'くるくると まわる きじちょうに やってきた。\nおなじ めいれいを ループに まとめると\nすくない めいれいで すすめるよ！',
+    wall: '🌿', tile: 'bg-lime-50', wallTile: 'bg-lime-200', board: 'bg-lime-100/80',
+  },
+  {
+    id: 'rloop_b',
+    name: 'そうたいループ だいみゃく',
+    emoji: '🌀',
+    bg: 'from-violet-100 to-purple-50',
+    accent: 'violet',
+    tagline: 'ループの なかに まがりかどを くみこもう！',
+    story: 'ぐるぐると つながる だいみゃくへ ようこそ。\nループの なかに「まがる」めいれいを くみこんで\nふくざつな みちも かんたんに あらわそう！',
+    wall: '🍃', tile: 'bg-violet-50', wallTile: 'bg-violet-200', board: 'bg-violet-100/80',
+  },
+  {
+    id: 'proc_a',
+    name: 'てじゅんの にわ',
+    emoji: '📦',
+    bg: 'from-orange-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'てじゅんを よびだして らくらく すすもう！',
+    story: 'きれいに かたちを した にわに やってきた。\nおなじ みちを まとめた「てじゅん」を よびだすと\nみじかい めいれいで ゴールへ たどりつけるよ！',
+    wall: '🌸', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-100/80',
+  },
+  {
+    id: 'proc_b',
+    name: 'てじゅんの やかた',
+    emoji: '🏛️',
+    bg: 'from-rose-100 to-pink-50',
+    accent: 'amber',
+    tagline: 'てじゅんの なかみを かんがえよう！',
+    story: 'ふしぎな やかたの まえに たった。\nメインプログラムは もう できあがっている。\nてじゅんの なかみを きめれば ゴールへ たどりつけるよ！',
+    wall: '🌺', tile: 'bg-rose-50', wallTile: 'bg-rose-200', board: 'bg-rose-100/80',
+  },
+  {
+    id: 'nloop_a',
+    name: 'ループの なかの ループ',
+    emoji: '🌀',
+    bg: 'from-teal-100 to-cyan-50',
+    accent: 'emerald',
+    tagline: 'ループを ネストして もっと かしこく！',
+    story: 'おなじ もようが くりかえす ふしぎな もり。\nループの なかに ループを いれると\nもっと みじかい めいれいで すすめるよ！',
+    wall: '🌊', tile: 'bg-teal-50', wallTile: 'bg-teal-200', board: 'bg-teal-100/80',
+  },
+  {
+    id: 'nloop_b',
+    name: 'ネストループ だいとうげ',
+    emoji: '🏔️',
+    bg: 'from-indigo-100 to-purple-50',
+    accent: 'indigo',
+    tagline: 'ふくざつな みちを ネストループで せいふく！',
+    story: 'おおきな だいとうげが めのまえに たちはだかる。\nネストしたループで パターンを つかみ、\nすくない めいれいで いただきを めざそう！',
+    wall: '🪨', tile: 'bg-indigo-50', wallTile: 'bg-indigo-200', board: 'bg-indigo-100/80',
   },
 ];
 
@@ -832,6 +899,382 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     relSolution: ['forward', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'forward'],
     optimal: 11, maxSlots: 20,
     prompt: '🔱しんでんの ボス！かいがら2つを とって たからへ',
+  },
+
+  // ─── 🔄 まわれ！ きじちょう（adv-q79〜adv-q84）そうたい × ループ 入門 ───
+  {
+    id: 'adv-q79', zoneId: 'rloop_a', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'おなじ めいれいを ループに まとめよう！',
+  },
+  {
+    id: 'adv-q80', zoneId: 'rloop_a', rows: 1, cols: 5,
+    start: r(0, 0), goal: r(0, 4), startFacing: 'right',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 4, body: ['forward'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'よこに すすむ ループを つかおう',
+  },
+  {
+    id: 'adv-q81', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 3, body: ['forward'] },
+    ],
+    optimal: 3, maxSlots: 4,
+    prompt: 'のぼって まがって また すすもう',
+  },
+  {
+    id: 'adv-q82', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 3, body: ['forward'] },
+    ],
+    optimal: 3, maxSlots: 4,
+    prompt: '⭐を とおりながら ゴールへ！',
+  },
+  {
+    id: 'adv-q83', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 1), goal: r(3, 3), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 5, maxSlots: 6,
+    prompt: 'コの字に まわって ゴール！',
+  },
+  {
+    id: 'adv-q84', zoneId: 'rloop_a', rows: 6, cols: 6,
+    start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [], gems: [r(2, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 5, body: ['forward'] },
+      'turn_left',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 5, maxSlots: 6,
+    prompt: 'Z字に すすんで ⭐も ひろおう！',
+  },
+
+  // ─── 🌀 そうたいループ だいみゃく（adv-q85〜adv-q90）ループ本体に まがりかど ───
+  {
+    id: 'adv-q85', zoneId: 'rloop_b', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 3), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'かいだんのように すすむ ループを つくろう！',
+  },
+  {
+    id: 'adv-q86', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 4), startFacing: 'right',
+    walls: [], gems: [r(2, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 4, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '💫を ひろいながら かいだんを すすもう',
+  },
+  {
+    id: 'adv-q87', zoneId: 'rloop_b', rows: 4, cols: 7,
+    start: r(0, 0), goal: r(3, 6), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ジグザグに すすむ みちを ループで あらわそう',
+  },
+  {
+    id: 'adv-q88', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 4), startFacing: 'down',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 2, body: ['forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'L字を くりかえして ゴールへ！',
+  },
+  {
+    id: 'adv-q89', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(2, 4), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 2, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 2, maxSlots: 3,
+    prompt: '2つの ループを くみあわせよう',
+  },
+  {
+    id: 'adv-q90', zoneId: 'rloop_b', rows: 6, cols: 6,
+    start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [], gems: [r(3, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 4, maxSlots: 5,
+    prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに',
+  },
+
+  // ─── 📦 てじゅんの にわ（adv-q91〜adv-q96）てじゅん呼び出し・proc_a ───
+  {
+    id: 'adv-q91', zoneId: 'proc_a', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'てじゅんを よびだして 3マス すすもう！',
+  },
+  {
+    id: 'adv-q92', zoneId: 'proc_a', rows: 7, cols: 1,
+    start: r(6, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }],
+    optimal: 2, maxSlots: 3,
+    prompt: 'てじゅんを 2かい よびだして ゴールへ！',
+  },
+  {
+    id: 'adv-q93', zoneId: 'proc_a', rows: 3, cols: 5,
+    start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'のぼって まがって また すすもう！',
+  },
+  {
+    id: 'adv-q94', zoneId: 'proc_a', rows: 3, cols: 3,
+    start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    optimal: 3, maxSlots: 4,
+    prompt: '🌸を とおりながら ゴールへ！',
+  },
+  {
+    id: 'adv-q95', zoneId: 'proc_a', rows: 5, cols: 3,
+    start: r(4, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'のぼって のぼって まがって すすもう！',
+  },
+  {
+    id: 'adv-q96', zoneId: 'proc_a', rows: 5, cols: 5,
+    start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'turn_right', 'forward', 'turn_left'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'てじゅんを 4かい くりかえして ゴールへ！',
+  },
+
+  // ─── 🏛️ てじゅんの やかた（adv-q97〜adv-q102）てじゅん本体を きめる・proc_b ───
+  {
+    id: 'adv-q97', zoneId: 'proc_b', rows: 5, cols: 1,
+    start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'てじゅんの なかみを きめよう！ 2かい よんで ゴールへ',
+  },
+  {
+    id: 'adv-q98', zoneId: 'proc_b', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward'],
+    optimal: 1, maxSlots: 3,
+    prompt: '3かい よんで 3マス すすむ てじゅんを つくろう！',
+  },
+  {
+    id: 'adv-q99', zoneId: 'proc_b', rows: 3, cols: 3,
+    start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'てじゅんで のぼって まがって また すすもう！',
+  },
+  {
+    id: 'adv-q100', zoneId: 'proc_b', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(3, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'U字に まわる てじゅんを かんがえよう！',
+  },
+  {
+    id: 'adv-q101', zoneId: 'proc_b', rows: 3, cols: 5,
+    start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🌺を とおりながら、てじゅんで ゴールへ！',
+  },
+  {
+    id: 'adv-q102', zoneId: 'proc_b', rows: 5, cols: 5,
+    start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🌺を とおって ゴールへ！ てじゅんで どのくらい すすむか きめよう',
+  },
+
+  // ─── 🌀 ループの なかの ループ（adv-q103〜adv-q108）ネストループ 入門 ───
+  {
+    id: 'adv-q103', zoneId: 'nloop_a', rows: 3, cols: 3,
+    start: r(0, 0), goal: r(2, 0), startFacing: 'right',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ループの なかに ループを いれてみよう！',
+  },
+  {
+    id: 'adv-q104', zoneId: 'nloop_a', rows: 3, cols: 3,
+    start: r(0, 0), goal: r(2, 0), startFacing: 'right',
+    walls: [], gems: [r(0, 2)], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '⭐を とりながら ゴールへ！ ネストループで みちを えがこう',
+  },
+  {
+    id: 'adv-q105', zoneId: 'nloop_a', rows: 3, cols: 3,
+    start: r(0, 2), goal: r(0, 0), startFacing: 'down',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'むきが かわっても おなじ ネストループで！',
+  },
+  {
+    id: 'adv-q106', zoneId: 'nloop_a', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'おなじパターン、おおきな グリッドで！',
+  },
+  {
+    id: 'adv-q107', zoneId: 'nloop_a', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
+    walls: [], gems: [r(0, 3)], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '⭐は コーナーに あるよ。ネストループで ぴったり とおろう',
+  },
+  {
+    id: 'adv-q108', zoneId: 'nloop_a', rows: 4, cols: 4,
+    start: r(0, 3), goal: r(0, 0), startFacing: 'down',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'むきを かえた しゅっぱつ！ パターンを みつけよう',
+  },
+
+  // ─── 🏔️ ネストループ だいとうげ（adv-q109〜adv-q114）ネストループ 応用 ───
+  {
+    id: 'adv-q109', zoneId: 'nloop_b', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(3, 3), startFacing: 'up',
+    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ゴールの かどは どこかな？ パターンで かんがえよう',
+  },
+  {
+    id: 'adv-q110', zoneId: 'nloop_b', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 3), startFacing: 'right',
+    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'そとの ループは なんかい？ かんがえてみよう！',
+  },
+  {
+    id: 'adv-q111', zoneId: 'nloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 0), startFacing: 'right',
+    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'おおきな グリッド！ なかの ループは なんかい？',
+  },
+  {
+    id: 'adv-q112', zoneId: 'nloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 0), startFacing: 'right',
+    walls: [], gems: [r(0, 4), r(4, 4)], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '💎を 2つ とりながら ゴールへ！ コーナーを かくにん',
+  },
+  {
+    id: 'adv-q113', zoneId: 'nloop_b', rows: 5, cols: 5,
+    start: r(0, 4), goal: r(0, 0), startFacing: 'down',
+    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'むきに ちゅうもく！ ネストループを うまく つかおう',
+  },
+  {
+    id: 'adv-q114', zoneId: 'nloop_b', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
+    walls: [], gems: [r(3, 3)], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '💎は コーナーに ある！ ちゃんと とおれるかな？',
   },
 ];
 

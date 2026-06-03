@@ -93,7 +93,8 @@ describe('ぼうけん 問題集', () => {
 
   const arrowQuests = all.filter((q) => q.kind === undefined);
   const branchQuests = all.filter((q) => q.kind === 'branch');
-  const relativeQuests = all.filter((q) => q.kind === 'relative');
+  const relativeQuests = all.filter((q) => q.kind === 'relative' && !q.allowLoop);
+  const relativeLoopQuests = all.filter((q) => q.kind === 'relative' && q.allowLoop);
 
   it.each(arrowQuests)('$id は 解けて optimal が 最短と 一致する', (q) => {
     const sol = q.solution ?? solve(q);
@@ -160,7 +161,7 @@ describe('ぼうけん 問題集', () => {
     expect(solutions, `${q.id} は 正解いがいでも クリアできる: ${solutions.join(', ')}`).toEqual([correct]);
   });
 
-  // ゆきのゾーン（そうたい方向）。relSolution で クリアでき、optimal が 最短（BFS）と 一致する。
+  // ゆきのゾーン（そうたい方向、ループなし）。relSolution で クリアでき、optimal が 最短（BFS）と 一致する。
   it.each(relativeQuests)('$id（そうたい方向）は relSolution で クリアでき optimal が 最短と 一致する', (q) => {
     expect(q.startFacing, `${q.id} に startFacing が ない`).toBeDefined();
     expect(q.relSolution, `${q.id} に relSolution が ない`).toBeDefined();
@@ -171,6 +172,16 @@ describe('ぼうけん 問題集', () => {
     expect(best, `${q.id} に そうたい解が ない`).not.toBeNull();
     expect(best!.length, `${q.id} の optimal が 最短と ずれている（最短: ${best!.length}）`).toBe(q.optimal);
     expect(result.steps, `${q.id} の relSolution が 最短手数で ない`).toBe(q.optimal);
+  });
+
+  // そうたい×ループゾーン。relSolution（ループ圧縮）で クリアでき、optimal が 命令数と 一致する。
+  it.each(relativeLoopQuests)('$id（そうたい×ループ）は relSolution で クリアでき optimal が 命令数と 一致する', (q) => {
+    expect(q.startFacing, `${q.id} に startFacing が ない`).toBeDefined();
+    expect(q.relSolution, `${q.id} に relSolution が ない`).toBeDefined();
+    const result = runRelative(q, q.relSolution!);
+    expect(isCleared(result), `${q.id} の relSolution が ゴールに つかない`).toBe(true);
+    expect(q.relSolution!.length, `${q.id} の relSolution が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+    expect(q.relSolution!.length, `${q.id} の optimal が 命令数と ずれている`).toBe(q.optimal);
   });
 
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
