@@ -31,6 +31,7 @@ import {
 } from '../lib/programming/adventureLevels';
 import { runBranch, buildBranchHint, type BranchCommand } from '../lib/programming/branch';
 import { runRelative, solveRelative, REL_ICON, REL_LABEL, type RelDir, type RelCommand, type RelLoop } from '../lib/programming/relativeEngine';
+import { expandProc, CALL_ICON, CALL_LABEL, type ProcMainCmd } from '../lib/programming/procEngine';
 import {
   addQuestClear,
   currentZoneId,
@@ -202,6 +203,8 @@ const REGION_TINT: Record<string, string> = {
   sea:     'rgba(60,150,170,.30)',
   rloop_a: 'rgba(80,160,80,.28)',
   rloop_b: 'rgba(120,90,190,.30)',
+  proc_a:  'rgba(220,130,60,.28)',
+  proc_b:  'rgba(200,80,100,.28)',
 };
 
 interface TownStop {
@@ -642,6 +645,9 @@ function AdventurePlay({
   }
   if (quest.kind === 'relative') {
     return <RelativeAdventurePlay quest={quest} index={index} charEmoji={charEmoji} onCleared={onCleared} onBack={onBack} />;
+  }
+  if (quest.kind === 'proc') {
+    return <ProcAdventurePlay quest={quest} index={index} charEmoji={charEmoji} onCleared={onCleared} onBack={onBack} />;
   }
 
   const zone = getZone(quest.zoneId);
@@ -1488,6 +1494,277 @@ function buildRelativeHint(quest: AdventureQuest, result: RunResult, attempt: nu
     return `ゴールは いまの ばしょから どっちかな？\nさきに むきを かえてから まえへ すすむと いいよ。`;
   }
   return 'おしい！ もういちど みちを みなおしてみよう。';
+}
+
+// ─────────────────────── ProcAdventurePlay（てじゅん 単元）───────────────────────
+
+function ProcAdventurePlay({
+  quest,
+  index,
+  charEmoji,
+  onCleared,
+  onBack,
+}: {
+  quest: AdventureQuest;
+  index: number;
+  charEmoji: string;
+  onCleared: () => void;
+  onBack: () => void;
+}) {
+  const zone = getZone(quest.zoneId);
+  const accent = ACCENT[zone.accent] ?? ACCENT.amber;
+  const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
+
+  // proc_b: procMain は fixed。プレイヤーは procBody を きめる
+  // proc_a: procDef は fixed。プレイヤーは mainCmds を つくる
+  const isProcB = !!quest.procMain;
+
+  const [mainCmds, setMainCmds] = useState<ProcMainCmd[]>([]);
+  const [procBody, setProcBody] = useState<RelDir[]>([]);
+  const [attempts, setAttempts] = useState(0);
+  const [hint, setHint] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
+
+  const maxSlots = quest.maxSlots ?? 6;
+  const runner = useProgramRunner<RelDir>(quest, handleFinish, runRelative);
+  const canEdit = !runner.playing && !locked;
+
+  const activeCmds = isProcB ? procBody : mainCmds;
+  const canAdd = activeCmds.length < maxSlots && canEdit;
+
+  function handleFinish(result: RunResult) {
+    if (isCleared(result)) {
+      setLocked(true);
+      playSfx('correct');
+      confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
+      const perfect = isPerfect(quest, result);
+      const earned = addQuestClear(quest.id, perfect);
+      speakJa(buildPraise(perfect));
+      setHint(null);
+      playSfx('fanfare');
+      window.setTimeout(() => setOverlay({ perfect, earned }), 600);
+    } else {
+      const nextAttempt = attempts + 1;
+      setAttempts(nextAttempt);
+      const h = buildProcHint(quest, result, nextAttempt, isProcB);
+      setHint(h);
+      speakJa(h);
+    }
+  }
+
+  function addRelDir(c: RelDir) {
+    if (!canAdd) return;
+    playSfx('tap');
+    if (isProcB) setProcBody((cs) => [...cs, c]);
+    else setMainCmds((cs) => [...cs, c]);
+    setHint(null);
+  }
+  function addCall() {
+    if (!isProcB && canAdd) {
+      playSfx('tap');
+      setMainCmds((cs) => [...cs, { kind: 'call' }]);
+      setHint(null);
+    }
+  }
+  function removeAt(i: number) {
+    if (!canEdit) return;
+    playSfx('tap');
+    if (isProcB) setProcBody((cs) => cs.filter((_, j) => j !== i));
+    else setMainCmds((cs) => cs.filter((_, j) => j !== i));
+  }
+  function handleStart() {
+    if (!canEdit || activeCmds.length === 0) return;
+    playSfx('tap');
+    setHint(null);
+    const expanded = isProcB
+      ? expandProc(quest.procMain!, procBody)
+      : expandProc(mainCmds, quest.procDef!);
+    runner.play(expanded);
+  }
+  function handleStep() {
+    if (!canEdit || activeCmds.length === 0) return;
+    playSfx('tap');
+    const expanded = isProcB
+      ? expandProc(quest.procMain!, procBody)
+      : expandProc(mainCmds, quest.procDef!);
+    runner.step(expanded);
+  }
+  function handleReset() {
+    if (locked) return;
+    playSfx('tap');
+    runner.reset();
+    setHint(null);
+  }
+  function handleClearAll() {
+    if (!canEdit) return;
+    playSfx('tap');
+    if (isProcB) setProcBody([]);
+    else setMainCmds([]);
+    runner.reset();
+    setHint(null);
+  }
+
+  // ── 固定プログラムの レンダリング用ヘルパー ──
+  function renderFixedCmds(cmds: ProcMainCmd[]) {
+    return cmds.map((c, i) => (
+      <span key={i} className={`inline-flex items-center rounded-lg ${accent.chip} px-2 py-1 text-sm font-bold text-white`}>
+        {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
+      </span>
+    ));
+  }
+
+  // ── 編集中のプログラムのレンダリング ──
+  function renderActiveCmds() {
+    if (activeCmds.length === 0) {
+      return <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいを おいてね</span>;
+    }
+    return activeCmds.map((c, i) => (
+      <button key={i} type="button" onClick={() => removeAt(i)}
+        className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}>
+        {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
+      </button>
+    ));
+  }
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center gap-4 p-5" style={{ background: PARCHMENT }}>
+      <ParchmentTexture />
+
+      <div className="relative z-10 flex w-full max-w-sm items-center justify-between pr-12">
+        <button type="button" onClick={onBack}
+          className="rounded-xl border-[1.5px] px-3 py-2 text-sm font-bold"
+          style={{ background: 'rgba(255,255,255,.5)', borderColor: 'rgba(123,90,58,.35)', color: '#6b4f30' }}>
+          ← ちずへ
+        </button>
+        <span className="text-sm font-bold" style={{ color: SEPIA }}>もんだい {index + 1} / {ADVENTURE_QUEST.length}</span>
+        <span className={`rounded-full ${accent.chip} px-2.5 py-1 text-xs font-bold text-white shadow-sm`}>
+          {zone.emoji} {zone.name}
+        </span>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center">
+        <Ribbon width={270}>
+          <span className="text-base">{charEmoji} を {quest.goalEmoji ?? '🎯'} まで はこぼう！</span>
+        </Ribbon>
+        {quest.prompt && (
+          <p className="mt-2 text-center text-sm font-bold" style={{ color: SEPIA }}>📜 {quest.prompt}</p>
+        )}
+      </div>
+
+      <div className="relative z-10 rounded-2xl border-2 p-2 shadow-md"
+        style={{ borderColor: 'rgba(123,90,58,.45)', background: 'rgba(255,250,235,.5)' }}>
+        <ProgrammingGrid level={quest} charEmoji={charEmoji}
+          charPos={runner.charPos} charFacing={runner.charFacing}
+          trail={runner.trail} collected={runner.collected}
+          blockedCell={runner.blockedCell} theme={theme} />
+      </div>
+
+      {/* 固定プログラム（proc_a: てじゅん定義 / proc_b: メインプログラム）*/}
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border-2 p-2"
+        style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}>
+        <p className="mb-1 text-[10px] font-bold" style={{ color: '#9a7c54' }}>
+          {isProcB ? '📋 メインプログラム（かえられないよ）' : `📦 ${CALL_LABEL} の 中身（かえられないよ）`}
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {isProcB ? renderFixedCmds(quest.procMain!) : quest.procDef!.map((c, i) => (
+            <span key={i} className={`inline-flex items-center rounded-lg ${accent.chip} px-2 py-1 text-sm font-bold text-white`}>
+              {REL_ICON[c]}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* 編集エリア（proc_a: メインプログラム / proc_b: てじゅん本体）*/}
+      <div className="relative z-10 flex min-h-[52px] w-full max-w-sm flex-wrap items-center gap-1 rounded-2xl border-2 border-dashed p-2"
+        style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}>
+        {renderActiveCmds()}
+      </div>
+      <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>
+        {isProcB ? `てじゅんの なかみ（のこり ${maxSlots - procBody.length}）` : `メインプログラム（のこり ${maxSlots - mainCmds.length}）`}
+        　タップで けせるよ
+      </p>
+
+      {/* パレット */}
+      <div className="relative z-10 flex flex-col items-center gap-2 rounded-2xl border-2 p-3"
+        style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}>
+        <div className="flex items-center justify-center gap-2">
+          {(['turn_left', 'forward', 'turn_right'] as RelDir[]).map((c) => (
+            <motion.button key={c} type="button" onClick={() => addRelDir(c)}
+              whileTap={{ scale: 0.9 }} disabled={!canAdd}
+              className={`flex h-16 w-20 flex-col items-center justify-center rounded-2xl ${accent.chip} font-bold text-white shadow-md disabled:opacity-40`}>
+              <span className="text-2xl">{REL_ICON[c]}</span>
+              <span className="text-[10px]">{REL_LABEL[c]}</span>
+            </motion.button>
+          ))}
+          {!isProcB && (
+            <motion.button type="button" onClick={addCall}
+              whileTap={{ scale: 0.9 }} disabled={!canAdd}
+              className={`flex h-16 w-20 flex-col items-center justify-center rounded-2xl bg-amber-500 font-bold text-white shadow-md disabled:opacity-40`}>
+              <span className="text-2xl">{CALL_ICON}</span>
+              <span className="text-[10px]">{CALL_LABEL}</span>
+            </motion.button>
+          )}
+        </div>
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-sm gap-2">
+        <button type="button" onClick={handleStart}
+          disabled={!canEdit || activeCmds.length === 0}
+          className="flex-1 rounded-2xl bg-green-500 py-3 text-lg font-bold text-white shadow-[0_4px_0_#15803d] active:translate-y-1 disabled:opacity-40">
+          ▶ スタート
+        </button>
+        <button type="button" onClick={handleStep}
+          disabled={!canEdit || activeCmds.length === 0}
+          className="rounded-2xl bg-sky-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#0369a1] active:translate-y-1 disabled:opacity-40">
+          👣 1コマ
+        </button>
+        <button type="button" onClick={handleReset} disabled={locked}
+          className="rounded-2xl bg-amber-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#b45309] active:translate-y-1 disabled:opacity-40">
+          ↺
+        </button>
+        <button type="button" onClick={handleClearAll}
+          disabled={!canEdit || activeCmds.length === 0}
+          className="rounded-2xl bg-rose-300 px-3 py-3 text-base font-bold text-white shadow-[0_4px_0_#9f1239] active:translate-y-1 disabled:opacity-40">
+          🗑️
+        </button>
+      </div>
+
+      {hint && (
+        <div className="relative z-10 w-full max-w-sm">
+          <HintBanner charEmoji={charEmoji} message={hint} />
+        </div>
+      )}
+
+      <AnimatePresence>
+        {overlay && (
+          <ClearOverlay quest={quest} perfect={overlay.perfect} earned={overlay.earned} onContinue={onCleared} />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function buildProcHint(quest: AdventureQuest, result: RunResult, attempt: number, isProcB: boolean): string {
+  if (result.blockedStep >= 0) {
+    return isProcB
+      ? `かべに あたって とまっちゃった！\nてじゅんの なかみを かえてみよう。`
+      : `かべに あたって とまっちゃった！\nてじゅんを よびだす ばしょを みなおしてみよう。`;
+  }
+  const gem = quest.gemEmoji ?? '⭐';
+  if (result.missedGems > 0) {
+    return `${gem}が まだ とれてないね。\n${gem}を とおるように みちを かんがえよう。`;
+  }
+  const dist = Math.abs(result.finalPos.r - quest.goal.r) + Math.abs(result.finalPos.c - quest.goal.c);
+  if (dist > 0) {
+    if (attempt <= 1) {
+      return isProcB
+        ? `ゴールまで あと ${dist}マス！\nてじゅんが なんマス すすむか かんがえよう。`
+        : `ゴールまで あと ${dist}マス！\nてじゅんを よびだす かいすうを かんがえよう。`;
+    }
+    return `ゴールは いまより ${dist}マス さきだよ。\nてじゅんを うまく つかって とどけてみよう。`;
+  }
+  return 'おしい！ もういちど かんがえてみよう。';
 }
 
 /**

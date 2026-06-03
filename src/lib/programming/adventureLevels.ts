@@ -13,6 +13,7 @@
 import type { Dir, Level, Pos } from './engine';
 import type { BranchCommand } from './branch';
 import type { RelCommand } from './relativeEngine';
+import type { ProcMainCmd } from './procEngine';
 
 const r = (row: number, col: number): Pos => ({ r: row, c: col });
 
@@ -89,12 +90,18 @@ export interface AdventureQuest extends Level {
   zoneId: string;
   /** 検証・ヒント用の 解の一例（なければ solve() で 検証する） */
   solution?: Dir[];
-  /** 問題の しゅるい。'branch'=もしも穴埋め、'relative'=そうたい方向。なければ 矢印ならべ */
-  kind?: 'branch' | 'relative';
+  /** 問題の しゅるい。'branch'=もしも穴埋め、'relative'=そうたい方向、'proc'=てじゅん。なければ 矢印ならべ */
+  kind?: 'branch' | 'relative' | 'proc';
   /** kind==='branch' のときの 穴埋め設定 */
   branchFill?: AdventureBranchFill;
   /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ。ループも ふくめられる） */
   relSolution?: RelCommand[];
+  /** kind==='proc' のとき: てじゅんの 固定した 中身（proc_a で みせる・proc_b で正解）*/
+  procDef?: import('./relativeEngine').RelDir[];
+  /** kind==='proc' のとき: 固定した メインプログラム（proc_b で みせる）*/
+  procMain?: ProcMainCmd[];
+  /** proc_a の 検証用 最適解（メインプログラムの 最短手順。call を ふくむ）*/
+  procMainSolution?: ProcMainCmd[];
 }
 
 export const ADVENTURE_ZONES: AdventureZone[] = [
@@ -247,6 +254,26 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     tagline: 'ループの なかに まがりかどを くみこもう！',
     story: 'ぐるぐると つながる だいみゃくへ ようこそ。\nループの なかに「まがる」めいれいを くみこんで\nふくざつな みちも かんたんに あらわそう！',
     wall: '🍃', tile: 'bg-violet-50', wallTile: 'bg-violet-200', board: 'bg-violet-100/80',
+  },
+  {
+    id: 'proc_a',
+    name: 'てじゅんの にわ',
+    emoji: '📦',
+    bg: 'from-orange-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'てじゅんを よびだして らくらく すすもう！',
+    story: 'きれいに かたちを した にわに やってきた。\nおなじ みちを まとめた「てじゅん」を よびだすと\nみじかい めいれいで ゴールへ たどりつけるよ！',
+    wall: '🌸', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-100/80',
+  },
+  {
+    id: 'proc_b',
+    name: 'てじゅんの やかた',
+    emoji: '🏛️',
+    bg: 'from-rose-100 to-pink-50',
+    accent: 'amber',
+    tagline: 'てじゅんの なかみを かんがえよう！',
+    story: 'ふしぎな やかたの まえに たった。\nメインプログラムは もう できあがっている。\nてじゅんの なかみを きめれば ゴールへ たどりつけるよ！',
+    wall: '🌺', tile: 'bg-rose-50', wallTile: 'bg-rose-200', board: 'bg-rose-100/80',
   },
 ];
 
@@ -992,6 +1019,130 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     ],
     optimal: 4, maxSlots: 5,
     prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに',
+  },
+
+  // ─── 📦 てじゅんの にわ（adv-q91〜adv-q96）てじゅん呼び出し・proc_a ───
+  {
+    id: 'adv-q91', zoneId: 'proc_a', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'てじゅんを よびだして 3マス すすもう！',
+  },
+  {
+    id: 'adv-q92', zoneId: 'proc_a', rows: 7, cols: 1,
+    start: r(6, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }],
+    optimal: 2, maxSlots: 3,
+    prompt: 'てじゅんを 2かい よびだして ゴールへ！',
+  },
+  {
+    id: 'adv-q93', zoneId: 'proc_a', rows: 3, cols: 5,
+    start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'のぼって まがって また すすもう！',
+  },
+  {
+    id: 'adv-q94', zoneId: 'proc_a', rows: 3, cols: 3,
+    start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    optimal: 3, maxSlots: 4,
+    prompt: '🌸を とおりながら ゴールへ！',
+  },
+  {
+    id: 'adv-q95', zoneId: 'proc_a', rows: 5, cols: 3,
+    start: r(4, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'forward'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'のぼって のぼって まがって すすもう！',
+  },
+  {
+    id: 'adv-q96', zoneId: 'proc_a', rows: 5, cols: 5,
+    start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '🌸',
+    kind: 'proc',
+    procDef: ['forward', 'turn_right', 'forward', 'turn_left'],
+    procMainSolution: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    optimal: 4, maxSlots: 5,
+    prompt: 'てじゅんを 4かい くりかえして ゴールへ！',
+  },
+
+  // ─── 🏛️ てじゅんの やかた（adv-q97〜adv-q102）てじゅん本体を きめる・proc_b ───
+  {
+    id: 'adv-q97', zoneId: 'proc_b', rows: 5, cols: 1,
+    start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'てじゅんの なかみを きめよう！ 2かい よんで ゴールへ',
+  },
+  {
+    id: 'adv-q98', zoneId: 'proc_b', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward'],
+    optimal: 1, maxSlots: 3,
+    prompt: '3かい よんで 3マス すすむ てじゅんを つくろう！',
+  },
+  {
+    id: 'adv-q99', zoneId: 'proc_b', rows: 3, cols: 3,
+    start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'てじゅんで のぼって まがって また すすもう！',
+  },
+  {
+    id: 'adv-q100', zoneId: 'proc_b', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(3, 2), startFacing: 'up',
+    walls: [], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'U字に まわる てじゅんを かんがえよう！',
+  },
+  {
+    id: 'adv-q101', zoneId: 'proc_b', rows: 3, cols: 5,
+    start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🌺を とおりながら、てじゅんで ゴールへ！',
+  },
+  {
+    id: 'adv-q102', zoneId: 'proc_b', rows: 5, cols: 5,
+    start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🏛️', gemEmoji: '🌺',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🌺を とおって ゴールへ！ てじゅんで どのくらい すすむか きめよう',
   },
 ];
 
