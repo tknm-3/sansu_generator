@@ -16,10 +16,37 @@ import {
   type Pos,
 } from './engine';
 import { runBranch } from './branch';
-import { runRelative, solveRelative } from './relativeEngine';
+import {
+  runRelative,
+  solveRelative,
+  flattenRel,
+  turnRight,
+  turnLeft,
+  type RelDir,
+} from './relativeEngine';
 
 function toCommands(dirs: Dir[]): Command[] {
   return dirs.map((dir) => ({ kind: 'move' as const, dir }));
+}
+
+/** そうたい命令れつを 実行し、まえへ すすんだ ときの ぜったい むき れつ を かえす */
+function moveDirs(cmds: RelDir[], startFacing: Dir): Dir[] {
+  let facing = startFacing;
+  const out: Dir[] = [];
+  for (const c of cmds) {
+    if (c === 'turn_right') facing = turnRight(facing);
+    else if (c === 'turn_left') facing = turnLeft(facing);
+    else out.push(facing);
+  }
+  return out;
+}
+
+/** みちの「まがりかど」の かず（となりあう すすむ むき が ちがう かいすう）*/
+function corners(cmds: RelDir[], startFacing: Dir): number {
+  const dirs = moveDirs(cmds, startFacing);
+  let n = 0;
+  for (let i = 1; i < dirs.length; i++) if (dirs[i] !== dirs[i - 1]) n += 1;
+  return n;
 }
 
 const all = ADVENTURE_QUEST;
@@ -182,6 +209,22 @@ describe('ぼうけん 問題集', () => {
     expect(isCleared(result), `${q.id} の relSolution が ゴールに つかない`).toBe(true);
     expect(q.relSolution!.length, `${q.id} の relSolution が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
     expect(q.relSolution!.length, `${q.id} の optimal が 命令数と ずれている`).toBe(q.optimal);
+  });
+
+  // そうたい×ループの「かたち」を かべで しぼれているか。
+  // コの字／かいだん／ジグザグ なのに まっすぐ や L字で ショートカットできると 学びが うすい。
+  // 最短解（solveRelative）の まがりかど かずが、ねらった かたち（relSolution）より すくなく
+  // ならないことを 確認する＝より すくない まがりかどでは ゴールできない＝ショートカット不可。
+  it.each(relativeLoopQuests)('$id（そうたい×ループ）は ショートカットできない（かべで かたちが しぼれている）', (q) => {
+    const facing = q.startFacing!;
+    const best = solveRelative(q);
+    expect(best, `${q.id} に そうたい解が ない`).not.toBeNull();
+    const needed = corners(flattenRel(q.relSolution!), facing);
+    const shortest = corners(best!, facing);
+    expect(
+      shortest,
+      `${q.id} は ${needed}かい まがる はずが ${shortest}かいで ゴールできてしまう（かべで みちを しぼって）`,
+    ).toBeGreaterThanOrEqual(needed);
   });
 
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。
