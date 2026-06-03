@@ -1194,6 +1194,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   },
 
   // ─── 🌀 ループの なかの ループ（adv-q103〜adv-q108）ネストループ 入門 ───
+  // 段階: L字2辺(小) → L字2辺(長辺) → 3辺(小) → 3辺(向き変え) → 3辺(大) → 3辺(大+⭐)
   {
     // 超入門: loop(2){loop(2){forward}, turn_right} = 2まい すすんで まがる を 2かい
     // = 3×3の 2辺（L字形）。walls:[] で maxSlots:2 の制約が 自然に ネストループを 強制。
@@ -1206,39 +1207,54 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'ループの なかに ループを いれてみよう！ 2まい すすんで まがる を 2かい くりかえすよ',
   },
   {
-    // 入門2: loop(3){loop(2){forward}, turn_right} = 3辺を まわる。
-    // まんなかを ふさぐ＝まっすぐ したへ いけない。四角の ふちを まわる ネストループ だけ。
-    id: 'adv-q104', zoneId: 'nloop_a', rows: 3, cols: 3,
+    // L字2辺（長辺版）: loop(2){loop(3){forward}, turn_right} = 3まい すすんで まがる を 2かい
+    // = 4×4の 2辺。内ループを 増やすと 1辺が 長くなる。walls:[] で maxSlots:2 が強制。
+    id: 'adv-q104', zoneId: 'nloop_a', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 3), startFacing: 'right',
+    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'なかの ループを 3にすると 1辺が ながくなるよ！',
+  },
+  {
+    // 3辺（小）: loop(3){loop(2){forward}, turn_right} = 2まい すすんで まがる を 3かい
+    // まんなかを ふさぐ＝まっすぐ したへ いけない。四角の ふちを まわる。
+    id: 'adv-q105', zoneId: 'nloop_a', rows: 3, cols: 3,
     start: r(0, 0), goal: r(2, 0), startFacing: 'right',
     walls: [r(1, 0), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
-    prompt: '3かい くりかえすと もとの 行に もどってくるよ！',
+    prompt: 'そとの ループを 3にすると 3辺まわれるよ！',
   },
   {
-    id: 'adv-q105', zoneId: 'nloop_a', rows: 3, cols: 3,
-    start: r(0, 2), goal: r(0, 0), startFacing: 'down',
+    // 3辺（向き変え）: 同じ loop(3){loop(2){forward}, turn_right} を startFacing:down で
     // うえの れつと まんなかを ふさぐ＝よこ まっすぐ では いけない。ふちを まわる だけ。
+    id: 'adv-q106', zoneId: 'nloop_a', rows: 3, cols: 3,
+    start: r(0, 2), goal: r(0, 0), startFacing: 'down',
     walls: [r(0, 1), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
-    prompt: 'むきが かわっても おなじ ネストループで！',
+    prompt: 'むきが ちがっても おなじ ループが つかえるよ！',
   },
   {
-    id: 'adv-q106', zoneId: 'nloop_a', rows: 4, cols: 4,
-    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
+    // 3辺（大）: loop(3){loop(3){forward}, turn_right} = 4×4 グリッド
     // なかみを ぜんぶ ふさぐ＝四角の ふち（みぎ→した→ひだり）だけ とおれる。
+    id: 'adv-q107', zoneId: 'nloop_a', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
     walls: [r(1, 0), r(1, 1), r(1, 2), r(2, 0), r(2, 1), r(2, 2)],
     goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
-    prompt: 'おなじパターン、おおきな グリッドで！',
+    prompt: 'おなじパターン、おおきな グリッドで！ なかのループは？',
   },
   {
-    id: 'adv-q107', zoneId: 'nloop_a', rows: 4, cols: 4,
+    // 3辺（大）+ ⭐: loop(3){loop(3){forward}, turn_right} + gems
+    // walls:[] で maxSlots:2 が強制。⭐は コーナーに。
+    id: 'adv-q108', zoneId: 'nloop_a', rows: 4, cols: 4,
     start: r(0, 0), goal: r(3, 0), startFacing: 'right',
     walls: [], gems: [r(0, 3)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
@@ -1246,32 +1262,13 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     optimal: 1, maxSlots: 2,
     prompt: '⭐は コーナーに あるよ。ネストループで ぴったり とおろう',
   },
-  {
-    id: 'adv-q108', zoneId: 'nloop_a', rows: 4, cols: 4,
-    start: r(0, 3), goal: r(0, 0), startFacing: 'down',
-    // なかみと うえの れつを ふさぐ＝ふち（した→ひだり→うえ）を まわる だけ。
-    walls: [r(0, 1), r(0, 2), r(1, 1), r(1, 2), r(2, 1), r(2, 2)],
-    goalEmoji: '🌊', gemEmoji: '⭐',
-    kind: 'relative', allowLoop: true,
-    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'むきを かえた しゅっぱつ！ パターンを みつけよう',
-  },
 
   // ─── 🏔️ ネストループ だいとうげ（adv-q109〜adv-q114）ネストループ 応用 ───
+  // 段階: L字(4×4) → 3辺+💎 → 3辺+壁+向き変え → 5×5壁あり → 5×5+💎×2 → 5×5向き変え
   {
+    // L字2辺（4×4）: loop(2){loop(3){forward}, turn_right}
+    // 入門ゾーンの q104 と同じパターンで、こんどは nloop_b の導入として確認。
     id: 'adv-q109', zoneId: 'nloop_b', rows: 4, cols: 4,
-    start: r(3, 0), goal: r(3, 3), startFacing: 'up',
-    // なかみと したの れつを ふさぐ＝ふち（うえ→みぎ→した）を まわる だけ。
-    walls: [r(1, 1), r(1, 2), r(2, 1), r(2, 2), r(3, 1), r(3, 2)],
-    goalEmoji: '🏔️', gemEmoji: '💎',
-    kind: 'relative', allowLoop: true,
-    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'ゴールの かどは どこかな？ パターンで かんがえよう',
-  },
-  {
-    id: 'adv-q110', zoneId: 'nloop_b', rows: 4, cols: 4,
     start: r(0, 0), goal: r(3, 3), startFacing: 'right',
     walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
@@ -1280,9 +1277,33 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'そとの ループは なんかい？ かんがえてみよう！',
   },
   {
-    id: 'adv-q111', zoneId: 'nloop_b', rows: 5, cols: 5,
-    start: r(0, 0), goal: r(4, 0), startFacing: 'right',
+    // 3辺（4×4）+ 💎: loop(3){loop(3){forward}, turn_right} + gems
+    // 💎 は コーナー（3辺目の終点）に。walls:[] で maxSlots:2 が強制。
+    id: 'adv-q110', zoneId: 'nloop_b', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
+    walls: [], gems: [r(3, 3)], goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '💎は コーナーに ある！ ちゃんと とおれるかな？',
+  },
+  {
+    // 3辺（4×4）+ 壁あり + startFacing:up
+    // なかみと したの れつを ふさぐ＝ふち（うえ→みぎ→した）を まわる だけ。
+    id: 'adv-q111', zoneId: 'nloop_b', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(3, 3), startFacing: 'up',
+    walls: [r(1, 1), r(1, 2), r(2, 1), r(2, 2), r(3, 1), r(3, 2)],
+    goalEmoji: '🏔️', gemEmoji: '💎',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ゴールの かどは どこかな？ パターンで かんがえよう',
+  },
+  {
+    // 5×5（大）+ 壁あり: loop(3){loop(4){forward}, turn_right}
     // なかみを ぜんぶ ふさぐ＝おおきな 四角の ふち（みぎ→した→ひだり）だけ とおれる。
+    id: 'adv-q112', zoneId: 'nloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 0), startFacing: 'right',
     walls: [
       r(1, 0), r(1, 1), r(1, 2), r(1, 3), r(2, 0), r(2, 1), r(2, 2), r(2, 3),
       r(3, 0), r(3, 1), r(3, 2), r(3, 3),
@@ -1294,7 +1315,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'おおきな グリッド！ なかの ループは なんかい？',
   },
   {
-    id: 'adv-q112', zoneId: 'nloop_b', rows: 5, cols: 5,
+    // 5×5 + 💎×2: loop(3){loop(4){forward}, turn_right} + gems
+    // 💎 は 2つの コーナーに。walls:[] で maxSlots:2 が強制。
+    id: 'adv-q113', zoneId: 'nloop_b', rows: 5, cols: 5,
     start: r(0, 0), goal: r(4, 0), startFacing: 'right',
     walls: [], gems: [r(0, 4), r(4, 4)], goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
@@ -1303,9 +1326,10 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: '💎を 2つ とりながら ゴールへ！ コーナーを かくにん',
   },
   {
-    id: 'adv-q113', zoneId: 'nloop_b', rows: 5, cols: 5,
-    start: r(0, 4), goal: r(0, 0), startFacing: 'down',
+    // 5×5 + 壁あり + startFacing:down（最難関ボス）
     // なかみと うえの れつを ふさぐ＝ふち（した→ひだり→うえ）を まわる だけ。
+    id: 'adv-q114', zoneId: 'nloop_b', rows: 5, cols: 5,
+    start: r(0, 4), goal: r(0, 0), startFacing: 'down',
     walls: [
       r(0, 1), r(0, 2), r(0, 3), r(1, 1), r(1, 2), r(1, 3),
       r(2, 1), r(2, 2), r(2, 3), r(3, 1), r(3, 2), r(3, 3),
@@ -1315,15 +1339,6 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
     prompt: 'むきに ちゅうもく！ ネストループを うまく つかおう',
-  },
-  {
-    id: 'adv-q114', zoneId: 'nloop_b', rows: 4, cols: 4,
-    start: r(0, 0), goal: r(3, 0), startFacing: 'right',
-    walls: [], gems: [r(3, 3)], goalEmoji: '🏔️', gemEmoji: '💎',
-    kind: 'relative', allowLoop: true,
-    relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '💎は コーナーに ある！ ちゃんと とおれるかな？',
   },
 ];
 
