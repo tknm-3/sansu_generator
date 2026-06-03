@@ -16,10 +16,38 @@ import {
   type Pos,
 } from './engine';
 import { runBranch } from './branch';
-import { runRelative, solveRelative } from './relativeEngine';
+import {
+  runRelative,
+  solveRelative,
+  flattenRel,
+  turnRight,
+  turnLeft,
+  type RelDir,
+} from './relativeEngine';
+import { runProc } from './procEngine';
 
 function toCommands(dirs: Dir[]): Command[] {
   return dirs.map((dir) => ({ kind: 'move' as const, dir }));
+}
+
+/** そうたい命令れつを 実行し、まえへ すすんだ ときの ぜったい むき れつ を かえす */
+function moveDirs(cmds: RelDir[], startFacing: Dir): Dir[] {
+  let facing = startFacing;
+  const out: Dir[] = [];
+  for (const c of cmds) {
+    if (c === 'turn_right') facing = turnRight(facing);
+    else if (c === 'turn_left') facing = turnLeft(facing);
+    else out.push(facing);
+  }
+  return out;
+}
+
+/** みちの「まがりかど」の かず（となりあう すすむ むき が ちがう かいすう）*/
+function corners(cmds: RelDir[], startFacing: Dir): number {
+  const dirs = moveDirs(cmds, startFacing);
+  let n = 0;
+  for (let i = 1; i < dirs.length; i++) if (dirs[i] !== dirs[i - 1]) n += 1;
+  return n;
 }
 
 const all = ADVENTURE_QUEST;
@@ -182,6 +210,76 @@ describe('ぼうけん 問題集', () => {
     expect(isCleared(result), `${q.id} の relSolution が ゴールに つかない`).toBe(true);
     expect(q.relSolution!.length, `${q.id} の relSolution が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
     expect(q.relSolution!.length, `${q.id} の optimal が 命令数と ずれている`).toBe(q.optimal);
+  });
+
+  // そうたい×ループの「かたち」を かべで しぼれているか。
+  // コの字／かいだん／ジグザグ なのに まっすぐ や L字で ショートカットできると 学びが うすい。
+  // 最短解（solveRelative）の まがりかど かずが、ねらった かたち（relSolution）より すくなく
+  // ならないことを 確認する＝より すくない まがりかどでは ゴールできない＝ショートカット不可。
+  it.each(relativeLoopQuests)('$id（そうたい×ループ）は ショートカットできない（かべで かたちが しぼれている）', (q) => {
+    const facing = q.startFacing!;
+    const best = solveRelative(q);
+    expect(best, `${q.id} に そうたい解が ない`).not.toBeNull();
+    const needed = corners(flattenRel(q.relSolution!), facing);
+    const shortest = corners(best!, facing);
+    expect(
+      shortest,
+      `${q.id} は ${needed}かい まがる はずが ${shortest}かいで ゴールできてしまう（かべで みちを しぼって）`,
+    ).toBeGreaterThanOrEqual(needed);
+  });
+
+  // ── てじゅん（proc）単元 ──
+  const procQuests = all.filter((q) => q.kind === 'proc');
+  const procAQuests = procQuests.filter((q) => q.procMainSolution); // proc_a: 中身固定・main を つくる
+  const procBQuests = procQuests.filter((q) => q.procMain && !q.procMainSolution); // proc_b: main固定・中身を きめる
+
+  it('proc 単元が proc_a/proc_b とも ある', () => {
+    expect(procAQuests.length).toBeGreaterThan(0);
+    expect(procBQuests.length).toBeGreaterThan(0);
+  });
+
+  it.each(procAQuests)('$id（proc_a）は call で クリアでき optimal が main命令数と 一致する', (q) => {
+    expect(q.procDef, `${q.id} に procDef が ない`).toBeDefined();
+    const result = runProc(q, q.procMainSolution!, q.procDef!);
+    expect(isCleared(result), `${q.id} の procMainSolution が ゴールに つかない`).toBe(true);
+    expect(q.procMainSolution!.length, `${q.id} の optimal が main命令数と ずれている`).toBe(q.optimal);
+    expect(q.procMainSolution!.length, `${q.id} の main が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+  });
+
+  // proc_a の「意図した解き方」: ふつうの矢印だけ では maxSlots に おさまらない＝てじゅんA 必須。
+  // （おさまると てじゅんを つかわず 解けてしまい「まとめて よびだす」学びが うすい）
+  it.each(procAQuests)('$id（proc_a）は てじゅんA なしの 矢印だけ では maxSlots に おさまらない', (q) => {
+    const raw = solveRelative(q);
+    expect(raw, `${q.id} に そうたい解が ない`).not.toBeNull();
+    expect(
+      raw!.length,
+      `${q.id} は 矢印だけ(${raw!.length}手)で maxSlots(${q.maxSlots})に おさまり てじゅんを つかわず 解けてしまう`,
+    ).toBeGreaterThan(q.maxSlots!);
+  });
+
+  it.each(procBQuests)('$id（proc_b）は きめた 中身で クリアでき optimal が 中身の命令数と 一致する', (q) => {
+    expect(q.procDef, `${q.id} に procDef（正解の中身）が ない`).toBeDefined();
+    const result = runProc(q, q.procMain!, q.procDef!);
+    expect(isCleared(result), `${q.id} の procDef が ゴールに つかない`).toBe(true);
+    expect(q.procDef!.length, `${q.id} の optimal が 中身の命令数と ずれている`).toBe(q.optimal);
+    expect(q.procDef!.length, `${q.id} の 中身が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+  });
+
+  // proc_b の「意図した解き方」: optimal より みじかい 中身では クリアできない
+  // （みじかい 中身で クリアできると かんがえずに あてられてしまう）。
+  it.each(procBQuests)('$id（proc_b）は optimal より みじかい 中身では クリアできない', (q) => {
+    const dirs: RelDir[] = ['forward', 'turn_right', 'turn_left'];
+    function bodies(len: number): RelDir[][] {
+      if (len === 0) return [[]];
+      const rest = bodies(len - 1);
+      return dirs.flatMap((d) => rest.map((b) => [d, ...b]));
+    }
+    for (let len = 1; len < q.optimal; len++) {
+      for (const body of bodies(len)) {
+        const ok = isCleared(runProc(q, q.procMain!, body));
+        expect(ok, `${q.id} は ${len}個の 中身 [${body.join(',')}] で クリアできてしまう`).toBe(false);
+      }
+    }
   });
 
   // loopOnly の たには、ふつうの 1マス矢印を ださず ループ箱だけ つかわせる。

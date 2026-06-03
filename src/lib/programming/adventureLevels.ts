@@ -949,7 +949,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q83', zoneId: 'rloop_a', rows: 4, cols: 4,
     start: r(3, 1), goal: r(3, 3), startFacing: 'up',
-    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    // まんなか（3,2）を かべで ふさぐ＝よこ まっすぐ では いけない。のぼって・よこ・おりる の コの字 だけ。
+    walls: [r(3, 2)], goalEmoji: '🎯', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [
       { kind: 'loop', times: 2, body: ['forward'] },
@@ -964,7 +965,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q84', zoneId: 'rloop_a', rows: 6, cols: 6,
     start: r(5, 0), goal: r(0, 5), startFacing: 'up',
-    walls: [], gems: [r(2, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
+    // (1,0) を ふさぐ＝⭐(2,0) より うえに のぼれない。のぼる→よこ→のぼる の Z字 だけ。
+    walls: [r(1, 0)], gems: [r(2, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [
       { kind: 'loop', times: 3, body: ['forward'] },
@@ -981,7 +983,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q85', zoneId: 'rloop_b', rows: 4, cols: 4,
     start: r(0, 0), goal: r(3, 3), startFacing: 'right',
-    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    // かいだん の かたちに かべで みちを しぼる（まっすぐ や L字 では いけない）。
+    walls: [r(0, 2), r(0, 3), r(1, 0), r(1, 3), r(2, 0), r(2, 1), r(3, 0), r(3, 1), r(3, 2)],
+    goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 2,
@@ -990,7 +994,13 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q86', zoneId: 'rloop_b', rows: 5, cols: 5,
     start: r(0, 0), goal: r(4, 4), startFacing: 'right',
-    walls: [], gems: [r(2, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    // かいだん通路。💫(2,2) は かいだんの まんなかの だんに ある。
+    walls: [
+      r(0, 2), r(0, 3), r(0, 4), r(1, 0), r(1, 3), r(1, 4),
+      r(2, 0), r(2, 1), r(2, 4), r(3, 0), r(3, 1), r(3, 2),
+      r(4, 0), r(4, 1), r(4, 2), r(4, 3),
+    ],
+    gems: [r(2, 2)], goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 4, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 2,
@@ -999,7 +1009,12 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q87', zoneId: 'rloop_b', rows: 4, cols: 7,
     start: r(0, 0), goal: r(3, 6), startFacing: 'right',
-    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    // ジグザグ通路（よこ2・した1 を くりかえす かたち）に かべで しぼる。
+    walls: [
+      r(0, 3), r(0, 4), r(0, 5), r(0, 6), r(1, 0), r(1, 1), r(1, 5), r(1, 6),
+      r(2, 0), r(2, 1), r(2, 2), r(2, 3), r(3, 0), r(3, 1), r(3, 2), r(3, 3), r(3, 4), r(3, 5),
+    ],
+    goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 2,
@@ -1008,16 +1023,23 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q88', zoneId: 'rloop_b', rows: 5, cols: 5,
     start: r(0, 0), goal: r(4, 4), startFacing: 'down',
-    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    // した2・よこ2 の L字 を くりかえす おおきな かいだん通路。
+    walls: [
+      r(0, 1), r(0, 2), r(0, 3), r(0, 4), r(1, 1), r(1, 2), r(1, 3), r(1, 4),
+      r(2, 3), r(2, 4), r(3, 0), r(3, 1), r(3, 3), r(3, 4), r(4, 0), r(4, 1),
+    ],
+    goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: ['forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right'] }],
     optimal: 1, maxSlots: 2,
     prompt: 'L字を くりかえして ゴールへ！',
   },
   {
-    id: 'adv-q89', zoneId: 'rloop_b', rows: 5, cols: 5,
+    id: 'adv-q89', zoneId: 'rloop_b', rows: 3, cols: 5,
     start: r(0, 0), goal: r(2, 4), startFacing: 'right',
-    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    // まえはん は かいだん、うしろは まっすぐ。2つの ループを くみあわせる かたちに しぼる。
+    walls: [r(0, 2), r(0, 3), r(0, 4), r(1, 0), r(1, 3), r(1, 4), r(2, 0), r(2, 1)],
+    goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [
       { kind: 'loop', times: 2, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
@@ -1029,7 +1051,13 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q90', zoneId: 'rloop_b', rows: 6, cols: 6,
     start: r(5, 0), goal: r(0, 5), startFacing: 'up',
-    walls: [], gems: [r(3, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    // ボス。かいだん→まっすぐ→まがって まっすぐ の くねくね通路。💫(3,2) は とちゅうの だんに ある。
+    walls: [
+      r(0, 0), r(0, 1), r(0, 2), r(1, 0), r(1, 1), r(1, 2), r(1, 4), r(1, 5),
+      r(2, 0), r(2, 1), r(2, 4), r(2, 5), r(3, 0), r(3, 3), r(3, 4), r(3, 5),
+      r(4, 2), r(4, 3), r(4, 4), r(4, 5), r(5, 1), r(5, 2), r(5, 3), r(5, 4), r(5, 5),
+    ],
+    gems: [r(3, 2)], goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [
       { kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
@@ -1169,7 +1197,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q103', zoneId: 'nloop_a', rows: 3, cols: 3,
     start: r(0, 0), goal: r(2, 0), startFacing: 'right',
-    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    // まんなかを ふさぐ＝まっすぐ したへ いけない。四角の ふちを まわる ネストループ だけ。
+    walls: [r(1, 0), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1187,7 +1216,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q105', zoneId: 'nloop_a', rows: 3, cols: 3,
     start: r(0, 2), goal: r(0, 0), startFacing: 'down',
-    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    // うえの れつと まんなかを ふさぐ＝よこ まっすぐ では いけない。ふちを まわる だけ。
+    walls: [r(0, 1), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1196,7 +1226,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q106', zoneId: 'nloop_a', rows: 4, cols: 4,
     start: r(0, 0), goal: r(3, 0), startFacing: 'right',
-    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    // なかみを ぜんぶ ふさぐ＝四角の ふち（みぎ→した→ひだり）だけ とおれる。
+    walls: [r(1, 0), r(1, 1), r(1, 2), r(2, 0), r(2, 1), r(2, 2)],
+    goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1214,7 +1246,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q108', zoneId: 'nloop_a', rows: 4, cols: 4,
     start: r(0, 3), goal: r(0, 0), startFacing: 'down',
-    walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
+    // なかみと うえの れつを ふさぐ＝ふち（した→ひだり→うえ）を まわる だけ。
+    walls: [r(0, 1), r(0, 2), r(1, 1), r(1, 2), r(2, 1), r(2, 2)],
+    goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1225,7 +1259,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q109', zoneId: 'nloop_b', rows: 4, cols: 4,
     start: r(3, 0), goal: r(3, 3), startFacing: 'up',
-    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    // なかみと したの れつを ふさぐ＝ふち（うえ→みぎ→した）を まわる だけ。
+    walls: [r(1, 1), r(1, 2), r(2, 1), r(2, 2), r(3, 1), r(3, 2)],
+    goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1243,7 +1279,12 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q111', zoneId: 'nloop_b', rows: 5, cols: 5,
     start: r(0, 0), goal: r(4, 0), startFacing: 'right',
-    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    // なかみを ぜんぶ ふさぐ＝おおきな 四角の ふち（みぎ→した→ひだり）だけ とおれる。
+    walls: [
+      r(1, 0), r(1, 1), r(1, 2), r(1, 3), r(2, 0), r(2, 1), r(2, 2), r(2, 3),
+      r(3, 0), r(3, 1), r(3, 2), r(3, 3),
+    ],
+    goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
@@ -1261,7 +1302,12 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
   {
     id: 'adv-q113', zoneId: 'nloop_b', rows: 5, cols: 5,
     start: r(0, 4), goal: r(0, 0), startFacing: 'down',
-    walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
+    // なかみと うえの れつを ふさぐ＝ふち（した→ひだり→うえ）を まわる だけ。
+    walls: [
+      r(0, 1), r(0, 2), r(0, 3), r(1, 1), r(1, 2), r(1, 3),
+      r(2, 1), r(2, 2), r(2, 3), r(3, 1), r(3, 2), r(3, 3),
+    ],
+    goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 2,
