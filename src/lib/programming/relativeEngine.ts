@@ -17,6 +17,22 @@ import { samePos, type Dir, type Level, type Pos, type RunResult } from './engin
 /** 相対方向の 命令 */
 export type RelDir = 'forward' | 'turn_right' | 'turn_left';
 
+/** ループ命令（N回 くりかえす） */
+export type RelLoop = { kind: 'loop'; times: number; body: RelDir[] };
+
+/** そうたい方向の 命令（1ステップ または ループ）*/
+export type RelCommand = RelDir | RelLoop;
+
+/** ループを ふくむ 命令列を フラットな RelDir[] に ひらく */
+export function flattenRel(cmds: RelCommand[]): RelDir[] {
+  const out: RelDir[] = [];
+  for (const c of cmds) {
+    if (typeof c === 'string') out.push(c);
+    else for (let i = 0; i < c.times; i++) out.push(...c.body);
+  }
+  return out;
+}
+
 export const REL_LABEL: Record<RelDir, string> = {
   forward: 'まえへ',
   turn_right: 'みぎをむく',
@@ -64,7 +80,7 @@ function isWall(level: Level, p: Pos): boolean {
  * facings は path と そろえた「そのときの むき」（スプライト描画用）。
  * steps は 実行した 命令の かず（まわる も 1手と かぞえる）。
  */
-export function runRelative(level: Level, cmds: RelDir[]): RunResult & { facings: Dir[] } {
+export function runRelative(level: Level, cmds: RelCommand[]): RunResult & { facings: Dir[] } {
   const startFacing: Dir = level.startFacing ?? 'up';
   const path: Pos[] = [level.start];
   const facings: Dir[] = [startFacing];
@@ -78,7 +94,7 @@ export function runRelative(level: Level, cmds: RelDir[]): RunResult & { facings
   const collected = new Set<string>();
   if (gemKeys.has(posKey(cur))) collected.add(posKey(cur));
 
-  for (const cmd of cmds) {
+  for (const cmd of flattenRel(cmds)) {
     if (cmd === 'turn_right') {
       facing = turnRight(facing);
     } else if (cmd === 'turn_left') {

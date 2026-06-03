@@ -30,7 +30,7 @@ import {
   type AdventureZone,
 } from '../lib/programming/adventureLevels';
 import { runBranch, buildBranchHint, type BranchCommand } from '../lib/programming/branch';
-import { runRelative, solveRelative, REL_ICON, REL_LABEL, type RelDir } from '../lib/programming/relativeEngine';
+import { runRelative, solveRelative, REL_ICON, REL_LABEL, type RelDir, type RelCommand, type RelLoop } from '../lib/programming/relativeEngine';
 import {
   addQuestClear,
   currentZoneId,
@@ -200,6 +200,8 @@ const REGION_TINT: Record<string, string> = {
   crystal: 'rgba(150,90,180,.30)',
   fog:     'rgba(120,150,130,.30)',
   sea:     'rgba(60,150,170,.30)',
+  rloop_a: 'rgba(80,160,80,.28)',
+  rloop_b: 'rgba(120,90,190,.30)',
 };
 
 interface TownStop {
@@ -1156,16 +1158,20 @@ function RelativeAdventurePlay({
   const accent = ACCENT[zone.accent] ?? ACCENT.sky;
   const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
 
-  const [cmds, setCmds] = useState<RelDir[]>([]);
+  const [cmds, setCmds] = useState<RelCommand[]>([]);
+  const [editingLoopIdx, setEditingLoopIdx] = useState<number | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const [overlay, setOverlay] = useState<null | { perfect: boolean; earned: number }>(null);
 
   const maxSlots = quest.maxSlots ?? 12;
-  const runner = useProgramRunner<RelDir>(quest, handleFinish, runRelative);
+  const runner = useProgramRunner<RelCommand>(quest, handleFinish, runRelative);
   const canEdit = !runner.playing && !locked;
-  const canAdd = cmds.length < maxSlots && canEdit;
+  const inLoop = editingLoopIdx !== null;
+  const currentLoop = inLoop ? (cmds[editingLoopIdx!] as RelLoop | undefined) : undefined;
+  const bodyLen = currentLoop?.body.length ?? 0;
+  const canAdd = canEdit && (inLoop ? bodyLen < 4 : cmds.length < maxSlots);
 
   function handleFinish(result: RunResult) {
     if (isCleared(result)) {
@@ -1190,22 +1196,46 @@ function RelativeAdventurePlay({
   function addCmd(c: RelDir) {
     if (!canAdd) return;
     playSfx('tap');
-    setCmds((cs) => [...cs, c]);
+    if (inLoop && editingLoopIdx !== null) {
+      setCmds((cs) => cs.map((cmd, i) => {
+        if (i !== editingLoopIdx || typeof cmd === 'string') return cmd;
+        return { ...(cmd as RelLoop), body: [...(cmd as RelLoop).body, c] };
+      }));
+    } else {
+      setCmds((cs) => [...cs, c]);
+      setHint(null);
+    }
+  }
+  function addLoop(times: number) {
+    if (!canEdit || inLoop || cmds.length >= maxSlots) return;
+    playSfx('tap');
+    const newIdx = cmds.length;
+    setCmds((cs) => [...cs, { kind: 'loop', times, body: [] } as RelLoop]);
+    setEditingLoopIdx(newIdx);
     setHint(null);
   }
+  function finishLoop() {
+    if (editingLoopIdx === null) return;
+    playSfx('tap');
+    const loop = cmds[editingLoopIdx] as RelLoop;
+    if (loop.body.length === 0) {
+      setCmds((cs) => cs.filter((_, i) => i !== editingLoopIdx));
+    }
+    setEditingLoopIdx(null);
+  }
   function removeAt(i: number) {
-    if (!canEdit) return;
+    if (!canEdit || inLoop) return;
     playSfx('tap');
     setCmds((cs) => cs.filter((_, j) => j !== i));
   }
   function handleStart() {
-    if (!canEdit || cmds.length === 0) return;
+    if (!canEdit || cmds.length === 0 || inLoop) return;
     playSfx('tap');
     setHint(null);
     runner.play(cmds);
   }
   function handleStep() {
-    if (!canEdit || cmds.length === 0) return;
+    if (!canEdit || cmds.length === 0 || inLoop) return;
     playSfx('tap');
     runner.step(cmds);
   }
@@ -1213,19 +1243,23 @@ function RelativeAdventurePlay({
     if (locked) return;
     playSfx('tap');
     runner.reset();
+    setEditingLoopIdx(null);
     setHint(null);
   }
   function handleClearAll() {
     if (!canEdit) return;
     playSfx('tap');
     setCmds([]);
+    setEditingLoopIdx(null);
     runner.reset();
     setHint(null);
   }
   function showMoreHint() {
     const sol = quest.relSolution ?? solveRelative(quest);
     if (sol && sol.length > 0) {
-      const msg = `さいしょは 「${REL_LABEL[sol[0]]}」から はじめると いいかも！`;
+      const first = sol[0];
+      const firstLabel = typeof first === 'string' ? REL_LABEL[first] : `ループ(×${first.times})`;
+      const msg = `さいしょは 「${firstLabel}」から はじめると いいかも！`;
       setHint(msg);
       speakJa(msg);
     }
@@ -1288,45 +1322,96 @@ function RelativeAdventurePlay({
         {cmds.length === 0 ? (
           <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいが ならぶよ</span>
         ) : (
-          cmds.map((c, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => removeAt(i)}
-              className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}
-            >
-              {REL_ICON[c]}
-            </button>
-          ))
+          cmds.map((c, i) => {
+            if (typeof c === 'string') {
+              return (
+                <button key={i} type="button" onClick={() => removeAt(i)}
+                  className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}>
+                  {REL_ICON[c]}
+                </button>
+              );
+            }
+            const isEditing = editingLoopIdx === i;
+            return (
+              <div key={i}
+                className={`flex items-center gap-0.5 rounded-xl border-2 px-1.5 py-0.5 ${accent.border} ${isEditing ? 'ring-2 ring-white bg-white/80' : 'bg-white/50'}`}
+                onClick={() => !inLoop && removeAt(i)}
+                style={{ cursor: inLoop ? 'default' : 'pointer' }}>
+                <span className="text-[10px] font-bold mr-0.5" style={{ color: '#7a5a3a' }}>🔁×{c.times}</span>
+                {c.body.map((bc, bi) => (
+                  <span key={bi} className={`rounded px-1 py-0.5 text-sm font-bold text-white ${accent.chip}`}>{REL_ICON[bc]}</span>
+                ))}
+                {isEditing && Array.from({ length: 4 - c.body.length }).map((_, ei) => (
+                  <span key={`ph-${ei}`} className="rounded border border-dashed border-gray-300 px-1 py-0.5 text-sm text-gray-300">？</span>
+                ))}
+              </div>
+            );
+          })
         )}
       </div>
       <p className="relative z-10 text-xs" style={{ color: '#9a7c54' }}>めいれいを タップすると けせるよ（のこり {maxSlots - cmds.length}）</p>
 
       {/* そうたい方向 どうぐばこ */}
       <div
-        className="relative z-10 flex items-center justify-center gap-2 rounded-2xl border-2 p-3"
+        className="relative z-10 flex flex-col items-center gap-2 rounded-2xl border-2 p-3"
         style={{ borderColor: 'rgba(123,90,58,.4)', background: 'rgba(255,250,235,.55)' }}
       >
-        {(['turn_left', 'forward', 'turn_right'] as RelDir[]).map((c) => (
-          <motion.button
-            key={c}
-            type="button"
-            onClick={() => addCmd(c)}
-            whileTap={{ scale: 0.9 }}
-            disabled={!canAdd}
-            className={`flex h-16 w-20 flex-col items-center justify-center rounded-2xl ${accent.chip} font-bold text-white shadow-md disabled:opacity-40`}
-          >
-            <span className="text-2xl">{REL_ICON[c]}</span>
-            <span className="text-[10px]">{REL_LABEL[c]}</span>
-          </motion.button>
-        ))}
+        {inLoop && (
+          <p className="text-xs font-bold" style={{ color: '#7a5a3a' }}>
+            🔁 ループの なかみを えらんでね（のこり {4 - bodyLen} こ）
+          </p>
+        )}
+        <div className="flex items-center justify-center gap-2">
+          {(['turn_left', 'forward', 'turn_right'] as RelDir[]).map((c) => (
+            <motion.button
+              key={c}
+              type="button"
+              onClick={() => addCmd(c)}
+              whileTap={{ scale: 0.9 }}
+              disabled={!canAdd}
+              className={`flex h-16 w-20 flex-col items-center justify-center rounded-2xl ${accent.chip} font-bold text-white shadow-md disabled:opacity-40`}
+            >
+              <span className="text-2xl">{REL_ICON[c]}</span>
+              <span className="text-[10px]">{REL_LABEL[c]}</span>
+            </motion.button>
+          ))}
+          {inLoop && (
+            <motion.button
+              type="button"
+              onClick={finishLoop}
+              whileTap={{ scale: 0.9 }}
+              className="flex h-16 w-20 flex-col items-center justify-center rounded-2xl bg-amber-500 font-bold text-white shadow-md"
+            >
+              <span className="text-2xl">✅</span>
+              <span className="text-[10px]">かんりょう</span>
+            </motion.button>
+          )}
+        </div>
+        {quest.allowLoop && !inLoop && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold" style={{ color: '#9a7c54' }}>ループ→</span>
+            {([2, 3, 4, 5] as const).map((n) => (
+              <motion.button
+                key={n}
+                type="button"
+                onClick={() => addLoop(n)}
+                whileTap={{ scale: 0.9 }}
+                disabled={cmds.length >= maxSlots || !canEdit}
+                className={`flex h-12 w-14 flex-col items-center justify-center rounded-2xl border-2 ${accent.border} ${accent.soft} font-bold ${accent.text} shadow-sm disabled:opacity-40`}
+              >
+                <span className="text-base">🔁</span>
+                <span className="text-[10px]">×{n}</span>
+              </motion.button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="relative z-10 flex w-full max-w-sm gap-2">
         <button
           type="button"
           onClick={handleStart}
-          disabled={!canEdit || cmds.length === 0}
+          disabled={!canEdit || cmds.length === 0 || inLoop}
           className="flex-1 rounded-2xl bg-green-500 py-3 text-lg font-bold text-white shadow-[0_4px_0_#15803d] active:translate-y-1 disabled:opacity-40"
         >
           ▶ スタート
@@ -1334,7 +1419,7 @@ function RelativeAdventurePlay({
         <button
           type="button"
           onClick={handleStep}
-          disabled={!canEdit || cmds.length === 0}
+          disabled={!canEdit || cmds.length === 0 || inLoop}
           className="rounded-2xl bg-sky-400 px-4 py-3 text-base font-bold text-white shadow-[0_4px_0_#0369a1] active:translate-y-1 disabled:opacity-40"
         >
           👣 1コマ
@@ -1380,19 +1465,25 @@ function RelativeAdventurePlay({
 
 /** そうたい方向単元の 前向きヒント */
 function buildRelativeHint(quest: AdventureQuest, result: RunResult, attempt: number): string {
+  const isLoop = !!quest.allowLoop;
   if (result.blockedStep >= 0) {
     if (attempt <= 1) {
-      return `かべに あたって とまっちゃった！\nキャラは いま どっちを むいているかな？`;
+      return isLoop
+        ? `かべに あたって とまっちゃった！\nループの なかみを みなおしてみよう。`
+        : `かべに あたって とまっちゃった！\nキャラは いま どっちを むいているかな？`;
     }
     return `すすむ さきに かべが あるよ。\n「みぎをむく」「ひだりをむく」で むきを かえてから すすんでみよう。`;
   }
+  const gem = quest.gemEmoji ?? '⭐';
   if (result.missedGems > 0) {
-    return `☃️を あと ${result.missedGems}こ とおりたいね。\n☃️を とおる みちを かんがえてみよう。`;
+    return `${gem}を あと ${result.missedGems}こ とおりたいね。\n${gem}を とおる みちを かんがえてみよう。`;
   }
   const dist = Math.abs(result.finalPos.r - quest.goal.r) + Math.abs(result.finalPos.c - quest.goal.c);
   if (dist > 0) {
     if (attempt <= 1) {
-      return `ゴールまで あと ${dist}マス！\nキャラの むきを よく みて、まえへ すすもう。`;
+      return isLoop
+        ? `ゴールまで あと ${dist}マス！\nループの かいすうや なかみを たしかめよう。`
+        : `ゴールまで あと ${dist}マス！\nキャラの むきを よく みて、まえへ すすもう。`;
     }
     return `ゴールは いまの ばしょから どっちかな？\nさきに むきを かえてから まえへ すすむと いいよ。`;
   }

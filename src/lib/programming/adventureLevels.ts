@@ -12,7 +12,7 @@
  */
 import type { Dir, Level, Pos } from './engine';
 import type { BranchCommand } from './branch';
-import type { RelDir } from './relativeEngine';
+import type { RelCommand } from './relativeEngine';
 
 const r = (row: number, col: number): Pos => ({ r: row, c: col });
 
@@ -93,8 +93,8 @@ export interface AdventureQuest extends Level {
   kind?: 'branch' | 'relative';
   /** kind==='branch' のときの 穴埋め設定 */
   branchFill?: AdventureBranchFill;
-  /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ） */
-  relSolution?: RelDir[];
+  /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ。ループも ふくめられる） */
+  relSolution?: RelCommand[];
 }
 
 export const ADVENTURE_ZONES: AdventureZone[] = [
@@ -227,6 +227,26 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     tagline: 'むきを かえながら しんでんを すすもう',
     story: 'うみの そこに ねむる ふるい しんでん。\nキャラの むき を きじゅんに「まえ・みぎむき・ひだりむき」で つうろを すすみ、たからを てに いれよう！',
     wall: '🪸', wallName: 'さんご', tile: 'bg-cyan-50', wallTile: 'bg-teal-200', board: 'bg-cyan-200/70',
+  },
+  {
+    id: 'rloop_a',
+    name: 'まわれ！ きじちょう',
+    emoji: '🔄',
+    bg: 'from-lime-100 to-teal-50',
+    accent: 'lime',
+    tagline: 'ループで めいれいを まとめて らくらく クリア！',
+    story: 'くるくると まわる きじちょうに やってきた。\nおなじ めいれいを ループに まとめると\nすくない めいれいで すすめるよ！',
+    wall: '🌿', tile: 'bg-lime-50', wallTile: 'bg-lime-200', board: 'bg-lime-100/80',
+  },
+  {
+    id: 'rloop_b',
+    name: 'そうたいループ だいみゃく',
+    emoji: '🌀',
+    bg: 'from-violet-100 to-purple-50',
+    accent: 'violet',
+    tagline: 'ループの なかに まがりかどを くみこもう！',
+    story: 'ぐるぐると つながる だいみゃくへ ようこそ。\nループの なかに「まがる」めいれいを くみこんで\nふくざつな みちも かんたんに あらわそう！',
+    wall: '🍃', tile: 'bg-violet-50', wallTile: 'bg-violet-200', board: 'bg-violet-100/80',
   },
 ];
 
@@ -832,6 +852,146 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     relSolution: ['forward', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'forward'],
     optimal: 11, maxSlots: 20,
     prompt: '🔱しんでんの ボス！かいがら2つを とって たからへ',
+  },
+
+  // ─── 🔄 まわれ！ きじちょう（adv-q79〜adv-q84）そうたい × ループ 入門 ───
+  {
+    id: 'adv-q79', zoneId: 'rloop_a', rows: 4, cols: 1,
+    start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'おなじ めいれいを ループに まとめよう！',
+  },
+  {
+    id: 'adv-q80', zoneId: 'rloop_a', rows: 1, cols: 5,
+    start: r(0, 0), goal: r(0, 4), startFacing: 'right',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 4, body: ['forward'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'よこに すすむ ループを つかおう',
+  },
+  {
+    id: 'adv-q81', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 3, body: ['forward'] },
+    ],
+    optimal: 3, maxSlots: 4,
+    prompt: 'のぼって まがって また すすもう',
+  },
+  {
+    id: 'adv-q82', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 3, body: ['forward'] },
+    ],
+    optimal: 3, maxSlots: 4,
+    prompt: '⭐を とおりながら ゴールへ！',
+  },
+  {
+    id: 'adv-q83', zoneId: 'rloop_a', rows: 4, cols: 4,
+    start: r(3, 1), goal: r(3, 3), startFacing: 'up',
+    walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 5, maxSlots: 6,
+    prompt: 'コの字に まわって ゴール！',
+  },
+  {
+    id: 'adv-q84', zoneId: 'rloop_a', rows: 6, cols: 6,
+    start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [], gems: [r(2, 0)], goalEmoji: '🎯', gemEmoji: '⭐',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 5, body: ['forward'] },
+      'turn_left',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 5, maxSlots: 6,
+    prompt: 'Z字に すすんで ⭐も ひろおう！',
+  },
+
+  // ─── 🌀 そうたいループ だいみゃく（adv-q85〜adv-q90）ループ本体に まがりかど ───
+  {
+    id: 'adv-q85', zoneId: 'rloop_b', rows: 4, cols: 4,
+    start: r(0, 0), goal: r(3, 3), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'かいだんのように すすむ ループを つくろう！',
+  },
+  {
+    id: 'adv-q86', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 4), startFacing: 'right',
+    walls: [], gems: [r(2, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 4, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: '💫を ひろいながら かいだんを すすもう',
+  },
+  {
+    id: 'adv-q87', zoneId: 'rloop_b', rows: 4, cols: 7,
+    start: r(0, 0), goal: r(3, 6), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'forward', 'turn_right', 'forward', 'turn_left'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'ジグザグに すすむ みちを ループで あらわそう',
+  },
+  {
+    id: 'adv-q88', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(4, 4), startFacing: 'down',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [{ kind: 'loop', times: 2, body: ['forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right'] }],
+    optimal: 1, maxSlots: 2,
+    prompt: 'L字を くりかえして ゴールへ！',
+  },
+  {
+    id: 'adv-q89', zoneId: 'rloop_b', rows: 5, cols: 5,
+    start: r(0, 0), goal: r(2, 4), startFacing: 'right',
+    walls: [], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 2, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 2, maxSlots: 3,
+    prompt: '2つの ループを くみあわせよう',
+  },
+  {
+    id: 'adv-q90', zoneId: 'rloop_b', rows: 6, cols: 6,
+    start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [], gems: [r(3, 2)], goalEmoji: '🏆', gemEmoji: '💫',
+    kind: 'relative', allowLoop: true,
+    relSolution: [
+      { kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
+      { kind: 'loop', times: 2, body: ['forward'] },
+      'turn_right',
+      { kind: 'loop', times: 2, body: ['forward'] },
+    ],
+    optimal: 4, maxSlots: 5,
+    prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに',
   },
 ];
 
