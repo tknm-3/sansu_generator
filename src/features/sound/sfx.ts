@@ -1,7 +1,7 @@
 import { Howl } from 'howler';
 import { playTone, type SynthName } from './synth';
 
-export type SfxName = 'correct' | 'tap' | 'levelup' | 'wrong' | 'fanfare';
+export type SfxName = 'correct' | 'tap' | 'levelup' | 'wrong' | 'fanfare' | 'dice';
 
 const FILES: Partial<Record<SfxName, string>> = {
   correct: 'sounds/correct.mp3',

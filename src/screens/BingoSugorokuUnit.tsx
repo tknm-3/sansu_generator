@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
+import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
 import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
@@ -146,6 +147,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (isAnimating || phase !== 'game') return;
     setIsAnimating(true);
     setDiceShaking(true);
+    playSfx('dice');
     const ROLL_TOTAL = 20;
     const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
     const doRoll = (i: number) => {
