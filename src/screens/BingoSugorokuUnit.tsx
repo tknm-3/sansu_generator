@@ -346,13 +346,16 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
                 return (
                   <div key={`${ri}-${ci}`} className={`relative flex items-center justify-center rounded text-center overflow-hidden ${bgClass} ${ringClass}`}>
-                    {/* マス番号 */}
-                    <span className={`leading-none font-black select-none text-[10px]
-                      ${isGoal    ? 'text-yellow-800'
-                      : isBonus   ? 'text-amber-800'
-                      : checkedOwners.length > 0 && owners.length === 1 ? 'text-white'
-                      : owners.length === 1 ? PLAYER_STYLES[owners[0] % PLAYER_STYLES.length].text
-                      : 'text-gray-700'}`}>
+                    {/* マス番号: コマがいるときは左上に退避、いないときは中央に大きく */}
+                    <span className={`
+                      leading-none font-black select-none
+                      ${playersHere.length > 0
+                        ? 'absolute top-0 left-0 px-px text-[8px] z-10'
+                        : 'text-xs'}
+                      ${isGoal    ? 'text-yellow-900'
+                      : isBonus   ? 'text-amber-900'
+                      : checkedOwners.length > 0 && owners.length === 1 ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'
+                      : 'text-gray-900'}`}>
                       {isGoal ? '🏁' : isBonus ? '⭐' : n}
                     </span>
 
@@ -367,7 +370,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
                     {/* リーチ印 */}
                     {isReach && !isGoal && owners.length === 0 && (
-                      <span className="text-[5px] absolute bottom-0 left-0 leading-none text-yellow-500">★</span>
+                      <span className="text-[6px] absolute bottom-0 right-0 leading-none text-yellow-600">★</span>
                     )}
 
                     {/* プレイヤーコマ */}
@@ -375,7 +378,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                       <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-0">
                         {playersHere.map(pi => (
                           <motion.div key={pi} initial={{ scale:0, y:-6 }} animate={{ scale:1, y:0 }} transition={{ type:'spring', stiffness:400, damping:20 }}
-                            className={`leading-none flex-shrink-0 drop-shadow-md ${playersHere.length === 1 ? 'text-[15px]' : 'text-[9px]'}`}>
+                            className={`leading-none flex-shrink-0 drop-shadow-md ${playersHere.length === 1 ? 'text-[14px]' : 'text-[8px]'}`}>
                             {players[pi]?.character ?? '🐶'}
                           </motion.div>
                         ))}
