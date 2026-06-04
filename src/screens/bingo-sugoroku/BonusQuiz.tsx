@@ -138,12 +138,14 @@ function NumberLineQuiz({
           )}
         </button>
 
-        {/* キリ番の目盛り */}
+        {/* キリ番の目盛り（目盛線は全部。数字は labels のものだけ＝間引きで難化） */}
         <div className="relative h-4 mt-1">
           {LANDMARKS.map(n => (
             <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
               <span className="w-px h-1.5 bg-gray-300" />
-              <span className="text-[10px] leading-none text-gray-400 font-bold">{n}</span>
+              {quiz.labels.includes(n) && (
+                <span className="text-[10px] leading-none text-gray-400 font-bold">{n}</span>
+              )}
             </div>
           ))}
         </div>
@@ -168,6 +170,125 @@ function NumberLineQuiz({
 
 const LANDMARKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
+// ── どっちに ちかい？（がい数の芽） ─────────────────────────────────────────────
+
+function NearestQuiz({
+  quiz, styleIdx, onAnswer,
+}: {
+  quiz: Extract<BonusQuiz, { kind: 'nearest' }>;
+  styleIdx: number;
+  onAnswer: (correct: boolean) => void;
+}) {
+  const s = PLAYER_STYLES[styleIdx % PLAYER_STYLES.length];
+  const [chosen, setChosen] = useState<number | null>(null);
+
+  useEffect(() => { speakJa(`${quiz.value} は どっちに ちかい？`); }, [quiz.value]);
+
+  function pick(value: number) {
+    if (chosen !== null) return;
+    setChosen(value);
+    const correct = value === quiz.answer;
+    playSfx(correct ? 'correct' : 'wrong');
+    speakJa(correct ? 'せいかい！' : `${quiz.answer} のほうが ちかいよ`);
+    setTimeout(() => onAnswer(correct), RESULT_MS);
+  }
+
+  return (
+    <>
+      <div className="text-2xl font-bold text-gray-800 mb-4">
+        <span className={`inline-block rounded-lg px-2 ${s.bg} text-white`}>{quiz.value}</span> は どっちに ちかい？
+      </div>
+      <div className="flex items-stretch justify-center gap-4">
+        {[quiz.low, quiz.high].map((n, i) => {
+          const isAnswer = n === quiz.answer;
+          const isChosen = chosen === n;
+          const revealed = chosen !== null;
+          const cls = !revealed
+            ? `bg-white border-2 ${s.border} ${s.text} hover:scale-105`
+            : isAnswer
+            ? 'bg-emerald-500 text-white border-2 border-emerald-600'
+            : isChosen
+            ? 'bg-gray-200 text-gray-400 border-2 border-gray-300'
+            : 'bg-white text-gray-300 border-2 border-gray-200';
+          return (
+            <motion.button key={i} type="button" disabled={revealed}
+              whileTap={!revealed ? { scale: 0.92 } : undefined} onClick={() => pick(n)}
+              className={`flex-1 max-w-[8rem] rounded-3xl py-8 text-5xl font-black shadow transition-all ${cls}`}>
+              {n}
+            </motion.button>
+          );
+        })}
+      </div>
+      {chosen !== null && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className={`mt-4 text-xl font-bold ${chosen === quiz.answer ? 'text-emerald-600' : 'text-orange-500'}`}>
+          {chosen === quiz.answer ? 'せいかい！🎉' : `${quiz.answer} のほうが ちかいね`}
+        </motion.div>
+      )}
+    </>
+  );
+}
+
+// ── 10 おおきい/ちいさい かず（位取りの感覚・3択） ──────────────────────────────
+
+function PlusTenQuiz({
+  quiz, styleIdx, onAnswer,
+}: {
+  quiz: Extract<BonusQuiz, { kind: 'plusten' }>;
+  styleIdx: number;
+  onAnswer: (correct: boolean) => void;
+}) {
+  const s = PLAYER_STYLES[styleIdx % PLAYER_STYLES.length];
+  const [chosen, setChosen] = useState<number | null>(null);
+  const word = quiz.delta === 10 ? 'おおきい' : 'ちいさい';
+
+  useEffect(() => { speakJa(`${quiz.base} より 10 ${word} かずは？`); }, [quiz.base, word]);
+
+  function pick(value: number) {
+    if (chosen !== null) return;
+    setChosen(value);
+    const correct = value === quiz.answer;
+    playSfx(correct ? 'correct' : 'wrong');
+    speakJa(correct ? 'せいかい！' : `${quiz.answer} だよ`);
+    setTimeout(() => onAnswer(correct), RESULT_MS);
+  }
+
+  return (
+    <>
+      <div className="text-2xl font-bold text-gray-800 mb-4">
+        <span className={`inline-block rounded-lg px-2 ${s.bg} text-white`}>{quiz.base}</span> より 10 {word} かずは？
+      </div>
+      <div className="flex items-stretch justify-center gap-3">
+        {quiz.choices.map((n, i) => {
+          const isAnswer = n === quiz.answer;
+          const isChosen = chosen === n;
+          const revealed = chosen !== null;
+          const cls = !revealed
+            ? `bg-white border-2 ${s.border} ${s.text} hover:scale-105`
+            : isAnswer
+            ? 'bg-emerald-500 text-white border-2 border-emerald-600'
+            : isChosen
+            ? 'bg-gray-200 text-gray-400 border-2 border-gray-300'
+            : 'bg-white text-gray-300 border-2 border-gray-200';
+          return (
+            <motion.button key={i} type="button" disabled={revealed}
+              whileTap={!revealed ? { scale: 0.92 } : undefined} onClick={() => pick(n)}
+              className={`flex-1 max-w-[6rem] rounded-3xl py-6 text-4xl font-black shadow transition-all ${cls}`}>
+              {n}
+            </motion.button>
+          );
+        })}
+      </div>
+      {chosen !== null && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className={`mt-4 text-xl font-bold ${chosen === quiz.answer ? 'text-emerald-600' : 'text-orange-500'}`}>
+          {chosen === quiz.answer ? 'せいかい！🎉' : `こたえは ${quiz.answer}`}
+        </motion.div>
+      )}
+    </>
+  );
+}
+
 /**
  * ボーナスマスのミニ問題オーバーレイ（提案B: 大小比較 / 提案D: 数直線推定）。
  * 正解すると onAnswer(true)（→ ビンゴマス選択へ）。不正解は onAnswer(false)。
@@ -186,9 +307,10 @@ export function BonusQuizOverlay({ quiz, player, styleIdx, onAnswer }: Props) {
             <div className="text-base font-bold text-gray-500 mb-3">
               {player.character} {player.name}・ボーナスチャンス！
             </div>
-            {quiz.kind === 'compare'
-              ? <CompareQuiz quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
-              : <NumberLineQuiz quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />}
+            {quiz.kind === 'compare'    ? <CompareQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
+             : quiz.kind === 'nearest'  ? <NearestQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
+             : quiz.kind === 'plusten'  ? <PlusTenQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
+             :                            <NumberLineQuiz quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />}
           </motion.div>
         </motion.div>
       )}

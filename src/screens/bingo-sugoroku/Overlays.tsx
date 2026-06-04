@@ -131,7 +131,7 @@ export function BonusPickOverlay({
 
 // ── ビンゴ演出 ──────────────────────────────────────────────────────────────
 
-export function BingoOverlay({ show }: { show: { name: string; count: number } | null }) {
+export function BingoOverlay({ show }: { show: { name: string; steps: number } | null }) {
   return (
     <AnimatePresence>
       {show && (
@@ -143,7 +143,7 @@ export function BingoOverlay({ show }: { show: { name: string; count: number } |
             <div className="text-7xl mb-3">🎉</div>
             <div className="text-4xl font-bold text-rose-600 mb-2">ビンゴ！</div>
             <div className="text-xl font-bold text-gray-700 mb-1">{show.name}</div>
-            <div className="text-lg text-emerald-600 font-bold">＋{show.count * 10}マス ボーナス！</div>
+            <div className="text-lg text-emerald-600 font-bold">＋{show.steps}マス ボーナス！</div>
           </motion.div>
         </motion.div>
       )}

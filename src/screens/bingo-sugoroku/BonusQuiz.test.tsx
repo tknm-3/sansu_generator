@@ -46,7 +46,7 @@ describe('BonusQuizOverlay（数直線推定）', () => {
   beforeEach(() => { cleanup(); });
 
   it('お題の数字と「どのへん？」を表示する', () => {
-    const quiz: BonusQuiz = { kind: 'numberline', target: 45, tolerance: 8 };
+    const quiz: BonusQuiz = { kind: 'numberline', target: 45, tolerance: 8, labels: [0, 50, 100] };
     render(<BonusQuizOverlay quiz={quiz} player={player} styleIdx={1} onAnswer={vi.fn()} />);
     expect(screen.getByText('45')).toBeInTheDocument();
     expect(screen.getByText(/どのへん/)).toBeInTheDocument();
