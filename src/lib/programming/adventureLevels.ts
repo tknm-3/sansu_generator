@@ -111,6 +111,11 @@ export interface AdventureQuest extends Level {
   procMain?: ProcMainCmd[];
   /** proc_a の 検証用 最適解（メインプログラムの 最短手順。call を ふくむ）*/
   procMainSolution?: ProcMainCmd[];
+  /**
+   * proc_a の 足場プリフィル: メインプログラムの 先頭を ロックして 最初から おいておく。
+   * こどもは のこりを たすだけ。`procMainSolution` の 接頭辞で あること（テストで 保証）。
+   */
+  procMainPrefill?: ProcMainCmd[];
 }
 
 export const ADVENTURE_ZONES: AdventureZone[] = [
@@ -1118,8 +1123,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'proc',
     procDef: ['forward', 'forward'],
     procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procMainPrefill: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
     optimal: 4, maxSlots: 5,
-    prompt: 'のぼって まがって また すすもう！',
+    prompt: 'まがる ところまで できてるよ。さいごの てじゅんを よぼう！',
   },
   {
     id: 'adv-q94', zoneId: 'proc_a', rows: 3, cols: 3,
@@ -1128,8 +1134,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'proc',
     procDef: ['forward', 'forward'],
     procMainSolution: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procMainPrefill: [{ kind: 'call' }, 'turn_right'],
     optimal: 3, maxSlots: 4,
-    prompt: '🌸を とおりながら ゴールへ！',
+    prompt: '🌸を とおる みち！ さいごの てじゅんを よんで ゴールへ',
   },
   {
     id: 'adv-q95', zoneId: 'proc_a', rows: 5, cols: 3,
@@ -1138,8 +1145,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'proc',
     procDef: ['forward', 'forward'],
     procMainSolution: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procMainPrefill: [{ kind: 'call' }, { kind: 'call' }, 'turn_right'],
     optimal: 4, maxSlots: 5,
-    prompt: 'のぼって のぼって まがって すすもう！',
+    prompt: 'まがる ところまで できてるよ。さいごの てじゅんを よぼう！',
   },
   {
     id: 'adv-q96', zoneId: 'proc_a', rows: 5, cols: 5,
@@ -1148,8 +1156,9 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'proc',
     procDef: ['forward', 'turn_right', 'forward', 'turn_left'],
     procMainSolution: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    procMainPrefill: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
     optimal: 4, maxSlots: 5,
-    prompt: 'てじゅんを 4かい くりかえして ゴールへ！',
+    prompt: 'あと 1かい てじゅんを よべば ゴール！',
   },
 
   // ─── 🏛️ てじゅんの やかた（adv-q97〜adv-q102）てじゅん本体を きめる・proc_b ───

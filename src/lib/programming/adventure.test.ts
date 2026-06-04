@@ -325,6 +325,22 @@ describe('ぼうけん 問題集', () => {
     ).toBeGreaterThan(q.maxSlots!);
   });
 
+  // proc_a の 足場プリフィル（procMainPrefill）: procMainSolution の 接頭辞で、
+  // こどもが たす ぶんが 1つ以上 ある（＝全部 うまってない 穴埋め）。
+  const procPrefillQuests = procAQuests.filter((q) => q.procMainPrefill);
+  it.each(procPrefillQuests)('$id（proc_a）の procMainPrefill は main解の 接頭辞で、すこしだけ たす', (q) => {
+    const sol = q.procMainSolution!;
+    const pre = q.procMainPrefill!;
+    expect(pre.length, `${q.id} の procMainPrefill が main解より ながい`).toBeLessThan(sol.length);
+    pre.forEach((c, i) => {
+      const a = sol[i];
+      const same = typeof c === 'string' || typeof a === 'string' ? c === a : c.kind === a.kind;
+      expect(same, `${q.id} の procMainPrefill[${i}] が main解と ちがう`).toBe(true);
+    });
+    const remaining = sol.length - pre.length;
+    expect(remaining, `${q.id} は こどもが たす ぶんが おおすぎる`).toBeLessThanOrEqual(2);
+  });
+
   it.each(procBQuests)('$id（proc_b）は きめた 中身で クリアでき optimal が 中身の命令数と 一致する', (q) => {
     expect(q.procDef, `${q.id} に procDef（正解の中身）が ない`).toBeDefined();
     const result = runProc(q, q.procMain!, q.procDef!);

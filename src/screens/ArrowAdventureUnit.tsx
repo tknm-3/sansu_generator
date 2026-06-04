@@ -1593,7 +1593,11 @@ function ProcAdventurePlay({
   // proc_a: procDef は fixed。プレイヤーは mainCmds を つくる
   const isProcB = !!quest.procMain;
 
-  const [mainCmds, setMainCmds] = useState<ProcMainCmd[]>([]);
+  // 足場プリフィル（proc_a のみ）: メインプログラムの 先頭を ロックして 最初から おいておく。
+  const procPrefill = !isProcB ? quest.procMainPrefill : undefined;
+  const lockedMainLen = procPrefill?.length ?? 0;
+  const hasProcPrefill = lockedMainLen > 0;
+  const [mainCmds, setMainCmds] = useState<ProcMainCmd[]>(() => (procPrefill ? [...procPrefill] : []));
   const [procBody, setProcBody] = useState<RelDir[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
@@ -1646,6 +1650,7 @@ function ProcAdventurePlay({
   }
   function removeAt(i: number) {
     if (!canEdit) return;
+    if (!isProcB && i < lockedMainLen) return; // 足場（最初から ある ぶん）は けせない
     playSfx('tap');
     if (isProcB) setProcBody((cs) => cs.filter((_, j) => j !== i));
     else setMainCmds((cs) => cs.filter((_, j) => j !== i));
@@ -1677,7 +1682,7 @@ function ProcAdventurePlay({
     if (!canEdit) return;
     playSfx('tap');
     if (isProcB) setProcBody([]);
-    else setMainCmds([]);
+    else setMainCmds(procPrefill ? [...procPrefill] : []); // 足場までは もどす
     runner.reset();
     setHint(null);
   }
@@ -1696,12 +1701,17 @@ function ProcAdventurePlay({
     if (activeCmds.length === 0) {
       return <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいを おいてね</span>;
     }
-    return activeCmds.map((c, i) => (
-      <button key={i} type="button" onClick={() => removeAt(i)}
-        className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}>
-        {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
-      </button>
-    ));
+    return activeCmds.map((c, i) => {
+      const isLocked = !isProcB && i < lockedMainLen;
+      return (
+        <button key={i} type="button" onClick={() => removeAt(i)}
+          title={isLocked ? 'これは さいしょから あるよ' : undefined}
+          className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm ${isLocked ? 'opacity-90' : ''}`}>
+          {isLocked && <span className="mr-0.5 text-[9px]">🔒</span>}
+          {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
+        </button>
+      );
+    });
   }
 
   return (
@@ -1726,6 +1736,11 @@ function ProcAdventurePlay({
         </Ribbon>
         {quest.prompt && (
           <p className="mt-2 text-center text-sm font-bold" style={{ color: SEPIA }}>📜 {quest.prompt}</p>
+        )}
+        {hasProcPrefill && !locked && (
+          <p className="mt-1 text-center text-[11px] font-bold text-orange-700">
+            🔧 はじめの ぶんは もう おいてあるよ！ のこりを たして ゴールへ
+          </p>
         )}
       </div>
 
