@@ -14,6 +14,7 @@ import {
   flatten,
   isCleared,
   isPerfect,
+  isPerfectByBlocks,
   solve,
   DIR_ARROW,
   DIR_LABEL,
@@ -1193,7 +1194,9 @@ function RelativeAdventurePlay({
       setLocked(true);
       playSfx('correct');
       confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
-      const perfect = isPerfect(quest, result);
+      // ぴったり賞（💎）は ならべた ブロック数 === optimal で 判定する。
+      // ループ/ネストに まとめると ブロックが へって ダイヤが もらえる（展開後ステップ数では ない）。
+      const perfect = isPerfectByBlocks(quest, result, cmds.length);
       const earned = addQuestClear(quest.id, perfect);
       speakJa(buildPraise(perfect));
       setHint(null);
@@ -1575,7 +1578,10 @@ function ProcAdventurePlay({
       setLocked(true);
       playSfx('correct');
       confetti({ particleCount: 70, spread: 65, origin: { y: 0.6 } });
-      const perfect = isPerfect(quest, result);
+      // ぴったり賞（💎）は ならべた ブロック数 === optimal で 判定する。
+      // proc_a は main の めいれい数、proc_b は てじゅんの なかみの 数（＝つかった ブロック）。
+      const usedBlocks = isProcB ? procBody.length : mainCmds.length;
+      const perfect = isPerfectByBlocks(quest, result, usedBlocks);
       const earned = addQuestClear(quest.id, perfect);
       speakJa(buildPraise(perfect));
       setHint(null);

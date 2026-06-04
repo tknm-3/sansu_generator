@@ -155,3 +155,19 @@ npx vitest run                                          # 全部
   検証: **矢印だけの最短(`solveRelative`) > maxSlots** を テストで確認＝てじゅん必須を 保証。
   proc_b（main固定・中身を きめる）は **optimalより 短い 中身では クリアできない**ことを 総当りで確認
   （短い中身で 当たると 考えずに解ける）。設計と検証の早見表は `intended-solution.md` に まとめた。
+- [2026-06-04] 冒険/ダイヤ(ぴったり賞💎)が ループ・proc単元で 取得不能だったバグ: `isPerfect` は
+  `result.steps === optimal` で判定するが、**ループ/ネスト/proc の `optimal` は「ならべた ブロック数」**
+  （ループ1個=1）で定義されている。一方 `result.steps` は **ループ展開後の 実行命令数**（前へ・まわるの
+  合計）なので、ループは必ず2回以上展開され 両者は永遠に一致しない＝そうたいループ以降の36問すべてで
+  ぴったり賞が 取れなかった。修正: `engine.ts` に `isPerfectByBlocks(level, result, usedBlocks)` を新設し、
+  `RelativeAdventurePlay`（`cmds.length`）・`ProcAdventurePlay`（proc_a=main数 / proc_b=なかみ数）で つかう。
+  **教訓: 単元ごとに optimal の意味（手数 か ブロック数 か）が ちがうときは、ぴったり賞の判定も そろえる**。
+  回帰防止テスト「$id は relSolution で ダイヤ（ぴったり賞）が とれる」を `adventure.test.ts` に常設。
+- [2026-06-04] 冒険/ループ系を「練習ゾーン化」: rloop_a/rloop_b/nloop_a/nloop_b は maxSlots が
+  「圧縮後ぴったり」だったので、**ループ/ネストを最初から正しく組まないと クリアすら できない**＝難しい
+  ゲートになっていた。対策: **maxSlots を 手動最短(`solveRelative()`)が おさまる大きさに ゆるめる**＝
+  まず めいれいを 1つずつ ならべて クリアでき、ループ/ネストに まとめると ✨ぴったり賞(💎)、という
+  段階的な学びにする。**かべで かたちは しぼったまま**なので「ショートカット不可」テストは維持される
+  （maxSlots は corners テストに 影響しない）。**proc_a は別**: maxSlots を ゆるめると「てじゅん必須」
+  テスト（矢印だけの最短 > maxSlots）が壊れるので 据え置き、ダイヤ修正だけで 達成可能にする。
+  maxSlots の値は 一時 vitest で `solveRelative().length <= maxSlots` を確認して 決める。

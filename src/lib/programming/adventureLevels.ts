@@ -908,8 +908,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'おなじ めいれいを ループに まとめよう！',
+    optimal: 1, maxSlots: 4,
+    prompt: 'まえへ を ならべても いいよ。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q80', zoneId: 'rloop_a', rows: 1, cols: 5,
@@ -917,8 +917,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], goalEmoji: '🎯', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 4, body: ['forward'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'よこに すすむ ループを つかおう',
+    optimal: 1, maxSlots: 5,
+    prompt: 'よこに 1つずつでも OK。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q81', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -930,8 +930,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       'turn_right',
       { kind: 'loop', times: 3, body: ['forward'] },
     ],
-    optimal: 3, maxSlots: 4,
-    prompt: 'のぼって まがって また すすもう',
+    optimal: 3, maxSlots: 7,
+    prompt: 'のぼって まがって また すすもう。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q82', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -943,8 +943,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       'turn_right',
       { kind: 'loop', times: 3, body: ['forward'] },
     ],
-    optimal: 3, maxSlots: 4,
-    prompt: '⭐を とおりながら ゴールへ！',
+    optimal: 3, maxSlots: 7,
+    prompt: '⭐を とおりながら ゴールへ！ ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q83', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -959,8 +959,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       'turn_right',
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
-    optimal: 5, maxSlots: 6,
-    prompt: 'コの字に まわって ゴール！',
+    optimal: 5, maxSlots: 9,
+    prompt: 'コの字に まわって ゴール！ ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q84', zoneId: 'rloop_a', rows: 6, cols: 6,
@@ -975,8 +975,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       'turn_left',
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
-    optimal: 5, maxSlots: 6,
-    prompt: 'Z字に すすんで ⭐も ひろおう！',
+    optimal: 5, maxSlots: 12,
+    prompt: 'Z字に すすんで ⭐も ひろおう！ ループに まとめると ✨ぴったり！',
   },
 
   // ─── 🌀 そうたいループ だいみゃく（adv-q85〜adv-q90）ループ本体に まがりかど ───
@@ -988,8 +988,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'かいだんのように すすむ ループを つくろう！',
+    optimal: 1, maxSlots: 12,
+    prompt: '1つずつ ならべて すすんでも OK。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q86', zoneId: 'rloop_b', rows: 5, cols: 5,
@@ -1003,8 +1003,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     gems: [r(2, 2)], goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 4, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '💫を ひろいながら かいだんを すすもう',
+    optimal: 1, maxSlots: 16,
+    prompt: '💫を ひろいながら かいだんを すすもう。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q87', zoneId: 'rloop_b', rows: 4, cols: 7,
@@ -1017,8 +1017,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'forward', 'turn_right', 'forward', 'turn_left'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'ジグザグに すすむ みちを ループで あらわそう',
+    optimal: 1, maxSlots: 15,
+    prompt: 'ジグザグに 1つずつ すすんでも OK。ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q88', zoneId: 'rloop_b', rows: 5, cols: 5,
@@ -1031,8 +1031,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏆', gemEmoji: '💫',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: ['forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'L字を くりかえして ゴールへ！',
+    optimal: 1, maxSlots: 12,
+    prompt: 'L字を くりかえして ゴールへ！ ループに まとめると ✨ぴったり！',
   },
   {
     id: 'adv-q89', zoneId: 'rloop_b', rows: 3, cols: 5,
@@ -1045,8 +1045,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 2, body: ['forward', 'turn_right', 'forward', 'turn_left'] },
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
-    optimal: 2, maxSlots: 3,
-    prompt: '2つの ループを くみあわせよう',
+    optimal: 2, maxSlots: 10,
+    prompt: '2つの ループを くみあわせよう。1つずつ ならべても OK！',
   },
   {
     id: 'adv-q90', zoneId: 'rloop_b', rows: 6, cols: 6,
@@ -1065,8 +1065,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       'turn_right',
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
-    optimal: 4, maxSlots: 5,
-    prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに',
+    optimal: 4, maxSlots: 17,
+    prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに（ループで ✨ぴったり）',
   },
 
   // ─── 📦 てじゅんの にわ（adv-q91〜adv-q96）てじゅん呼び出し・proc_a ───
@@ -1203,8 +1203,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'ループの なかに ループを いれてみよう！ 2まい すすんで まがる を 2かい くりかえすよ',
+    optimal: 1, maxSlots: 6,
+    prompt: '1つずつ ならべても OK。ループの なかに ループで まとめると ✨ぴったり！',
   },
   {
     // L字2辺（長辺版）: loop(2){loop(3){forward}, turn_right} = 3まい すすんで まがる を 2かい
@@ -1214,8 +1214,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'なかの ループを 3にすると 1辺が ながくなるよ！',
+    optimal: 1, maxSlots: 8,
+    prompt: '1つずつでも OK。なかの ループを 3にすると 1辺が ながくなるよ！',
   },
   {
     // 3辺（小）: loop(3){loop(2){forward}, turn_right} = 2まい すすんで まがる を 3かい
@@ -1225,8 +1225,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [r(1, 0), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'そとの ループを 3にすると 3辺まわれるよ！',
+    optimal: 1, maxSlots: 9,
+    prompt: '1つずつでも OK。そとの ループを 3にすると 3辺まわれるよ！',
   },
   {
     // 3辺（向き変え）: 同じ loop(3){loop(2){forward}, turn_right} を startFacing:down で
@@ -1236,8 +1236,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [r(0, 1), r(1, 1)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'むきが ちがっても おなじ ループが つかえるよ！',
+    optimal: 1, maxSlots: 9,
+    prompt: 'むきが ちがっても おなじ ループが つかえるよ！（1つずつでも OK）',
   },
   {
     // 3辺（大）: loop(3){loop(3){forward}, turn_right} = 4×4 グリッド
@@ -1248,8 +1248,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'おなじパターン、おおきな グリッドで！ なかのループは？',
+    optimal: 1, maxSlots: 12,
+    prompt: 'おおきな グリッド！ 1つずつでも OK。ネストループで ✨ぴったり！',
   },
   {
     // 3辺（大）+ ⭐: loop(3){loop(3){forward}, turn_right} + gems
@@ -1259,8 +1259,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], gems: [r(0, 3)], goalEmoji: '🌊', gemEmoji: '⭐',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '⭐は コーナーに あるよ。ネストループで ぴったり とおろう',
+    optimal: 1, maxSlots: 12,
+    prompt: '⭐は コーナーに あるよ。1つずつでも OK、ネストループで ✨ぴったり！',
   },
 
   // ─── 🏔️ ネストループ だいとうげ（adv-q109〜adv-q114）ネストループ 応用 ───
@@ -1273,8 +1273,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'そとの ループは なんかい？ かんがえてみよう！',
+    optimal: 1, maxSlots: 8,
+    prompt: '1つずつでも OK。そとの ループは なんかい？ ネストで ✨ぴったり！',
   },
   {
     // 3辺（4×4）+ 💎: loop(3){loop(3){forward}, turn_right} + gems
@@ -1284,8 +1284,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], gems: [r(3, 3)], goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '💎は コーナーに ある！ ちゃんと とおれるかな？',
+    optimal: 1, maxSlots: 12,
+    prompt: '💎は コーナーに ある！ 1つずつでも OK、ネストで ✨ぴったり！',
   },
   {
     // 3辺（4×4）+ 壁あり + startFacing:up
@@ -1296,8 +1296,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'ゴールの かどは どこかな？ パターンで かんがえよう',
+    optimal: 1, maxSlots: 12,
+    prompt: 'ゴールの かどは どこかな？ 1つずつでも OK、ネストで ✨ぴったり！',
   },
   {
     // 5×5（大）+ 壁あり: loop(3){loop(4){forward}, turn_right}
@@ -1311,8 +1311,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'おおきな グリッド！ なかの ループは なんかい？',
+    optimal: 1, maxSlots: 15,
+    prompt: 'おおきな グリッド！ 1つずつでも OK、ネストで ✨ぴったり！',
   },
   {
     // 5×5 + 💎×2: loop(3){loop(4){forward}, turn_right} + gems
@@ -1322,8 +1322,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], gems: [r(0, 4), r(4, 4)], goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: '💎を 2つ とりながら ゴールへ！ コーナーを かくにん',
+    optimal: 1, maxSlots: 15,
+    prompt: '💎を 2つ とりながら ゴールへ！ 1つずつでも OK、ネストで ✨ぴったり！',
   },
   {
     // 5×5 + 壁あり + startFacing:down（最難関ボス）
@@ -1337,8 +1337,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     goalEmoji: '🏔️', gemEmoji: '💎',
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
-    optimal: 1, maxSlots: 2,
-    prompt: 'むきに ちゅうもく！ ネストループを うまく つかおう',
+    optimal: 1, maxSlots: 15,
+    prompt: 'むきに ちゅうもく！ 1つずつでも OK、ネストループで ✨ぴったり！',
   },
 ];
 
