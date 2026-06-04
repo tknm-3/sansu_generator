@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, type BonusQuiz } from './bingo-sugoroku/logic';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, rollBonusSteps, type BonusQuiz } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
@@ -35,7 +35,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [flashedSquare, setFlashedSquare] = useState<number | null>(null);
 
   // ── オーバーレイ状態 ──
-  const [showBingo, setShowBingo]       = useState<{ name: string; count: number } | null>(null);
+  const [showBingo, setShowBingo]       = useState<{ name: string; steps: number } | null>(null);
   const [showGoal, setShowGoal]         = useState<{ name: string; character: string } | null>(null);
   const [showBonusIntro, setShowBonusIntro] = useState(false);
   const [choosingBonus, setChoosingBonus]   = useState(false);
@@ -117,6 +117,35 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     timerRef.current = setTimeout(step, 120);
   }, []);
 
+  /**
+   * ビンゴした人を1人ずつボーナスで進める。サイコロを振った本人だけでなく、
+   * 共有マスが光って同時にビンゴした他のプレイヤーも順番に進む（issue #95-1）。
+   * 進んだ先でさらにビンゴが連鎖したら、その人もキューに積んで続けて処理する。
+   * すべて処理し終えたら onDone を呼ぶ。
+   */
+  const resolveBingoQueue = useCallback((
+    ps: Player[], queue: number[], onDone: (finalPlayers: Player[]) => void,
+  ) => {
+    if (queue.length === 0) { onDone(ps); return; }
+    const [pIdx, ...rest] = queue;
+    const from  = ps[pIdx].position;
+    const steps = rollBonusSteps();              // 5〜10 のランダム（何ビンゴでも1回分）
+    const to    = Math.min(from + steps, 100);
+    setShowBingo({ name: ps[pIdx].name, steps });
+    timerRef.current = setTimeout(() => {
+      setShowBingo(null);
+      animateMove(ps, pIdx, from, to, (afterBonus) => {
+        const afterMark = applyMark(to, afterBonus);
+        const { updated, events } = processAllBingos(afterMark);
+        setPlayers(updated);
+        if (events.length > 0) {
+          timerRef.current = setTimeout(() => speakJa(events.map(e => updated[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
+        }
+        resolveBingoQueue(updated, [...rest, ...events.map(e => e.playerIdx)], onDone);
+      });
+    }, 2200);
+  }, [animateMove]);
+
   function handleAfterLand(movedPlayers: Player[], from: number, square: number, pIdx: number) {
     const before    = movedPlayers;
     const afterMark = applyMark(square, movedPlayers);
@@ -134,24 +163,14 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       }
     }, 300);
 
-    const myBingo = events.find(e => e.playerIdx === pIdx);
-    if (myBingo) {
-      setShowBingo({ name: updated[pIdx].name, count: myBingo.count });
-      timerRef.current = setTimeout(() => {
-        setShowBingo(null);
-        const bonusFrom = updated[pIdx].position;
-        const bonus = Math.min(bonusFrom + myBingo.count * 10, 100);
-        animateMove(updated, pIdx, bonusFrom, bonus, (afterBonus) => {
-          const afterMark2 = applyMark(bonus, afterBonus);
-          const { updated: u2, events: ev2 } = processAllBingos(afterMark2);
-          setPlayers(u2);
-          if (ev2.length > 0) setTimeout(() => speakJa(ev2.map(e => u2[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
-          checkBonusOrProceed(u2, bonusFrom, bonus, pIdx);
-        });
-      }, 2200);
-    } else {
-      checkBonusOrProceed(updated, from, square, pIdx);
-    }
+    // ビンゴした全員をボーナスで進める。サイコロを振った本人を先頭に処理する。
+    const bingoIdxs = events.map(e => e.playerIdx);
+    const queue = bingoIdxs.includes(pIdx)
+      ? [pIdx, ...bingoIdxs.filter(i => i !== pIdx)]
+      : bingoIdxs;
+    resolveBingoQueue(updated, queue, (finalPlayers) => {
+      checkBonusOrProceed(finalPlayers, from, finalPlayers[pIdx].position, pIdx);
+    });
   }
 
   function handleRoll() {
@@ -187,26 +206,28 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   }
 
   function checkBonusOrProceed(ps: Player[], from: number, pos: number, pIdx: number) {
-    const landmark = firstPassedLandmark(from, pos);
-    if (landmark !== null && pos < 100 && Math.random() < 0.5) {
+    // ぴったりキリ番マスに止まったら必ず発生。止まらず通り過ぎただけなら今まで通り1/2（issue #95-3）。
+    const landedExactly = isLandmark(pos);
+    const passed        = firstPassedLandmark(from, pos) !== null;
+    const trigger       = pos < 100 && (landedExactly || (passed && Math.random() < 0.5));
+    if (trigger) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
       setIsAnimating(false);
       timerRef.current = setTimeout(() => { setShowBonusIntro(false); setQuiz(makeBonusQuiz()); }, 2000);
     } else {
-      checkGameOver(ps, pos);
+      checkGameOver(ps);
     }
   }
 
   /** ボーナスのミニ問題に答えたあと。正解→ビンゴマス選択、不正解→つぎのひとへ */
   function handleQuizAnswer(correct: boolean) {
     setQuiz(null);
-    const pIdx = bonusPlayerIdx ?? currentIdx;
     if (correct) {
       setChoosingBonus(true);
     } else {
       setBonusPlayerIdx(null);
-      checkGameOver(players, players[pIdx]?.position ?? 0);
+      checkGameOver(players);
     }
   }
 
@@ -234,30 +255,23 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
     if (events.length > 0) {
       setTimeout(() => speakJa(events.map(e => updated[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
-      const myBingo = events.find(e => e.playerIdx === pIdx);
-      if (myBingo) {
-        setShowBingo({ name: updated[pIdx].name, count: myBingo.count });
-        timerRef.current = setTimeout(() => {
-          setShowBingo(null);
-          const bonus = Math.min(updated[pIdx].position + myBingo.count * 10, 100);
-          animateMove(updated, pIdx, updated[pIdx].position, bonus, (afterBonus) => {
-            const afterMark2 = applyMark(bonus, afterBonus);
-            const { updated: u2, events: ev2 } = processAllBingos(afterMark2);
-            setPlayers(u2);
-            if (ev2.length > 0) setTimeout(() => speakJa(ev2.map(e => u2[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
-            checkGameOver(u2, bonus);
-          });
-        }, 2200);
-        return;
-      }
+      // ボーナスマスで揃ったビンゴも全員ボーナスで進める（連鎖込み）。
+      const bingoIdxs = events.map(e => e.playerIdx);
+      const queue = bingoIdxs.includes(pIdx)
+        ? [pIdx, ...bingoIdxs.filter(i => i !== pIdx)]
+        : bingoIdxs;
+      resolveBingoQueue(updated, queue, (finalPlayers) => checkGameOver(finalPlayers));
+      return;
     }
 
-    checkGameOver(updated, updated[pIdx].position);
+    checkGameOver(updated);
   }
 
-  function checkGameOver(ps: Player[], pos: number) {
-    if (pos >= 100) {
-      const w = ps[currentIdx];
+  function checkGameOver(ps: Player[]) {
+    // ボーナスで他の人が100に到達することもあるので、本人優先で誰かゴールしていれば勝ち。
+    const winnerIdx = ps[currentIdx].position >= 100 ? currentIdx : ps.findIndex(p => p.position >= 100);
+    if (winnerIdx !== -1) {
+      const w = ps[winnerIdx];
       speakJa(`${w.name} ゴール！`);
       setShowGoal({ name: w.name, character: w.character });
       timerRef.current = setTimeout(() => {
@@ -388,8 +402,13 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                       : isBonus   ? 'text-amber-900'
                       : checkedOwners.length > 0 && owners.length === 1 ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]'
                       : 'text-gray-900'}`}>
-                      {isGoal ? '🏁' : isBonus ? '⭐' : n}
+                      {isGoal ? '🏁' : n}
                     </span>
+
+                    {/* ボーナスマスは星と数字の両方を見せる（星は右上の小バッジ） */}
+                    {isBonus && !isGoal && (
+                      <span className="absolute top-0 right-0 leading-none text-[8px] z-10 select-none pointer-events-none">⭐</span>
+                    )}
 
                     {/* 複数オーナーの場合: 下部に小さいカラードット */}
                     {owners.length > 1 && (

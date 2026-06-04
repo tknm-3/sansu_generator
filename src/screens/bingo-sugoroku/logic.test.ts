@@ -6,6 +6,7 @@ import {
   makeNumberLineQuiz,
   makeBonusQuiz,
   isNumberLineCorrect,
+  rollBonusSteps,
   NUMBERLINE_TOLERANCE,
 } from './logic';
 
@@ -56,6 +57,21 @@ describe('makeBonusQuiz（B/D ランダム）', () => {
   it('rng<0.5 で compare、>=0.5 で numberline', () => {
     expect(makeBonusQuiz(() => 0.1).kind).toBe('compare');
     expect(makeBonusQuiz(() => 0.9).kind).toBe('numberline');
+  });
+});
+
+describe('rollBonusSteps（ビンゴボーナスの進数）', () => {
+  it('常に 5〜10 の整数を返す（何ビンゴでも1回分）', () => {
+    for (let i = 0; i < 500; i++) {
+      const s = rollBonusSteps();
+      expect(Number.isInteger(s)).toBe(true);
+      expect(s).toBeGreaterThanOrEqual(5);
+      expect(s).toBeLessThanOrEqual(10);
+    }
+  });
+  it('rng の下限/上限で 5 と 10 になる', () => {
+    expect(rollBonusSteps(() => 0)).toBe(5);
+    expect(rollBonusSteps(() => 0.999)).toBe(10);
   });
 });
 

@@ -38,6 +38,14 @@ export function isLandmark(n: number): boolean {
   return n > 0 && n < 100 && n % 10 === 0;
 }
 
+/**
+ * ビンゴボーナスで進むマス数（5〜10 のランダム）。
+ * 何ビンゴ（列数）でも1回分。複数列が同時に揃っても進むのは 5〜10 マスのみ。
+ */
+export function rollBonusSteps(rng: () => number = Math.random): number {
+  return 5 + Math.floor(rng() * 6); // 5..10
+}
+
 // ── ボーナスマスのミニ問題（B: 大小比較 / D: 数直線推定） ──────────────────────
 
 /** 数直線推定で「正解」とみなす許容差（0〜100 のうち ±この値）。やさしめに広く取る */
