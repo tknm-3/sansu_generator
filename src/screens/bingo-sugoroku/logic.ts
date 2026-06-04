@@ -21,15 +21,21 @@ export const BOARD_GRID: number[][] = (() => {
   return g;
 })();
 
-/** ゲーム開始時にボーナスマスをランダムに配置（5〜95 の範囲で count 個） */
-export function generateBonusSquares(count: number = 8): number[] {
-  const pool: number[] = [];
-  for (let n = 5; n <= 95; n++) pool.push(n);
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, count).sort((a, b) => a - b);
+/**
+ * ボーナスマスは「キリ番」（10, 20, … 90）に固定する。
+ * 10とびのまとまり＝ベンチマークを目印にすることで、数の大小判断・数直線推定の
+ * 足場になる（Siegler & Booth 2004 ほか。docs/sugoroku-number-learning-design.md 参照）。
+ * ゴール(100)は別扱いなので含めない。
+ */
+export function generateBonusSquares(): number[] {
+  const squares: number[] = [];
+  for (let n = 10; n <= 90; n += 10) squares.push(n);
+  return squares;
+}
+
+/** キリ番（10とび）かどうか。数直線バーや盤の強調・読み上げに使う */
+export function isLandmark(n: number): boolean {
+  return n > 0 && n < 100 && n % 10 === 0;
 }
 
 export function getNewBingos(player: Player): number[] {

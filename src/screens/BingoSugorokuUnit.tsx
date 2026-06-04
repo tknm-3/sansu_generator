@@ -5,6 +5,7 @@ import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
 import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
+import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { SetupCountScreen, SetupCardsScreen } from './bingo-sugoroku/SetupScreens';
 import { GoalOverlay, BonusIntroOverlay, BonusPickOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
 
@@ -68,7 +69,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (setupIdx + 1 < playerCount) {
       startSetupCard(setupIdx + 1);
     } else {
-      setBonusSquares(new Set(generateBonusSquares(8)));
+      setBonusSquares(new Set(generateBonusSquares()));
       setPhase('game');
     }
   }
@@ -90,21 +91,24 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     ps: Player[], pIdx: number, from: number, to: number,
     onComplete: (finalPlayers: Player[]) => void,
   ) => {
+    // 1マスあたりの間隔。数の読み上げ（特に2桁）が間に合うようゆっくりにする。
+    const STEP_MS = 700;
     let current = from;
     let state = ps;
     function step() {
       current = Math.min(current + 1, to);
       setMovingSquare(current);
-      speakJa(String(current));
+      // キリ番(50)はベンチマークとして「もう はんぶん！」を添えて量感を後押し（提案C）
+      speakJa(current === 50 ? '50。もう はんぶん' : String(current));
       state = state.map((p, i) => i === pIdx ? { ...p, position: current } : p);
       setPlayers([...state]);
       if (current < to) {
-        timerRef.current = setTimeout(step, 350);
+        timerRef.current = setTimeout(step, STEP_MS);
       } else {
-        timerRef.current = setTimeout(() => { setMovingSquare(null); onComplete(state); }, 500);
+        timerRef.current = setTimeout(() => { setMovingSquare(null); onComplete(state); }, 600);
       }
     }
-    timerRef.current = setTimeout(step, 100);
+    timerRef.current = setTimeout(step, 120);
   }, []);
 
   function handleAfterLand(movedPlayers: Player[], square: number, pIdx: number) {
@@ -396,17 +400,26 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         </div>
       </div>
 
+      {/* 数直線バー（横一直線で「数が大きい＝右に遠い／バーが長い」を明示） */}
+      <NumberLineBar players={players} currentIdx={currentIdx} />
+
       {/* フッター */}
       <div className={`flex items-center justify-between px-4 py-2 border-t border-gray-200 ${currentStyle.light}`}>
         <div className="flex items-center gap-2">
           <span className={`w-5 h-5 rounded-full ${currentStyle.bg} flex-shrink-0`} />
           <span className="font-bold text-gray-700">{current?.name} のばん</span>
         </div>
-        <motion.div className="text-7xl leading-none select-none"
-          animate={diceShaking ? { rotate:[-12,12,-10,10,-6,6,0], scale:[1,1.25,1.1,1.25,1.1,1.2,1] } : diceValue ? { scale:[1.4,1], rotate:[0,0] } : {}}
-          transition={{ duration: diceShaking ? 0.18 : 0.3 }}>
-          {diceValue ? DICE_FACE[diceValue] : '🎲'}
-        </motion.div>
+        <div className="flex flex-col items-center leading-none">
+          <motion.div className="text-7xl leading-none select-none"
+            animate={diceShaking ? { rotate:[-12,12,-10,10,-6,6,0], scale:[1,1.25,1.1,1.25,1.1,1.2,1] } : diceValue ? { scale:[1.4,1], rotate:[0,0] } : {}}
+            transition={{ duration: diceShaking ? 0.18 : 0.3 }}>
+            {diceValue ? DICE_FACE[diceValue] : '🎲'}
+          </motion.div>
+          {/* 出目の数字（つぶ＝量 と 数字＝記号 を結びつける・提案C） */}
+          {diceValue && !diceShaking && (
+            <span className="text-base font-black text-gray-600 select-none">{diceValue} すすむ</span>
+          )}
+        </div>
         <motion.button type="button" onClick={handleRoll} disabled={blocked}
           whileTap={!blocked ? { scale: 0.93 } : undefined}
           className={`rounded-2xl px-6 py-3 text-xl font-bold text-white transition-all
