@@ -50,8 +50,8 @@ export function BingoCardDisplay({
               className={`
                 aspect-square flex items-center justify-center text-xs font-extrabold rounded
                 ${isCenter && isChecked ? 'bg-yellow-400 text-yellow-900'
-                  : isChecked           ? `${s.bg} text-white`
-                  :                       'bg-white text-gray-800 border border-gray-200'}
+                  : isChecked           ? `${s.bg} text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]`
+                  :                       'bg-white text-gray-900 border border-gray-300'}
                 ${isFlash ? `ring-2 ${s.ring}` : ''}
               `}
             >
