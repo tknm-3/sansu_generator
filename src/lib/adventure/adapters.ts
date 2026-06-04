@@ -81,7 +81,7 @@ export function cherryCalcToBattle(rng: () => number = Math.random): BattleQuest
 }
 
 export function bigAdditionToBattle(rng: () => number = Math.random): BattleQuestion {
-  const p = generateBigAddition(rng);
+  const p = generateBigAddition(rng, { mixed: true });
   const answer = p.a + p.b;
   const { choices, answerIndex } = toFourChoices(p.choices, answer, rng);
   return {
