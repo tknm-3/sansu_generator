@@ -96,6 +96,15 @@ export interface AdventureQuest extends Level {
   branchFill?: AdventureBranchFill;
   /** kind==='relative' の 検証用 解（そうたい方向の 命令れつ。ループも ふくめられる） */
   relSolution?: RelCommand[];
+  /**
+   * kind==='relative' の 足場プリフィル（チュートリアル用の 穴埋め）。
+   * 最初から おいてある（こどもは けせない）ループ箱・矢印で、のこりを 少し たすだけにする。
+   * - `cmds`: 先頭に おく ロック済み トップレベル命令（完成した ループ箱や まがる）。
+   * - `openLoop`: relSolution の さいごの ループ箱を「ひらいた まま」で おいておく。
+   *   `times` は 固定、`body` の さいしょの ぶんは ロック。こどもは のこりの なかみを たして
+   *   「かんりょう」する。`relPrefillIsPrefix` テストで relSolution の 接頭辞だと 保証する。
+   */
+  relPrefill?: { cmds?: RelCommand[]; openLoop?: { times: number; body: RelCommand[] } };
   /** kind==='proc' のとき: てじゅんの 固定した 中身（proc_a で みせる・proc_b で正解）*/
   procDef?: import('./relativeEngine').RelDir[];
   /** kind==='proc' のとき: 固定した メインプログラム（proc_b で みせる）*/
