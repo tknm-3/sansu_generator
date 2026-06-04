@@ -21,15 +21,55 @@ export const BOARD_GRID: number[][] = (() => {
   return g;
 })();
 
-/** ゲーム開始時にボーナスマスをランダムに配置（5〜95 の範囲で count 個） */
-export function generateBonusSquares(count: number = 8): number[] {
-  const pool: number[] = [];
-  for (let n = 5; n <= 95; n++) pool.push(n);
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, count).sort((a, b) => a - b);
+/**
+ * ボーナスマスは「キリ番」（10, 20, … 90）に固定する。
+ * 10とびのまとまり＝ベンチマークを目印にすることで、数の大小判断・数直線推定の
+ * 足場になる（Siegler & Booth 2004 ほか。docs/sugoroku-number-learning-design.md 参照）。
+ * ゴール(100)は別扱いなので含めない。
+ */
+export function generateBonusSquares(): number[] {
+  const squares: number[] = [];
+  for (let n = 10; n <= 90; n += 10) squares.push(n);
+  return squares;
+}
+
+/** キリ番（10とび）かどうか。数直線バーや盤の強調・読み上げに使う */
+export function isLandmark(n: number): boolean {
+  return n > 0 && n < 100 && n % 10 === 0;
+}
+
+// ── ボーナスマスのミニ問題（B: 大小比較 / D: 数直線推定） ──────────────────────
+
+/** 数直線推定で「正解」とみなす許容差（0〜100 のうち ±この値）。やさしめに広く取る */
+export const NUMBERLINE_TOLERANCE = 8;
+
+export type BonusQuiz =
+  | { kind: 'compare'; a: number; b: number; answer: number }   // 大きいのはどっち？
+  | { kind: 'numberline'; target: number; tolerance: number };  // ◯◯はどのへん？
+
+/** 大小比較の問題を1つ作る。a≠b で answer は大きいほう（提案B）。
+ * b は a からのオフセットで作るため、rng が定数でも必ず a≠b になりループしない。 */
+export function makeCompareQuiz(rng: () => number = Math.random): BonusQuiz {
+  const a = 1 + Math.floor(rng() * 99);            // 1..99
+  const offset = 1 + Math.floor(rng() * 98);       // 1..98
+  const b = ((a - 1 + offset) % 99) + 1;           // 1..99 かつ必ず a と異なる
+  return { kind: 'compare', a, b, answer: Math.max(a, b) };
+}
+
+/** 数直線推定の問題を1つ作る（提案D） */
+export function makeNumberLineQuiz(rng: () => number = Math.random): BonusQuiz {
+  const target = 1 + Math.floor(rng() * 99);
+  return { kind: 'numberline', target, tolerance: NUMBERLINE_TOLERANCE };
+}
+
+/** ボーナスマスで出す問題をランダムに作る（B と D を半々で） */
+export function makeBonusQuiz(rng: () => number = Math.random): BonusQuiz {
+  return rng() < 0.5 ? makeCompareQuiz(rng) : makeNumberLineQuiz(rng);
+}
+
+/** 数直線推定の正誤判定。target と guess の差が許容内なら正解 */
+export function isNumberLineCorrect(target: number, guess: number, tolerance: number): boolean {
+  return Math.abs(target - guess) <= tolerance;
 }
 
 export function getNewBingos(player: Player): number[] {

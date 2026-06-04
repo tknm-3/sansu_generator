@@ -64,7 +64,7 @@ export function BonusIntroOverlay({
               className="text-7xl mb-3">⭐</motion.div>
             <div className="text-4xl font-bold text-white mb-2 drop-shadow">ボーナスマス！</div>
             <div className="text-xl font-bold text-yellow-100 mb-1">{players[bonusPlayerIdx]?.name} の チャンス！</div>
-            <div className="text-lg text-white/90 font-bold">ビンゴカードの すきな マスを ぬりつぶせる！</div>
+            <div className="text-lg text-white/90 font-bold">クイズに せいかいで ビンゴマスGET！</div>
           </motion.div>
         </motion.div>
       )}
