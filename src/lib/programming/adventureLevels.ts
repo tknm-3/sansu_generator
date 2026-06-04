@@ -918,7 +918,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward'] }],
     optimal: 1, maxSlots: 4,
-    prompt: 'まえへ を ならべても いいよ。ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [] } },
+    prompt: 'ループ箱に「まえへ」を いれて、✅かんりょう！',
   },
   {
     id: 'adv-q80', zoneId: 'rloop_a', rows: 1, cols: 5,
@@ -927,7 +928,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 4, body: ['forward'] }],
     optimal: 1, maxSlots: 5,
-    prompt: 'よこに 1つずつでも OK。ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 4, body: [] } },
+    prompt: 'ループ箱に「まえへ」を いれて、✅かんりょう！',
   },
   {
     id: 'adv-q81', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -940,7 +942,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 3, body: ['forward'] },
     ],
     optimal: 3, maxSlots: 7,
-    prompt: 'のぼって まがって また すすもう。ループに まとめると ✨ぴったり！',
+    relPrefill: { cmds: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'], openLoop: { times: 3, body: [] } },
+    prompt: 'まがる ところは できてるよ。さいごの ループに「まえへ」を いれてね',
   },
   {
     id: 'adv-q82', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -953,7 +956,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 3, body: ['forward'] },
     ],
     optimal: 3, maxSlots: 7,
-    prompt: '⭐を とおりながら ゴールへ！ ループに まとめると ✨ぴったり！',
+    relPrefill: { cmds: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'], openLoop: { times: 3, body: [] } },
+    prompt: '⭐を とおる みち！ さいごの ループに「まえへ」を いれてね',
   },
   {
     id: 'adv-q83', zoneId: 'rloop_a', rows: 4, cols: 4,
@@ -969,7 +973,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
     optimal: 5, maxSlots: 9,
-    prompt: 'コの字に まわって ゴール！ ループに まとめると ✨ぴったり！',
+    relPrefill: { cmds: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right', { kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'], openLoop: { times: 2, body: [] } },
+    prompt: 'コの字の さいご！ ループに「まえへ」を いれて かんりょう',
   },
   {
     id: 'adv-q84', zoneId: 'rloop_a', rows: 6, cols: 6,
@@ -985,7 +990,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
     optimal: 5, maxSlots: 12,
-    prompt: 'Z字に すすんで ⭐も ひろおう！ ループに まとめると ✨ぴったり！',
+    relPrefill: { cmds: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right', { kind: 'loop', times: 5, body: ['forward'] }, 'turn_left'], openLoop: { times: 2, body: [] } },
+    prompt: 'Z字の さいご！ ループに「まえへ」を いれて ⭐も ひろおう',
   },
 
   // ─── 🌀 そうたいループ だいみゃく（adv-q85〜adv-q90）ループ本体に まがりかど ───
@@ -998,7 +1004,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 12,
-    prompt: '1つずつ ならべて すすんでも OK。ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: ['forward', 'turn_right'] } },
+    prompt: 'かいだんの くりかえし！ ？に「まえへ」と「ひだりをむく」を たそう',
   },
   {
     id: 'adv-q86', zoneId: 'rloop_b', rows: 5, cols: 5,
@@ -1013,7 +1020,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 4, body: ['forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 16,
-    prompt: '💫を ひろいながら かいだんを すすもう。ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 4, body: ['forward', 'turn_right'] } },
+    prompt: '💫を ひろう かいだん！ ？に「まえへ」と「ひだりをむく」を たそう',
   },
   {
     id: 'adv-q87', zoneId: 'rloop_b', rows: 4, cols: 7,
@@ -1027,7 +1035,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: ['forward', 'forward', 'turn_right', 'forward', 'turn_left'] }],
     optimal: 1, maxSlots: 15,
-    prompt: 'ジグザグに 1つずつ すすんでも OK。ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: ['forward', 'forward', 'turn_right'] } },
+    prompt: 'ジグザグの くりかえし！ ？に「まえへ」と「ひだりをむく」を たそう',
   },
   {
     id: 'adv-q88', zoneId: 'rloop_b', rows: 5, cols: 5,
@@ -1041,7 +1050,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: ['forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right'] }],
     optimal: 1, maxSlots: 12,
-    prompt: 'L字を くりかえして ゴールへ！ ループに まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 2, body: ['forward', 'forward', 'turn_left', 'forward'] } },
+    prompt: 'おおきな かいだん！ ？に「まえへ」と「みぎをむく」を たそう',
   },
   {
     id: 'adv-q89', zoneId: 'rloop_b', rows: 3, cols: 5,
@@ -1055,7 +1065,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
     optimal: 2, maxSlots: 10,
-    prompt: '2つの ループを くみあわせよう。1つずつ ならべても OK！',
+    relPrefill: { cmds: [{ kind: 'loop', times: 2, body: ['forward', 'turn_right', 'forward', 'turn_left'] }], openLoop: { times: 2, body: [] } },
+    prompt: '2つめの ループに「まえへ」を いれて かんりょう！',
   },
   {
     id: 'adv-q90', zoneId: 'rloop_b', rows: 6, cols: 6,
@@ -1075,7 +1086,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
       { kind: 'loop', times: 2, body: ['forward'] },
     ],
     optimal: 4, maxSlots: 17,
-    prompt: 'かいだん＋まっすぐで ゴールへ！ 💫も わすれずに（ループで ✨ぴったり）',
+    relPrefill: { cmds: [{ kind: 'loop', times: 3, body: ['forward', 'turn_right', 'forward', 'turn_left'] }, { kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'], openLoop: { times: 2, body: [] } },
+    prompt: 'ボス！ さいごの ループに「まえへ」を いれて 💫も ひろおう',
   },
 
   // ─── 📦 てじゅんの にわ（adv-q91〜adv-q96）てじゅん呼び出し・proc_a ───
@@ -1213,7 +1225,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 6,
-    prompt: '1つずつ ならべても OK。ループの なかに ループで まとめると ✨ぴったり！',
+    relPrefill: { openLoop: { times: 2, body: [{ kind: 'loop', times: 2, body: ['forward'] }] } },
+    prompt: 'なかの ループは できてるよ。「みぎをむく」を たして かんりょう！',
   },
   {
     // L字2辺（長辺版）: loop(2){loop(3){forward}, turn_right} = 3まい すすんで まがる を 2かい
@@ -1224,7 +1237,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 8,
-    prompt: '1つずつでも OK。なかの ループを 3にすると 1辺が ながくなるよ！',
+    relPrefill: { openLoop: { times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: 'なかの ループは できてるよ。「みぎをむく」を たして かんりょう！',
   },
   {
     // 3辺（小）: loop(3){loop(2){forward}, turn_right} = 2まい すすんで まがる を 3かい
@@ -1235,7 +1249,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 9,
-    prompt: '1つずつでも OK。そとの ループを 3にすると 3辺まわれるよ！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }] } },
+    prompt: 'そとの ループは 3かい。「みぎをむく」を たして 3つの かどを まわろう',
   },
   {
     // 3辺（向き変え）: 同じ loop(3){loop(2){forward}, turn_right} を startFacing:down で
@@ -1246,7 +1261,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 9,
-    prompt: 'むきが ちがっても おなじ ループが つかえるよ！（1つずつでも OK）',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 2, body: ['forward'] }] } },
+    prompt: 'むきが ちがっても おなじ！「みぎをむく」を たして かんりょう',
   },
   {
     // 3辺（大）: loop(3){loop(3){forward}, turn_right} = 4×4 グリッド
@@ -1258,7 +1274,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 12,
-    prompt: 'おおきな グリッド！ 1つずつでも OK。ネストループで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: 'おおきな しかく！「みぎをむく」を たして ふちを まわろう',
   },
   {
     // 3辺（大）+ ⭐: loop(3){loop(3){forward}, turn_right} + gems
@@ -1269,7 +1286,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 12,
-    prompt: '⭐は コーナーに あるよ。1つずつでも OK、ネストループで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: '⭐は かどに あるよ。「みぎをむく」を たして かんりょう',
   },
 
   // ─── 🏔️ ネストループ だいとうげ（adv-q109〜adv-q114）ネストループ 応用 ───
@@ -1283,7 +1301,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 8,
-    prompt: '1つずつでも OK。そとの ループは なんかい？ ネストで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 2, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: 'なかの ループは できてるよ。「みぎをむく」を たして かんりょう！',
   },
   {
     // 3辺（4×4）+ 💎: loop(3){loop(3){forward}, turn_right} + gems
@@ -1294,7 +1313,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 12,
-    prompt: '💎は コーナーに ある！ 1つずつでも OK、ネストで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: '💎は かどに ある！「みぎをむく」を たして かんりょう',
   },
   {
     // 3辺（4×4）+ 壁あり + startFacing:up
@@ -1306,7 +1326,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 12,
-    prompt: 'ゴールの かどは どこかな？ 1つずつでも OK、ネストで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 3, body: ['forward'] }] } },
+    prompt: 'ゴールの かどは どこかな？「みぎをむく」を たして かんりょう',
   },
   {
     // 5×5（大）+ 壁あり: loop(3){loop(4){forward}, turn_right}
@@ -1321,7 +1342,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 15,
-    prompt: 'おおきな グリッド！ 1つずつでも OK、ネストで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }] } },
+    prompt: 'おおきな しかく！「みぎをむく」を たして ふちを まわろう',
   },
   {
     // 5×5 + 💎×2: loop(3){loop(4){forward}, turn_right} + gems
@@ -1332,7 +1354,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 15,
-    prompt: '💎を 2つ とりながら ゴールへ！ 1つずつでも OK、ネストで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }] } },
+    prompt: '💎を 2つ とろう！「みぎをむく」を たして かんりょう',
   },
   {
     // 5×5 + 壁あり + startFacing:down（最難関ボス）
@@ -1347,7 +1370,8 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     kind: 'relative', allowLoop: true,
     relSolution: [{ kind: 'loop', times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }, 'turn_right'] }],
     optimal: 1, maxSlots: 15,
-    prompt: 'むきに ちゅうもく！ 1つずつでも OK、ネストループで ✨ぴったり！',
+    relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }] } },
+    prompt: 'ボス！ むきに ちゅうい。「みぎをむく」を たして かんりょう',
   },
 ];
 

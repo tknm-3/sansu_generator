@@ -24,6 +24,7 @@ import {
   turnRight,
   turnLeft,
   type RelDir,
+  type RelCommand,
 } from './relativeEngine';
 import { runProc } from './procEngine';
 
@@ -244,6 +245,55 @@ describe('ぼうけん 問題集', () => {
       shortest,
       `${q.id} は ${needed}かい まがる はずが ${shortest}かいで ゴールできてしまう（かべで みちを しぼって）`,
     ).toBeGreaterThanOrEqual(needed);
+  });
+
+  // ── 足場プリフィル（relPrefill）の チュートリアル穴埋め ──
+  // relPrefill は こどもに「ループ箱＋少しの矢印」を 最初から みせる 足場。
+  // ① relSolution の 接頭辞で あること（足場どおり 進めば 正解に なる）。
+  // ② openLoop は relSolution の さいごの ブロックを 途中まで ひらいたもので、
+  //    こどもが たす ぶん（のこりの body）が 1つ以上 ある（＝全部 うまってない）。
+  // ③ こどもの 追加は すこし（穴埋め）＝のこりの body は 3つ以下。
+  // ④ そうたい×ループの 4ゾーンは すべて relPrefill を もつ（取りこぼし防止）。
+  function relEqual(a: RelCommand, b: RelCommand): boolean {
+    if (typeof a === 'string' || typeof b === 'string') return a === b;
+    if (a.times !== b.times || a.body.length !== b.body.length) return false;
+    return a.body.every((c, i) => relEqual(c, b.body[i]));
+  }
+  const relPrefillQuests = all.filter((q) => q.relPrefill);
+
+  it('そうたい×ループの 4ゾーンは すべて relPrefill（足場）を もつ', () => {
+    const ids = relativeLoopQuests.map((q) => q.id);
+    const withPrefill = relativeLoopQuests.filter((q) => q.relPrefill).map((q) => q.id);
+    expect(withPrefill, `relPrefill が ない: ${ids.filter((id) => !withPrefill.includes(id))}`).toEqual(ids);
+  });
+
+  it.each(relPrefillQuests)('$id の relPrefill は relSolution の 接頭辞で、すこしだけ こどもが たす', (q) => {
+    const sol = q.relSolution!;
+    const pre = q.relPrefill!.cmds ?? [];
+    // ① cmds は 先頭から ぴったり 一致
+    expect(pre.length, `${q.id} の relPrefill.cmds が relSolution より ながい`).toBeLessThanOrEqual(sol.length);
+    pre.forEach((c, i) => {
+      expect(relEqual(c, sol[i]), `${q.id} の relPrefill.cmds[${i}] が relSolution と ちがう`).toBe(true);
+    });
+    const open = q.relPrefill!.openLoop;
+    if (open) {
+      // ② openLoop は cmds の つぎ（＝relSolution の さいごの ブロック）を ひらいたもの
+      expect(pre.length + 1, `${q.id} の openLoop は relSolution の さいごの ブロックで ない`).toBe(sol.length);
+      const last = sol[pre.length];
+      expect(typeof last !== 'string' && last.kind === 'loop', `${q.id} の さいごの ブロックが ループで ない`).toBe(true);
+      const loop = last as Exclude<RelCommand, RelDir>;
+      expect(loop.times, `${q.id} の openLoop.times が relSolution と ちがう`).toBe(open.times);
+      open.body.forEach((c, i) => {
+        expect(relEqual(c, loop.body[i]), `${q.id} の openLoop.body[${i}] が relSolution と ちがう`).toBe(true);
+      });
+      const remaining = loop.body.length - open.body.length;
+      // ③ こどもが たす ぶんが 1〜3（穴埋め）
+      expect(remaining, `${q.id} は openLoop が ぜんぶ うまっていて こどもが たす ぶんが ない`).toBeGreaterThanOrEqual(1);
+      expect(remaining, `${q.id} は こどもが たす ぶんが おおすぎる（穴埋めに ならない）`).toBeLessThanOrEqual(3);
+    } else {
+      // openLoop が なければ cmds が 解の 一部（最後の1ブロックは こどもが くむ）
+      expect(pre.length, `${q.id} は relPrefill が ぜんぶ 解で こどもが くむ ぶんが ない`).toBeLessThan(sol.length);
+    }
   });
 
   // ── てじゅん（proc）単元 ──
