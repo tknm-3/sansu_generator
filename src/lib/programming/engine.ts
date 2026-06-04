@@ -244,6 +244,18 @@ export function isPerfect(level: Level, result: RunResult): boolean {
   return isCleared(result) && result.steps === level.optimal;
 }
 
+/**
+ * ループ/てじゅん単元の ぴったり賞（💎）判定。
+ *
+ * これらの単元の `optimal` は「展開後の実行ステップ数」ではなく
+ * 「こどもが ならべた ブロックの かず（ループ1個＝1・てじゅん呼び出し＝1）」で定義している。
+ * `result.steps` は ループ展開後の 実行命令数なので、`isPerfect`（steps基準）では
+ * 永遠に 一致せず ダイヤが とれない。ここでは つかった ブロック数 で 判定する。
+ */
+export function isPerfectByBlocks(level: Level, result: RunResult, usedBlocks: number): boolean {
+  return isCleared(result) && usedBlocks === level.optimal;
+}
+
 function manhattan(a: Pos, b: Pos): number {
   return Math.abs(a.r - b.r) + Math.abs(a.c - b.c);
 }

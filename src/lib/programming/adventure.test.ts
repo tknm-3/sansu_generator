@@ -10,6 +10,7 @@ import {
   runProgram,
   isCleared,
   isPerfect,
+  isPerfectByBlocks,
   samePos,
   type Command,
   type Dir,
@@ -212,6 +213,23 @@ describe('ぼうけん 問題集', () => {
     expect(q.relSolution!.length, `${q.id} の optimal が 命令数と ずれている`).toBe(q.optimal);
   });
 
+  // ダイヤ（ぴったり賞💎）が とれることを 保証する。ループ/ネスト単元は optimal が
+  // 「ならべた ブロック数」なので、intended solution（relSolution）の ブロック数で 判定する。
+  // （isPerfect の steps基準だと ループ展開で 永遠に 一致せず ダイヤが とれない＝既知バグの回帰防止）
+  it.each(relativeLoopQuests)('$id（そうたい×ループ）は relSolution で ダイヤ（ぴったり賞）が とれる', (q) => {
+    const result = runRelative(q, q.relSolution!);
+    expect(
+      isPerfectByBlocks(q, result, q.relSolution!.length),
+      `${q.id} は intended solution(${q.relSolution!.length}ブロック)でも ダイヤが とれない`,
+    ).toBe(true);
+  });
+
+  // ループなしの そうたい（ゆき/うみ）も、ならべた ブロック数 === optimal で ダイヤが とれる。
+  it.each(relativeQuests)('$id（そうたい方向）は relSolution で ダイヤ（ぴったり賞）が とれる', (q) => {
+    const result = runRelative(q, q.relSolution!);
+    expect(isPerfectByBlocks(q, result, q.relSolution!.length), `${q.id} は ダイヤが とれない`).toBe(true);
+  });
+
   // そうたい×ループの「かたち」を かべで しぼれているか。
   // コの字／かいだん／ジグザグ なのに まっすぐ や L字で ショートカットできると 学びが うすい。
   // 最短解（solveRelative）の まがりかど かずが、ねらった かたち（relSolution）より すくなく
@@ -263,6 +281,23 @@ describe('ぼうけん 問題集', () => {
     expect(isCleared(result), `${q.id} の procDef が ゴールに つかない`).toBe(true);
     expect(q.procDef!.length, `${q.id} の optimal が 中身の命令数と ずれている`).toBe(q.optimal);
     expect(q.procDef!.length, `${q.id} の 中身が maxSlots を こえる`).toBeLessThanOrEqual(q.maxSlots!);
+  });
+
+  // てじゅん（proc）も intended solution で ダイヤ（ぴったり賞💎）が とれる。
+  // proc_a は main の めいれい数、proc_b は てじゅんの なかみ（procDef）の 数 が optimal。
+  it.each(procAQuests)('$id（proc_a）は ダイヤ（ぴったり賞）が とれる', (q) => {
+    const result = runProc(q, q.procMainSolution!, q.procDef!);
+    expect(
+      isPerfectByBlocks(q, result, q.procMainSolution!.length),
+      `${q.id} は intended solution でも ダイヤが とれない`,
+    ).toBe(true);
+  });
+  it.each(procBQuests)('$id（proc_b）は ダイヤ（ぴったり賞）が とれる', (q) => {
+    const result = runProc(q, q.procMain!, q.procDef!);
+    expect(
+      isPerfectByBlocks(q, result, q.procDef!.length),
+      `${q.id} は intended solution でも ダイヤが とれない`,
+    ).toBe(true);
   });
 
   // proc_b の「意図した解き方」: optimal より みじかい 中身では クリアできない
