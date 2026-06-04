@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, rollBonusSteps, type BonusQuiz } from './bingo-sugoroku/logic';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, rollBonusSteps, shouldTriggerLandmarkBonus, type BonusQuiz } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
@@ -197,19 +197,9 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     doRoll(0);
   }
 
-  // 移動範囲 (from, to] に最初に現れるキリ番を返す
-  function firstPassedLandmark(from: number, to: number): number | null {
-    for (let n = from + 1; n <= to; n++) {
-      if (isLandmark(n)) return n;
-    }
-    return null;
-  }
-
   function checkBonusOrProceed(ps: Player[], from: number, pos: number, pIdx: number) {
-    // ぴったりキリ番マスに止まったら必ず発生。止まらず通り過ぎただけなら今まで通り1/2（issue #95-3）。
-    const landedExactly = isLandmark(pos);
-    const passed        = firstPassedLandmark(from, pos) !== null;
-    const trigger       = pos < 100 && (landedExactly || (passed && Math.random() < 0.5));
+    // キリ番マスのミニ問題を出すか。順位でキャッチアップ補正（びり=必ず/トップ=なし/中間=従来）。
+    const trigger = shouldTriggerLandmarkBonus(from, pos, ps.map(p => p.position));
     if (trigger) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
