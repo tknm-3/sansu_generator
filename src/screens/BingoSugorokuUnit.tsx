@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap } from './bingo-sugoroku/logic';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap, makeBonusQuiz, type BonusQuiz } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
+import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
 import { SetupCountScreen, SetupCardsScreen } from './bingo-sugoroku/SetupScreens';
 import { GoalOverlay, BonusIntroOverlay, BonusPickOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
 
@@ -40,6 +41,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [showBonusIntro, setShowBonusIntro] = useState(false);
   const [choosingBonus, setChoosingBonus]   = useState(false);
   const [bonusPlayerIdx, setBonusPlayerIdx] = useState<number | null>(null);
+  const [quiz, setQuiz]                     = useState<BonusQuiz | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -176,9 +178,22 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
       setIsAnimating(false);
-      timerRef.current = setTimeout(() => { setShowBonusIntro(false); setChoosingBonus(true); }, 2200);
+      // イントロのあと B/D のミニ問題を出題（正解で ビンゴマス選択へ）
+      timerRef.current = setTimeout(() => { setShowBonusIntro(false); setQuiz(makeBonusQuiz()); }, 2000);
     } else {
       checkGameOver(ps, pos);
+    }
+  }
+
+  /** ボーナスのミニ問題に答えたあと。正解→ビンゴマス選択、不正解→つぎのひとへ */
+  function handleQuizAnswer(correct: boolean) {
+    setQuiz(null);
+    const pIdx = bonusPlayerIdx ?? currentIdx;
+    if (correct) {
+      setChoosingBonus(true);
+    } else {
+      setBonusPlayerIdx(null);
+      checkGameOver(players, players[pIdx]?.position ?? 0);
     }
   }
 
@@ -275,7 +290,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         </div>
         <div className="flex gap-4">
           <motion.button type="button" whileTap={{ scale: 0.95 }} className="rounded-2xl bg-rose-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#be123c]"
-            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setBonusSquares(new Set()); setPhase('setup-count'); }}>
+            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setBonusSquares(new Set()); setQuiz(null); setBonusPlayerIdx(null); setPhase('setup-count'); }}>
             もう1かい！
           </motion.button>
           <button type="button" onClick={onExit} className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-gray-600 border-2 border-gray-200">おわり</button>
@@ -298,7 +313,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   // ビンゴカードに含まれるマス → オーナー（プレイヤーインデックス）のリスト
   const squareOwners = buildSquareOwnerMap(players);
 
-  const blocked = isAnimating || showBonusIntro || choosingBonus || !!showGoal;
+  const blocked = isAnimating || showBonusIntro || choosingBonus || !!quiz || !!showGoal;
 
   return (
     <div className="flex h-screen flex-col bg-gradient-to-br from-sky-100 to-rose-50 overflow-hidden">
@@ -430,6 +445,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
       <GoalOverlay        show={showGoal} />
       <BonusIntroOverlay  show={showBonusIntro} players={players} bonusPlayerIdx={bonusPlayerIdx} />
+      <BonusQuizOverlay   quiz={quiz} player={bonusPlayerIdx !== null ? players[bonusPlayerIdx] : null} styleIdx={bonusPlayerIdx ?? 0} onAnswer={handleQuizAnswer} />
       <BonusPickOverlay   show={choosingBonus}  players={players} bonusPlayerIdx={bonusPlayerIdx} onPick={handleBonusPick} />
       <BingoOverlay       show={showBingo} />
     </div>
