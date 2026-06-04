@@ -100,6 +100,26 @@ ArrowAdventureUnit         … playIndex で マップ⇔プレイ を切替
   に色を足す。「さいご」をコードで特別扱いしない設計（末尾＝自動でラスト）。
 - **きらきらの配点変更**: progress.ts の `SPARKLE_CLEAR`/`SPARKLE_PERFECT`。
 
+### ダイヤ（💎 ぴったり賞）が とれる問題に する（必ず）
+新しく ループ/ネスト/proc の問題を足すときは、**ダイヤが 取れることを 設計時に 保証する**
+（過去に 36問すべてで 取得不能だったバグの 再発防止。2026-06-04）。手順:
+1. その単元の `optimal` の意味を そろえる: ループ/ネスト/proc は **「ならべた ブロック数」**
+   （ループ1個=1・call=1）。`relSolution.length`（ループは トップレベルの数）または
+   proc の main/なかみ の めいれい数 が `optimal`。**展開後の steps では ない**。
+2. プレイ画面の ぴったり判定は `isPerfectByBlocks(level, result, usedBlocks)` を つかう
+   （steps基準の `isPerfect` だと ループ展開で 永遠に 一致しない）。`RelativeAdventurePlay`
+   なら `cmds.length`、`ProcAdventurePlay` なら main数/なかみ数。
+3. 回帰防止テスト「$id は relSolution で ダイヤ（ぴったり賞）が とれる」が
+   `adventure.test.ts` に あるので、intended solution の ブロック数 === optimal なら 自動で 緑。
+
+### 練習ゾーン化（手動でも クリア・ループで ✨ぴったり）
+ループ/ネストを「最初から 正しく 組まないと クリアできない」と 難しいゲートに なる。
+**`maxSlots` を `solveRelative()` の手動最短が おさまる大きさに ゆるめる**と、まず 1つずつ
+ならべて クリアでき、まとめると ダイヤ、の 段階的な学びに なる。注意:
+- かべで かたちは しぼったまま（`maxSlots` は ショートカット不可テストに 影響しない）。
+- **proc_a は例外**: ゆるめると「てじゅん必須」テスト（矢印だけの最短 > maxSlots）が 壊れる→据え置き。
+- 値は 一時 vitest で `solveRelative().length <= maxSlots` を 確認して 決める。
+
 ### optimal の合わせ方（手計算しない）
 `adventure.test.ts` は `optimal === solve()の最短手数` を検証する。盤面を編集→
 `npx vitest run src/lib/programming/adventure.test.ts` を実行→ ずれていれば
