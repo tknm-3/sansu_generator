@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, generateBonusSquares, buildSquareOwnerMap, makeBonusQuiz, type BonusQuiz } from './bingo-sugoroku/logic';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, type BonusQuiz } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
@@ -33,7 +33,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [flashCards, setFlashCards]     = useState<Map<number, Set<number>>>(new Map());
   const [movingSquare, setMovingSquare] = useState<number | null>(null);
   const [flashedSquare, setFlashedSquare] = useState<number | null>(null);
-  const [bonusSquares, setBonusSquares] = useState<Set<number>>(new Set());
 
   // ── オーバーレイ状態 ──
   const [showBingo, setShowBingo]       = useState<{ name: string; count: number } | null>(null);
@@ -71,7 +70,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (setupIdx + 1 < playerCount) {
       startSetupCard(setupIdx + 1);
     } else {
-      setBonusSquares(new Set(generateBonusSquares()));
       setPhase('game');
     }
   }
@@ -93,27 +91,33 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     ps: Player[], pIdx: number, from: number, to: number,
     onComplete: (finalPlayers: Player[]) => void,
   ) => {
-    // 1マスあたりの間隔。数の読み上げ（特に2桁）が間に合うようゆっくりにする。
-    const STEP_MS = 700;
+    // 読み上げ開始から視覚移動まで待つ時間。TTS 起動ラグ（~150ms）を吸収して
+    // 「声が先、コマが後」の順序を保つ。
+    const SPEAK_LEAD_MS = 300;
+    // 1マスあたりの合計間隔（読み上げ開始〜次の読み上げ開始）。
+    const STEP_MS = 900;
     let current = from;
     let state = ps;
     function step() {
       current = Math.min(current + 1, to);
-      setMovingSquare(current);
       // キリ番(50)はベンチマークとして「もう はんぶん！」を添えて量感を後押し（提案C）
       speakJa(current === 50 ? '50。もう はんぶん' : String(current));
-      state = state.map((p, i) => i === pIdx ? { ...p, position: current } : p);
-      setPlayers([...state]);
+      // 読み上げが始まってからコマを視覚的に進める
+      setTimeout(() => {
+        setMovingSquare(current);
+        state = state.map((p, i) => i === pIdx ? { ...p, position: current } : p);
+        setPlayers([...state]);
+      }, SPEAK_LEAD_MS);
       if (current < to) {
         timerRef.current = setTimeout(step, STEP_MS);
       } else {
-        timerRef.current = setTimeout(() => { setMovingSquare(null); onComplete(state); }, 600);
+        timerRef.current = setTimeout(() => { setMovingSquare(null); onComplete(state); }, SPEAK_LEAD_MS + 600);
       }
     }
     timerRef.current = setTimeout(step, 120);
   }, []);
 
-  function handleAfterLand(movedPlayers: Player[], square: number, pIdx: number) {
+  function handleAfterLand(movedPlayers: Player[], from: number, square: number, pIdx: number) {
     const before    = movedPlayers;
     const afterMark = applyMark(square, movedPlayers);
     const { updated, events } = processAllBingos(afterMark);
@@ -135,17 +139,18 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       setShowBingo({ name: updated[pIdx].name, count: myBingo.count });
       timerRef.current = setTimeout(() => {
         setShowBingo(null);
-        const bonus = Math.min(updated[pIdx].position + myBingo.count * 10, 100);
-        animateMove(updated, pIdx, updated[pIdx].position, bonus, (afterBonus) => {
+        const bonusFrom = updated[pIdx].position;
+        const bonus = Math.min(bonusFrom + myBingo.count * 10, 100);
+        animateMove(updated, pIdx, bonusFrom, bonus, (afterBonus) => {
           const afterMark2 = applyMark(bonus, afterBonus);
           const { updated: u2, events: ev2 } = processAllBingos(afterMark2);
           setPlayers(u2);
           if (ev2.length > 0) setTimeout(() => speakJa(ev2.map(e => u2[e.playerIdx].name + ' ビンゴ').join(' ') + '！'), 300);
-          checkBonusOrProceed(u2, bonus, pIdx);
+          checkBonusOrProceed(u2, bonusFrom, bonus, pIdx);
         });
       }, 2200);
     } else {
-      checkBonusOrProceed(updated, square, pIdx);
+      checkBonusOrProceed(updated, from, square, pIdx);
     }
   }
 
@@ -167,18 +172,26 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         const p = players[currentIdx];
         const from = p.position;
         const to   = Math.min(from + roll, 100);
-        animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, to, currentIdx));
+        animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
       }
     };
     doRoll(0);
   }
 
-  function checkBonusOrProceed(ps: Player[], pos: number, pIdx: number) {
-    if (bonusSquares.has(pos) && pos < 100) {
+  // 移動範囲 (from, to] に最初に現れるキリ番を返す
+  function firstPassedLandmark(from: number, to: number): number | null {
+    for (let n = from + 1; n <= to; n++) {
+      if (isLandmark(n)) return n;
+    }
+    return null;
+  }
+
+  function checkBonusOrProceed(ps: Player[], from: number, pos: number, pIdx: number) {
+    const landmark = firstPassedLandmark(from, pos);
+    if (landmark !== null && pos < 100 && Math.random() < 0.5) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
       setIsAnimating(false);
-      // イントロのあと B/D のミニ問題を出題（正解で ビンゴマス選択へ）
       timerRef.current = setTimeout(() => { setShowBonusIntro(false); setQuiz(makeBonusQuiz()); }, 2000);
     } else {
       checkGameOver(ps, pos);
@@ -290,7 +303,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         </div>
         <div className="flex gap-4">
           <motion.button type="button" whileTap={{ scale: 0.95 }} className="rounded-2xl bg-rose-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#be123c]"
-            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setBonusSquares(new Set()); setQuiz(null); setBonusPlayerIdx(null); setPhase('setup-count'); }}>
+            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setQuiz(null); setBonusPlayerIdx(null); setPhase('setup-count'); }}>
             もう1かい！
           </motion.button>
           <button type="button" onClick={onExit} className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-gray-600 border-2 border-gray-200">おわり</button>
@@ -330,7 +343,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
             <div className="w-full h-full" style={{ display:'grid', gridTemplateRows:'repeat(10,1fr)', gridTemplateColumns:'repeat(10,1fr)', gap:'1px' }}>
               {BOARD_GRID.flatMap((row, ri) => row.map((n, ci) => {
                 const isGoal      = n === 100;
-                const isBonus     = bonusSquares.has(n);
+                const isBonus     = isLandmark(n);
                 const playersHere = playerPositions.get(n) ?? [];
                 const isMoving    = movingSquare === n;
                 const isFlashed   = flashedSquare === n;
