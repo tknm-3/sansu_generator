@@ -23,6 +23,14 @@
   `Level.startFacing` で初期むき指定。`relSolution` で検証、`solveRelative()` が最短手数。
   UI は むきバッジ（`ProgrammingGrid` の `charFacing`）でキャラのむきを表示。
 
+### ぴったり賞（💎 ダイヤ）の 判定 — 単元で ちがう
+- 矢印ならべ・分岐・ゆき/うみ（ループなし そうたい）: `isPerfect`（`result.steps === optimal`）。
+- **ループ/ネスト/proc**: `optimal` は「ならべた ブロック数」（ループ1個=1）なので
+  `isPerfectByBlocks(level, result, usedBlocks)` を つかう（`RelativeAdventurePlay`=`cmds.length`、
+  `ProcAdventurePlay`=main数/なかみ数）。**`isPerfect`(steps基準)では ループ展開で 永遠に 一致せず
+  ダイヤが とれない**（2026-06-04 のバグ。親 SKILL 追記ログ参照）。
+- ループ系ゾーンは maxSlots を ゆるめて「手動でも クリア・ループで ✨ぴったり」の練習ゾーン設計。
+
 難易度の段階分け（easy/normal/…）は**冒険モードには無い**。30問を順番に進む設計。
 （難易度アンロックは矢印ならべ等の他単元の話で、同じ progress.ts 内の別セクション）
 
