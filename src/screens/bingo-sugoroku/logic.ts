@@ -135,7 +135,7 @@ export function firstPassedLandmark(from: number, to: number): number | null {
 /**
  * キリ番（ボーナスマス）のミニ問題を出すか判定。順位でキャッチアップ補正する（ティア制）。
  * - 最下位（同着含む）: キリ番に関与したら必ず発生（びりを後押し）
- * - 最上位（同着含む）: 発生しない（勝ってる人は出さない）
+ * - 最上位（同着含む）: ぴったり止まれば必ず、通り過ぎただけなら 30%
  * - 中間: ぴったり止まれば必ず、通り過ぎただけなら 1/2
  * キリ番を通過も到達もしていない、またはゴール到達時は発生しない。
  * 全員同位置のときは中間ルール扱い。
@@ -148,10 +148,10 @@ export function shouldTriggerLandmarkBonus(
   const maxPos = Math.max(...positions);
   const minPos = Math.min(...positions);
   const middleRule = () => isLandmark(pos) || rng() < 0.5;
-  if (maxPos === minPos) return middleRule();        // 全員同じ位置
-  if (pos === maxPos) return false;                  // トップ
-  if (pos === minPos) return true;                   // びり
-  return middleRule();                               // 中間
+  if (maxPos === minPos) return middleRule();                        // 全員同じ位置
+  if (pos === maxPos) return isLandmark(pos) || rng() < 0.3;        // トップ：ぴったりなら必ず、通過のみなら30%
+  if (pos === minPos) return true;                                   // びり
+  return middleRule();                                               // 中間
 }
 
 /** 数直線推定の正誤判定。target と guess の差が許容内なら正解 */

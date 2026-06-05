@@ -14,6 +14,69 @@ type Phase = 'setup-count' | 'setup-cards' | 'game' | 'gameover';
 
 interface Props { onExit: () => void }
 
+/**
+ * サイコロを振る前に読み上げるセリフを組み立てる。
+ * 現在地・到達できるビンゴ番号・ボーナスマス（キリ番）・ゴールを考慮して
+ * バリエーションのある「いくつが出ると嬉しいかな？」系の文章を返す。
+ */
+export function buildPreRollSpeech(
+  pos: number,
+  reachNums: number[],
+  rng: () => number = Math.random,
+): string {
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
+
+  const prefix = pick([
+    `いまは ${pos} ばんめ。`,
+    `${pos} まいめ だよ。`,
+    `いま ${pos} に いるよ。`,
+  ]);
+
+  const dice = [1, 2, 3, 4, 5, 6] as const;
+  const goalStep  = dice.find(d => pos + d >= 100);
+  const bonusStep = dice.find(d => isLandmark(pos + d));
+  const bingoStep = dice.find(d => reachNums.includes(pos + d));
+
+  if (goalStep !== undefined) {
+    return prefix + pick([
+      `${goalStep} が でたら ゴール！`,
+      `あと ${goalStep} で ゴール！ でるかな？`,
+      `${goalStep} を だそう！ ゴールだよ！`,
+    ]);
+  }
+
+  if (bingoStep !== undefined && bonusStep !== undefined && bingoStep !== bonusStep) {
+    return prefix + pick([
+      `${bingoStep} が でたら ビンゴ！ ${bonusStep} が でたら ボーナスマスだよ！`,
+      `${bingoStep} も ${bonusStep} も でると うれしいな！`,
+      `いくつが でると うれしいかな？`,
+    ]);
+  }
+
+  if (bingoStep !== undefined) {
+    return prefix + pick([
+      `${bingoStep} が でたら ビンゴ！ でるかな？`,
+      `${bingoStep} で ビンゴ！ どきどき！`,
+      `${bingoStep} が でると うれしいな！`,
+    ]);
+  }
+
+  if (bonusStep !== undefined) {
+    return prefix + pick([
+      `${bonusStep} が でたら ボーナスマス！`,
+      `あと ${bonusStep} で キリバン！ でるかな？`,
+      `${bonusStep} を だそう！ キリバンだよ！`,
+    ]);
+  }
+
+  return prefix + pick([
+    `いくつが でるかな？`,
+    `どきどき！ なにが でるかな？`,
+    `いくつ すすめるかな？`,
+    `うんめいの サイコロ！`,
+  ]);
+}
+
 export function BingoSugorokuUnit({ onExit }: Props) {
   // ── セットアップ状態 ──
   const [phase, setPhase]               = useState<Phase>('setup-count');
@@ -175,6 +238,8 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
   function handleRoll() {
     if (isAnimating || phase !== 'game') return;
+    const p = players[currentIdx];
+    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)));
     setIsAnimating(true);
     setDiceShaking(true);
     playSfx('dice');
