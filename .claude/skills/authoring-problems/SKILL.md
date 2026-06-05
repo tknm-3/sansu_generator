@@ -171,3 +171,20 @@ npx vitest run                                          # 全部
   （maxSlots は corners テストに 影響しない）。**proc_a は別**: maxSlots を ゆるめると「てじゅん必須」
   テスト（矢印だけの最短 > maxSlots）が壊れるので 据え置き、ダイヤ修正だけで 達成可能にする。
   maxSlots の値は 一時 vitest で `solveRelative().length <= maxSlots` を確認して 決める。
+- [2026-06-04] 冒険/そうたい×ループ・proc を「足場プリフィル」でチュートリアル化: 「1つずつ ならべても
+  クリアできる」練習ゾーン化だけでは そうたい×ループの 組み立て負荷が のこり 難しかった。対策は
+  **最初から ループ箱＋少しの矢印を おいておき、こどもは のこりを 少し たすだけ**にする 穴埋め足場。
+  ・データ: `AdventureQuest.relPrefill = { cmds?, openLoop? }`（そうたい）/ `procMainPrefill`（proc_a）。
+    `openLoop` は **relSolution の さいごの ループ箱を 途中まで ひらいた もの**（times固定・body先頭ロック）。
+    こどもは のこりの body を たして「✅かんりょう」する。単一ループ・ネスト（内側ループを body に
+    完成させて おく）・列(cmds に前半ブロック)の すべてを openLoop だけで 表現できる（appendのみ）。
+  ・UI（`ArrowAdventureUnit.tsx` の `RelativeAdventurePlay`/`ProcAdventurePlay`）: state を 足場で 初期化、
+    `lockedCmdLen`/`lockedMainLen` 未満は `removeAt` で けせない、🗑️/↺ は 足場まで もどす、ロック分に 🔒。
+  ・**検証**（`adventure.test.ts`）: relPrefill は **relSolution の 接頭辞**で、openLoop の のこり body は
+    1〜3（穴埋め＝全部うまってない／たしすぎない）。procMainPrefill も procMainSolution の 接頭辞。
+    そうたい×ループ4ゾーンは 全問 relPrefill を もつ（取りこぼし防止の coverage テスト）。
+  ・**ぴったり賞**: cmds.length===optimal（ブロック数）の `isPerfectByBlocks` のまま。足場どおり 完成すると
+    トップレベルが relSolution と そろい 💎が とれる（実機で q79=💎クリアまで確認ずみ）。
+  ・落とし穴: スクショ検証で `getByRole('button',{name:/スタート/})` は「スタート」と「▶ スタート」の
+    2つに マッチして 失敗 → **`name:'▶ スタート'` の 完全一致**で 取る。足場の 表示は「🔁×N に 途中まで
+    矢印＋？プレースホルダ」で 出る（renderLoopBuilding の ？）。

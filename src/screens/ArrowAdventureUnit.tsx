@@ -1168,8 +1168,18 @@ function RelativeAdventurePlay({
   const theme = { wall: zone.wall, tile: zone.tile, wallTile: zone.wallTile, board: zone.board };
 
   type LoopBuild = { times: number; body: RelCommand[] };
-  const [cmds, setCmds] = useState<RelCommand[]>([]);
-  const [loopStack, setLoopStack] = useState<LoopBuild[]>([]);
+  // 足場プリフィル: 最初から おいてある（こどもは けせない）ループ箱・矢印。のこりを たすだけ。
+  const hasPrefill = !!quest.relPrefill;
+  const lockedCmdLen = quest.relPrefill?.cmds?.length ?? 0;
+  function freshScaffold(): { cmds: RelCommand[]; loop: LoopBuild[] } {
+    const cmds = quest.relPrefill?.cmds ? [...quest.relPrefill.cmds] : [];
+    const loop = quest.relPrefill?.openLoop
+      ? [{ times: quest.relPrefill.openLoop.times, body: [...quest.relPrefill.openLoop.body] }]
+      : [];
+    return { cmds, loop };
+  }
+  const [cmds, setCmds] = useState<RelCommand[]>(() => freshScaffold().cmds);
+  const [loopStack, setLoopStack] = useState<LoopBuild[]>(() => freshScaffold().loop);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
@@ -1251,6 +1261,7 @@ function RelativeAdventurePlay({
   }
   function removeAt(i: number) {
     if (!canEdit || inLoop) return;
+    if (i < lockedCmdLen) return; // 足場（最初から ある ぶん）は けせない
     playSfx('tap');
     setCmds(cs => cs.filter((_, j) => j !== i));
   }
@@ -1269,14 +1280,22 @@ function RelativeAdventurePlay({
     if (locked) return;
     playSfx('tap');
     runner.reset();
-    setLoopStack([]);
+    // 足場プリフィルが あれば その状態へ もどす（けせない 足場を 失わない）。
+    if (hasPrefill) {
+      const f = freshScaffold();
+      setCmds(f.cmds);
+      setLoopStack(f.loop);
+    } else {
+      setLoopStack([]);
+    }
     setHint(null);
   }
   function handleClearAll() {
     if (!canEdit) return;
     playSfx('tap');
-    setCmds([]);
-    setLoopStack([]);
+    const f = freshScaffold();
+    setCmds(f.cmds);
+    setLoopStack(f.loop);
     runner.reset();
     setHint(null);
   }
@@ -1356,6 +1375,11 @@ function RelativeAdventurePlay({
         <p className="mt-1 text-center text-[11px] font-bold" style={{ color: '#9a7c54' }}>
           💡 「みぎ」「ひだり」は キャラの めの まえ から みた むき！
         </p>
+        {hasPrefill && !locked && (
+          <p className="mt-1 text-center text-[11px] font-bold text-violet-700">
+            🔧 ループ箱は もう おいてあるよ！ ？の ところに のこりの やじるしを たして「✅ かんりょう」しよう
+          </p>
+        )}
       </div>
 
       <div
@@ -1385,11 +1409,21 @@ function RelativeAdventurePlay({
           <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいが ならぶよ</span>
         ) : (
           <>
-            {cmds.map((c, i) => (
-              <span key={i} onClick={() => removeAt(i)} style={{ cursor: inLoop ? 'default' : 'pointer' }}>
-                {renderRelCmd(c, i)}
-              </span>
-            ))}
+            {cmds.map((c, i) => {
+              const isLocked = i < lockedCmdLen;
+              return (
+                <span
+                  key={i}
+                  onClick={() => removeAt(i)}
+                  style={{ cursor: isLocked || inLoop ? 'default' : 'pointer' }}
+                  title={isLocked ? 'これは さいしょから あるよ' : undefined}
+                  className={isLocked ? 'opacity-90' : undefined}
+                >
+                  {isLocked && <span className="mr-0.5 text-[9px]">🔒</span>}
+                  {renderRelCmd(c, i)}
+                </span>
+              );
+            })}
             {inLoop && renderLoopBuilding(0)}
           </>
         )}
@@ -1559,7 +1593,11 @@ function ProcAdventurePlay({
   // proc_a: procDef は fixed。プレイヤーは mainCmds を つくる
   const isProcB = !!quest.procMain;
 
-  const [mainCmds, setMainCmds] = useState<ProcMainCmd[]>([]);
+  // 足場プリフィル（proc_a のみ）: メインプログラムの 先頭を ロックして 最初から おいておく。
+  const procPrefill = !isProcB ? quest.procMainPrefill : undefined;
+  const lockedMainLen = procPrefill?.length ?? 0;
+  const hasProcPrefill = lockedMainLen > 0;
+  const [mainCmds, setMainCmds] = useState<ProcMainCmd[]>(() => (procPrefill ? [...procPrefill] : []));
   const [procBody, setProcBody] = useState<RelDir[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
@@ -1612,6 +1650,7 @@ function ProcAdventurePlay({
   }
   function removeAt(i: number) {
     if (!canEdit) return;
+    if (!isProcB && i < lockedMainLen) return; // 足場（最初から ある ぶん）は けせない
     playSfx('tap');
     if (isProcB) setProcBody((cs) => cs.filter((_, j) => j !== i));
     else setMainCmds((cs) => cs.filter((_, j) => j !== i));
@@ -1643,7 +1682,7 @@ function ProcAdventurePlay({
     if (!canEdit) return;
     playSfx('tap');
     if (isProcB) setProcBody([]);
-    else setMainCmds([]);
+    else setMainCmds(procPrefill ? [...procPrefill] : []); // 足場までは もどす
     runner.reset();
     setHint(null);
   }
@@ -1662,12 +1701,17 @@ function ProcAdventurePlay({
     if (activeCmds.length === 0) {
       return <span className="px-2 text-sm" style={{ color: 'rgba(123,90,58,.5)' }}>ここに めいれいを おいてね</span>;
     }
-    return activeCmds.map((c, i) => (
-      <button key={i} type="button" onClick={() => removeAt(i)}
-        className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm`}>
-        {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
-      </button>
-    ));
+    return activeCmds.map((c, i) => {
+      const isLocked = !isProcB && i < lockedMainLen;
+      return (
+        <button key={i} type="button" onClick={() => removeAt(i)}
+          title={isLocked ? 'これは さいしょから あるよ' : undefined}
+          className={`rounded-lg ${accent.chip} px-2 py-1 text-lg font-bold text-white shadow-sm ${isLocked ? 'opacity-90' : ''}`}>
+          {isLocked && <span className="mr-0.5 text-[9px]">🔒</span>}
+          {typeof c === 'string' ? REL_ICON[c] : CALL_ICON}
+        </button>
+      );
+    });
   }
 
   return (
@@ -1692,6 +1736,11 @@ function ProcAdventurePlay({
         </Ribbon>
         {quest.prompt && (
           <p className="mt-2 text-center text-sm font-bold" style={{ color: SEPIA }}>📜 {quest.prompt}</p>
+        )}
+        {hasProcPrefill && !locked && (
+          <p className="mt-1 text-center text-[11px] font-bold text-orange-700">
+            🔧 はじめの ぶんは もう おいてあるよ！ のこりを たして ゴールへ
+          </p>
         )}
       </div>
 
