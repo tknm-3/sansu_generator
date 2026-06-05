@@ -10,9 +10,16 @@ export interface BigAdditionProblem {
   choices: number[];
 }
 
-export function generateBigAddition(rng: () => number = Math.random): BigAdditionProblem {
-  const a = Math.floor(rng() * 40) + 10;
-  const b = Math.floor(rng() * 40) + 10;
+export function generateBigAddition(
+  rng: () => number = Math.random,
+  opts: { mixed?: boolean } = {},
+): BigAdditionProblem {
+  // mixed: 片方2けた(10-49)、もう片方1けた(1-9)
+  const [a, b] = opts.mixed
+    ? rng() < 0.5
+      ? [Math.floor(rng() * 40) + 10, Math.floor(rng() * 9) + 1]
+      : [Math.floor(rng() * 9) + 1, Math.floor(rng() * 40) + 10]
+    : [Math.floor(rng() * 40) + 10, Math.floor(rng() * 40) + 10];
   const answer = a + b;
   const onesA = a % 10;
   const tensA = Math.floor(a / 10);
