@@ -419,7 +419,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
                       <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-0">
                         {playersHere.map(pi => (
                           <motion.div key={pi} initial={{ scale:0, y:-6 }} animate={{ scale:1, y:0 }} transition={{ type:'spring', stiffness:400, damping:20 }}
-                            className={`leading-none flex-shrink-0 drop-shadow-md ${playersHere.length === 1 ? 'text-[14px]' : 'text-[8px]'}`}>
+                            className={`leading-none flex-shrink-0 drop-shadow-md ${playersHere.length === 1 ? 'text-[20px]' : 'text-[12px]'}`}>
                             {players[pi]?.character ?? '🐶'}
                           </motion.div>
                         ))}
