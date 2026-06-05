@@ -139,10 +139,13 @@ describe('shouldTriggerLandmarkBonus（順位ティア補正）', () => {
     expect(shouldTriggerLandmarkBonus(11, 19, [19, 5, 30])).toBe(false);
     expect(shouldTriggerLandmarkBonus(95, 100, [100, 5, 30])).toBe(false);
   });
-  it('トップ（最上位・同着含む）は発生しない（ぴったり止まっても）', () => {
-    // pos=30 が最大。通り過ぎでも止まりでも false
-    expect(shouldTriggerLandmarkBonus(25, 30, [30, 10, 20])).toBe(false);
-    expect(shouldTriggerLandmarkBonus(28, 32, [32, 10, 20], () => 0)).toBe(false);
+  it('トップ（最上位・同着含む）はぴったりなら必ず発生、通り過ぎは30%', () => {
+    // pos=30 が最大（ぴったりキリ番）→ 必ず true
+    expect(shouldTriggerLandmarkBonus(25, 30, [30, 10, 20])).toBe(true);
+    // pos=32 が最大（通り過ぎ）、rng=0.9 > 0.3 → false
+    expect(shouldTriggerLandmarkBonus(28, 32, [32, 10, 20], () => 0.9)).toBe(false);
+    // pos=32 が最大（通り過ぎ）、rng=0.1 < 0.3 → true
+    expect(shouldTriggerLandmarkBonus(28, 32, [32, 10, 20], () => 0.1)).toBe(true);
   });
   it('びり（最下位・同着含む）はキリ番に関与したら必ず発生', () => {
     // pos=20 が最小。通り過ぎでも（rng=0.99）true
