@@ -12,6 +12,11 @@ import {
   shouldTriggerLandmarkBonus,
   firstPassedLandmark,
   NUMBERLINE_TOLERANCE,
+  makePredictQuiz,
+  rollPredictBonusSteps,
+  shouldTriggerPredictBonus,
+  PREDICT_BONUS_MAX,
+  PREDICT_BONUS_TOLERANCE,
 } from './logic';
 
 describe('generateBonusSquares（キリ番固定）', () => {
@@ -165,5 +170,42 @@ describe('isNumberLineCorrect', () => {
     expect(isNumberLineCorrect(45, 37, 8)).toBe(true);
     expect(isNumberLineCorrect(45, 54, 8)).toBe(false);
     expect(isNumberLineCorrect(45, 30, 8)).toBe(false);
+  });
+});
+
+describe('makePredictQuiz（どこに止まる？予想）', () => {
+  it('target は from + roll（最大100で頭打ち）', () => {
+    expect(makePredictQuiz(23, 4)).toEqual({ from: 23, roll: 4, target: 27, tolerance: PREDICT_BONUS_TOLERANCE });
+    expect(makePredictQuiz(98, 5).target).toBe(100); // 100で頭打ち
+  });
+});
+
+describe('rollPredictBonusSteps（3〜5）', () => {
+  it('rng の境界で 3 と 5 を返す', () => {
+    expect(rollPredictBonusSteps(() => 0)).toBe(3);
+    expect(rollPredictBonusSteps(() => 0.99)).toBe(5);
+  });
+});
+
+describe('shouldTriggerPredictBonus', () => {
+  it('上限回数に達したら出さない', () => {
+    expect(shouldTriggerPredictBonus(0, PREDICT_BONUS_MAX, [10, 20, 30], 14, () => 0)).toBe(false);
+  });
+  it('ゴール到達(to>=100)では出さない', () => {
+    expect(shouldTriggerPredictBonus(0, 0, [98, 20, 30], 100, () => 0)).toBe(false);
+  });
+  it('びり（最下位）は起きやすい（55%）', () => {
+    // pos=10 が最小。rng=0.5 < 0.55 → true、rng=0.6 → false
+    expect(shouldTriggerPredictBonus(0, 0, [10, 50, 80], 15, () => 0.5)).toBe(true);
+    expect(shouldTriggerPredictBonus(0, 0, [10, 50, 80], 15, () => 0.6)).toBe(false);
+  });
+  it('トップ（最上位）は起きにくい（15%）', () => {
+    // pos=80 が最大。rng=0.1 < 0.15 → true、rng=0.2 → false
+    expect(shouldTriggerPredictBonus(2, 0, [10, 50, 80], 85, () => 0.1)).toBe(true);
+    expect(shouldTriggerPredictBonus(2, 0, [10, 50, 80], 85, () => 0.2)).toBe(false);
+  });
+  it('中間は30%', () => {
+    expect(shouldTriggerPredictBonus(1, 0, [10, 50, 80], 55, () => 0.2)).toBe(true);
+    expect(shouldTriggerPredictBonus(1, 0, [10, 50, 80], 55, () => 0.4)).toBe(false);
   });
 });
