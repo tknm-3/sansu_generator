@@ -1506,6 +1506,58 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [], gems: [r(5, 0)], gemEmoji: '🍯', optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
     prompt: '🍯はちみつの ボス！ はちみつを とって くまさんへ（🔁だけ）',
   },
+
+  // ─── 🤖 ロボットこうじょう（adv-q127〜adv-q132）そうたい方向・ループなし ───
+  // キャラの むき が きじゅん。まえへ／みぎをむく／ひだりをむく で ねじ(⚙️)を ひろい でんち(🔋)へ。
+  // optimal は そうたい命令の かず（まわる も 1手）。relSolution は solveRelative() の 最短解。
+  {
+    id: 'adv-q127', zoneId: 'robot', rows: 5, cols: 1, start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward'],
+    optimal: 4, maxSlots: 6,
+    prompt: 'まえへ すすんで でんち🔋へ いこう',
+  },
+  {
+    id: 'adv-q128', zoneId: 'robot', rows: 1, cols: 5, start: r(0, 0), goal: r(0, 4), startFacing: 'right',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward'],
+    optimal: 4, maxSlots: 6,
+    prompt: 'むいている ほうへ すすもう',
+  },
+  {
+    id: 'adv-q129', zoneId: 'robot', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward'],
+    optimal: 7, maxSlots: 10,
+    prompt: 'てっぺんで むきを かえて すすもう',
+  },
+  {
+    id: 'adv-q130', zoneId: 'robot', rows: 3, cols: 3, start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], gems: [r(2, 2)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward'],
+    optimal: 6, maxSlots: 9,
+    prompt: 'ねじ⚙️を とおって でんち🔋へ',
+  },
+  {
+    id: 'adv-q131', zoneId: 'robot', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], gems: [r(3, 3)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward'],
+    optimal: 8, maxSlots: 11,
+    prompt: 'ねじ⚙️を ひろってから ゴールへ',
+  },
+  {
+    id: 'adv-q132', zoneId: 'robot', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [r(2, 2)], gems: [r(4, 4)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward', 'forward'],
+    optimal: 10, maxSlots: 16,
+    prompt: '🤖こうじょうの ボス！ ねじ⚙️を とって でんち🔋へ',
+  },
 ];
 
 /** ゾーン定義を id で ひく */
