@@ -247,7 +247,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     setIsAnimating(true);
     setDiceValue(null);   // 煽りセリフのあいだは 🎲 を見せて結果を伏せる
     setDiceShaking(true); // しゃべっている間も振って期待感を出す
-    playSfx('dice');
 
     // 出目を確定させる本体。煽りセリフを言い切ってから始める
     // （結果が先に出ると「なにが でるかな？」の煽りが間に合わない）。
@@ -255,6 +254,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     const beginRoll = () => {
       if (started) return;
       started = true;
+      playSfx('dice'); // サイコロが回り出す瞬間に鳴らして、音と見た目をそろえる
       const ROLL_TOTAL = 20;
       const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
       const doRoll = (i: number) => {
@@ -564,7 +564,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         <div className="flex flex-col items-center leading-none">
           <motion.div className="text-7xl leading-none select-none"
             animate={diceShaking ? { rotate:[-12,12,-10,10,-6,6,0], scale:[1,1.25,1.1,1.25,1.1,1.2,1] } : diceValue ? { scale:[1.4,1], rotate:[0,0] } : {}}
-            transition={{ duration: diceShaking ? 0.18 : 0.3 }}>
+            transition={diceShaking ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}>
             {diceValue ? DICE_FACE[diceValue] : '🎲'}
           </motion.div>
           {/* 出目の数字（つぶ＝量 と 数字＝記号 を結びつける・提案C） */}
