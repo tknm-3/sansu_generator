@@ -239,27 +239,42 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   function handleRoll() {
     if (isAnimating || phase !== 'game') return;
     const p = players[currentIdx];
-    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)));
     setIsAnimating(true);
-    setDiceShaking(true);
+    setDiceValue(null);   // 煽りセリフのあいだは 🎲 を見せて結果を伏せる
+    setDiceShaking(true); // しゃべっている間も振って期待感を出す
     playSfx('dice');
-    const ROLL_TOTAL = 20;
-    const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
-    const doRoll = (i: number) => {
-      setDiceValue(Math.ceil(Math.random() * 6));
-      if (i < ROLL_TOTAL - 1) {
-        timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
-      } else {
-        const roll = Math.ceil(Math.random() * 6);
-        setDiceValue(roll);
-        setDiceShaking(false);
-        const p = players[currentIdx];
-        const from = p.position;
-        const to   = Math.min(from + roll, 100);
-        animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
-      }
+
+    // 出目を確定させる本体。煽りセリフを言い切ってから始める
+    // （結果が先に出ると「なにが でるかな？」の煽りが間に合わない）。
+    let started = false;
+    const beginRoll = () => {
+      if (started) return;
+      started = true;
+      const ROLL_TOTAL = 20;
+      const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
+      const doRoll = (i: number) => {
+        setDiceValue(Math.ceil(Math.random() * 6));
+        if (i < ROLL_TOTAL - 1) {
+          timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
+        } else {
+          const roll = Math.ceil(Math.random() * 6);
+          setDiceValue(roll);
+          setDiceShaking(false);
+          const cp = players[currentIdx];
+          const from = cp.position;
+          const to   = Math.min(from + roll, 100);
+          animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
+        }
+      };
+      doRoll(0);
     };
-    doRoll(0);
+
+    // 保険: TTS非対応や onend が来ないブラウザでも最大2.5秒で振り始める
+    timerRef.current = setTimeout(beginRoll, 2500);
+    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)), () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      beginRoll();
+    });
   }
 
   function checkBonusOrProceed(ps: Player[], from: number, pos: number, pIdx: number) {
