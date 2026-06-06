@@ -213,14 +213,12 @@ export function isNumberLineCorrect(target: number, guess: number, tolerance: nu
 
 /** 予想ボーナスが一人のゲーム中に起きる最大回数 */
 export const PREDICT_BONUS_MAX = 2;
-/** 予想クイズで正解とみなす許容差（0〜100 のうち ±この値）。タップ精度を考えてやや広め */
-export const PREDICT_BONUS_TOLERANCE = 5;
 
 export interface PredictQuiz {
-  from:      number;  // いまいるマス
-  roll:      number;  // 出た目
-  target:    number;  // 止まるマス（from + roll、最大100）
-  tolerance: number;
+  from:    number;    // いまいるマス
+  roll:    number;    // 出た目
+  target:  number;    // 止まるマス（from + roll、最大100）＝正解
+  choices: number[];  // 4択（target を含む・たし算の答えを選ぶ）
 }
 
 /** 予想ボーナスで余分に進めるマス数（3〜5 のランダム） */
@@ -228,9 +226,28 @@ export function rollPredictBonusSteps(rng: () => number = Math.random): number {
   return 3 + Math.floor(rng() * 3); // 3..5
 }
 
+/**
+ * 「いま from マスめ。roll すすむと？」の4択を作る。
+ * 正解＝from+roll の近く（±1〜3）からダミーを3つ混ぜる。たし算の練習にもなる。
+ * 0〜100 に収め重複なし。
+ */
+export function makePredictChoices(target: number, rng: () => number = Math.random): number[] {
+  const pool = [target + 1, target - 1, target + 2, target - 2, target + 3, target - 3]
+    .filter(v => v >= 1 && v <= 100);
+  const dummies: number[] = [];
+  while (dummies.length < 3 && pool.length > 0) {
+    const idx = Math.floor(rng() * pool.length);
+    dummies.push(pool.splice(idx, 1)[0]);
+  }
+  const cands = [target, ...dummies];
+  const shift = Math.floor(rng() * cands.length);  // 正解の位置をランダムに
+  return cands.map((_, i) => cands[(i + shift) % cands.length]);
+}
+
 /** 「どこに止まる？」予想クイズを作る。target = from + roll（最大100） */
-export function makePredictQuiz(from: number, roll: number): PredictQuiz {
-  return { from, roll, target: Math.min(from + roll, 100), tolerance: PREDICT_BONUS_TOLERANCE };
+export function makePredictQuiz(from: number, roll: number, rng: () => number = Math.random): PredictQuiz {
+  const target = Math.min(from + roll, 100);
+  return { from, roll, target, choices: makePredictChoices(target, rng) };
 }
 
 /**
