@@ -67,14 +67,17 @@ export function NumberLineBar({ players, currentIdx }: Props) {
         ))}
       </div>
 
-      {/* キリ番の目盛り（ベンチマーク） */}
-      <div className="relative h-3 mt-0.5">
-        {LANDMARKS.map(n => (
-          <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
-            <span className="w-px h-1 bg-gray-300" />
-            <span className="text-[8px] leading-none text-gray-400 font-bold">{n === 100 ? '🏁' : n}</span>
-          </div>
-        ))}
+      {/* キリ番の目盛り（ベンチマーク・0/50/100は強調） */}
+      <div className="relative h-4 mt-0.5">
+        {LANDMARKS.map(n => {
+          const major = n === 0 || n === 50 || n === 100;
+          return (
+            <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
+              <span className={major ? 'w-0.5 h-2 rounded-full bg-gray-500' : 'w-0.5 h-1.5 rounded-full bg-gray-400'} />
+              <span className={`leading-none font-bold ${major ? 'text-[11px] text-gray-700' : 'text-[10px] text-gray-500'}`}>{n === 100 ? '🏁' : n}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

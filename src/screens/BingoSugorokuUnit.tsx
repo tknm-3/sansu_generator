@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { speakJa } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
 import { PLAYER_STYLES, DICE_FACE, CHARACTERS, DEFAULT_CHARS, DEFAULT_NAMES, generateRandomBingoNumbers, type Player } from './bingo-sugoroku/types';
-import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, rollBonusSteps, shouldTriggerLandmarkBonus, type BonusQuiz } from './bingo-sugoroku/logic';
+import { BOARD_GRID, markBingoNumber, processAllBingos, getReachNumbers, isLandmark, buildSquareOwnerMap, makeBonusQuiz, rollBonusSteps, shouldTriggerLandmarkBonus, makePredictQuiz, shouldTriggerPredictBonus, rollPredictBonusSteps, type BonusQuiz, type PredictQuiz } from './bingo-sugoroku/logic';
 import { BingoCardDisplay } from './bingo-sugoroku/BingoCardDisplay';
 import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
+import { PredictBonusOverlay } from './bingo-sugoroku/PredictBonus';
 import { SetupCountScreen, SetupCardsScreen } from './bingo-sugoroku/SetupScreens';
 import { GoalOverlay, BonusIntroOverlay, BonusPickOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
 
@@ -104,8 +105,11 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [choosingBonus, setChoosingBonus]   = useState(false);
   const [bonusPlayerIdx, setBonusPlayerIdx] = useState<number | null>(null);
   const [quiz, setQuiz]                     = useState<BonusQuiz | null>(null);
+  const [predictQuiz, setPredictQuiz]       = useState<PredictQuiz | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 予想ボーナスを各プレイヤーが何回使ったか（ゲームごとにリセット・一人 PREDICT_BONUS_MAX 回まで）
+  const predictUsedRef = useRef<number[]>([]);
 
   // ── セットアップ ─────────────────────────────────────────────────────────
 
@@ -133,6 +137,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (setupIdx + 1 < playerCount) {
       startSetupCard(setupIdx + 1);
     } else {
+      predictUsedRef.current = Array(playerCount).fill(0); // 予想ボーナス回数をリセット
       setPhase('game');
     }
   }
@@ -239,27 +244,63 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   function handleRoll() {
     if (isAnimating || phase !== 'game') return;
     const p = players[currentIdx];
-    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)));
     setIsAnimating(true);
-    setDiceShaking(true);
+    setDiceValue(null);   // 煽りセリフのあいだは 🎲 を見せて結果を伏せる
+    setDiceShaking(true); // しゃべっている間も振って期待感を出す
     playSfx('dice');
-    const ROLL_TOTAL = 20;
-    const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
-    const doRoll = (i: number) => {
-      setDiceValue(Math.ceil(Math.random() * 6));
-      if (i < ROLL_TOTAL - 1) {
-        timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
-      } else {
-        const roll = Math.ceil(Math.random() * 6);
-        setDiceValue(roll);
-        setDiceShaking(false);
-        const p = players[currentIdx];
-        const from = p.position;
-        const to   = Math.min(from + roll, 100);
-        animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
-      }
+
+    // 出目を確定させる本体。煽りセリフを言い切ってから始める
+    // （結果が先に出ると「なにが でるかな？」の煽りが間に合わない）。
+    let started = false;
+    const beginRoll = () => {
+      if (started) return;
+      started = true;
+      const ROLL_TOTAL = 20;
+      const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
+      const doRoll = (i: number) => {
+        setDiceValue(Math.ceil(Math.random() * 6));
+        if (i < ROLL_TOTAL - 1) {
+          timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
+        } else {
+          const roll = Math.ceil(Math.random() * 6);
+          setDiceValue(roll);
+          setDiceShaking(false);
+          const cp = players[currentIdx];
+          const from = cp.position;
+          const to   = Math.min(from + roll, 100);
+          // 出た目で「どこに止まる？」予想ボーナスを抽選（負けてる人ほど起きやすい・一人2回まで）
+          const used = predictUsedRef.current[currentIdx] ?? 0;
+          if (shouldTriggerPredictBonus(currentIdx, used, players.map(p => p.position), to)) {
+            predictUsedRef.current[currentIdx] = used + 1;
+            setPredictQuiz(makePredictQuiz(from, roll)); // 移動は予想クイズの回答後に行う
+          } else {
+            animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
+          }
+        }
+      };
+      doRoll(0);
     };
-    doRoll(0);
+
+    // 保険: TTS非対応や onend が来ないブラウザでも最大2.5秒で振り始める
+    timerRef.current = setTimeout(beginRoll, 2500);
+    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)), () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      beginRoll();
+    });
+  }
+
+  /**
+   * 予想ボーナスクイズの回答後。出た目どおりに進み、正解なら 3〜5 マス余分に進む。
+   * （from → from+roll+ボーナス を 1回の移動でつなげて「いっぱい進めた！」感を出す）
+   */
+  function handlePredictAnswer(correct: boolean) {
+    const pq = predictQuiz;
+    setPredictQuiz(null);
+    if (!pq) return;
+    const bonus = correct ? rollPredictBonusSteps() : 0;
+    const from  = pq.from;
+    const to    = Math.min(from + pq.roll + bonus, 100);
+    animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
   }
 
   function checkBonusOrProceed(ps: Player[], from: number, pos: number, pIdx: number) {
@@ -372,7 +413,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         </div>
         <div className="flex gap-4">
           <motion.button type="button" whileTap={{ scale: 0.95 }} className="rounded-2xl bg-rose-500 px-8 py-4 text-xl font-bold text-white shadow-[0_4px_0_#be123c]"
-            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setQuiz(null); setBonusPlayerIdx(null); setPhase('setup-count'); }}>
+            onClick={() => { setPlayers([]); setCurrentIdx(0); setDiceValue(null); setWinner(null); setQuiz(null); setPredictQuiz(null); setBonusPlayerIdx(null); setPhase('setup-count'); }}>
             もう1かい！
           </motion.button>
           <button type="button" onClick={onExit} className="rounded-2xl bg-white px-6 py-4 text-lg font-bold text-gray-600 border-2 border-gray-200">おわり</button>
@@ -395,7 +436,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   // ビンゴカードに含まれるマス → オーナー（プレイヤーインデックス）のリスト
   const squareOwners = buildSquareOwnerMap(players);
 
-  const blocked = isAnimating || showBonusIntro || choosingBonus || !!quiz || !!showGoal;
+  const blocked = isAnimating || showBonusIntro || choosingBonus || !!quiz || !!predictQuiz || !!showGoal;
 
   return (
     <div className="flex h-screen flex-col bg-gradient-to-br from-sky-100 to-rose-50 overflow-hidden">
@@ -536,6 +577,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       <GoalOverlay        show={showGoal} />
       <BonusIntroOverlay  show={showBonusIntro} players={players} bonusPlayerIdx={bonusPlayerIdx} />
       <BonusQuizOverlay   quiz={quiz} player={bonusPlayerIdx !== null ? players[bonusPlayerIdx] : null} styleIdx={bonusPlayerIdx ?? 0} onAnswer={handleQuizAnswer} />
+      <PredictBonusOverlay quiz={predictQuiz} player={current ?? null} styleIdx={currentIdx} onAnswer={handlePredictAnswer} />
       <BonusPickOverlay   show={choosingBonus}  players={players} bonusPlayerIdx={bonusPlayerIdx} onPick={handleBonusPick} />
       <BingoOverlay       show={showBingo} />
     </div>

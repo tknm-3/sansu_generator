@@ -159,6 +159,51 @@ export function isNumberLineCorrect(target: number, guess: number, tolerance: nu
   return Math.abs(target - guess) <= tolerance;
 }
 
+// ── 予想ボーナスチャンス（サイコロ後「どこに止まる？」を数直線で当てる） ──────────
+
+/** 予想ボーナスが一人のゲーム中に起きる最大回数 */
+export const PREDICT_BONUS_MAX = 2;
+/** 予想クイズで正解とみなす許容差（0〜100 のうち ±この値）。タップ精度を考えてやや広め */
+export const PREDICT_BONUS_TOLERANCE = 5;
+
+export interface PredictQuiz {
+  from:      number;  // いまいるマス
+  roll:      number;  // 出た目
+  target:    number;  // 止まるマス（from + roll、最大100）
+  tolerance: number;
+}
+
+/** 予想ボーナスで余分に進めるマス数（3〜5 のランダム） */
+export function rollPredictBonusSteps(rng: () => number = Math.random): number {
+  return 3 + Math.floor(rng() * 3); // 3..5
+}
+
+/** 「どこに止まる？」予想クイズを作る。target = from + roll（最大100） */
+export function makePredictQuiz(from: number, roll: number): PredictQuiz {
+  return { from, roll, target: Math.min(from + roll, 100), tolerance: PREDICT_BONUS_TOLERANCE };
+}
+
+/**
+ * サイコロを振ったあと「どこに止まる？」予想ボーナスを出すか判定。
+ * - すでに上限(PREDICT_BONUS_MAX)回 使った人には出さない
+ * - ゴール到達(to>=100)では出さない（勝ち確の直前に水を差さない）
+ * - 負けている人ほど起きやすい（びり > 中間 > トップ）でキャッチアップを後押し
+ */
+export function shouldTriggerPredictBonus(
+  playerIdx: number, usedCount: number, positions: number[], to: number,
+  rng: () => number = Math.random,
+): boolean {
+  if (usedCount >= PREDICT_BONUS_MAX) return false;
+  if (to >= 100) return false;
+  const pos = positions[playerIdx];
+  const maxPos = Math.max(...positions);
+  const minPos = Math.min(...positions);
+  if (maxPos === minPos) return rng() < 0.3;   // 全員横並び
+  if (pos === minPos)    return rng() < 0.55;  // びり：起きやすい
+  if (pos === maxPos)    return rng() < 0.15;  // トップ：起きにくい
+  return rng() < 0.3;                          // 中間
+}
+
 export function getNewBingos(player: Player): number[] {
   return BINGO_LINES.flatMap((line, i) => {
     if (player.doneLines.includes(i)) return [];

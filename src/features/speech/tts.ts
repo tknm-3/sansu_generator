@@ -49,16 +49,29 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined' && 'speechS
   document.addEventListener('pagehide', cancelSpeech);
 }
 
-/** 日本語で読み上げ。非対応なら何もしない（優雅な劣化） */
-export function speakJa(text: string): void {
-  if (!isSpeechSupported()) return;
+/**
+ * 日本語で読み上げ。非対応なら何もしない（優雅な劣化）。
+ * onEnd を渡すと読み上げ終了（またはエラー・非対応）後に必ず一度だけ呼ぶ。
+ * 「言い切ってから次の演出へ」進めたいとき（例: すごろくの煽りセリフ→サイコロ）に使う。
+ */
+export function speakJa(text: string, onEnd?: () => void): void {
+  if (!isSpeechSupported()) {
+    onEnd?.();
+    return;
+  }
   try {
     const u = new SpeechSynthesisUtterance(speechifyMath(text));
     u.lang = 'ja-JP';
     u.rate = 0.95;
+    if (onEnd) {
+      let done = false;
+      const finish = () => { if (!done) { done = true; onEnd(); } };
+      u.onend = finish;
+      u.onerror = finish;
+    }
     window.speechSynthesis.cancel(); // 連続読み上げの重なり防止
     window.speechSynthesis.speak(u);
   } catch {
-    // 失敗してもアプリは継続
+    onEnd?.(); // 失敗してもアプリは継続
   }
 }
