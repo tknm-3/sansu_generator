@@ -99,14 +99,17 @@ function PredictCard({ quiz, player, styleIdx, onAnswer }: {
           )}
         </button>
 
-        {/* キリ番の目盛り（予想は正確さが要るので数字ラベルは全部出す） */}
-        <div className="relative h-4 mt-1">
-          {LANDMARKS.map(n => (
-            <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
-              <span className="w-px h-1.5 bg-gray-300" />
-              <span className="text-[10px] leading-none text-gray-400 font-bold">{n}</span>
-            </div>
-          ))}
+        {/* キリ番の目盛り（予想は正確さが要るので数字ラベルは全部出す・0/50/100は強調） */}
+        <div className="relative h-7 mt-1">
+          {LANDMARKS.map(n => {
+            const major = n === 0 || n === 50 || n === 100;
+            return (
+              <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
+                <span className={major ? 'w-0.5 h-3 rounded-full bg-gray-500' : 'w-0.5 h-2 rounded-full bg-gray-400'} />
+                <span className={`mt-0.5 leading-none font-bold ${major ? 'text-sm text-gray-700' : 'text-xs text-gray-500'}`}>{n}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
