@@ -5,6 +5,10 @@ import {
   subtractionToBattle,
   cherryCalcToBattle,
   bigAdditionToBattle,
+  bigSubtractionToBattle,
+  multiplicationToBattle,
+  divisionToBattle,
+  divisionRemainderToBattle,
   wordToBattle,
   shapeComposeToBattle,
   shapePatternToBattle,
@@ -30,6 +34,10 @@ describe('battle adapters', () => {
     { name: 'subtraction', fn: subtractionToBattle },
     { name: 'cherryCalc', fn: cherryCalcToBattle },
     { name: 'bigAddition', fn: bigAdditionToBattle },
+    { name: 'bigSubtraction', fn: bigSubtractionToBattle },
+    { name: 'multiplication', fn: multiplicationToBattle },
+    { name: 'division', fn: divisionToBattle },
+    { name: 'divisionRemainder', fn: divisionRemainderToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -67,6 +75,20 @@ describe('battle adapters', () => {
         expect(q.answerIndex).toBeGreaterThanOrEqual(0);
         expect(q.answerIndex).toBeLessThan(3);
       }
+    });
+  });
+
+  describe('divisionRemainder', () => {
+    it('しょうを きく と あまりを きく の 両方が 出る', () => {
+      let askQuotient = false;
+      let askRemainder = false;
+      for (let seed = 1; seed <= 40; seed++) {
+        const q = divisionRemainderToBattle(seededRng(seed));
+        if (q.promptText.includes('あまる')) askRemainder = true;
+        else askQuotient = true;
+      }
+      expect(askQuotient).toBe(true);
+      expect(askRemainder).toBe(true);
     });
   });
 });

@@ -4,6 +4,9 @@ import { generateSubtraction, explainSubtraction } from '../math/subtraction';
 import { missingToTen, makeAnswerChoices, explainMakeTen } from '../math/makeTen';
 import { generateCarryProblem, explainCherry } from '../math/cherryCalc';
 import { generateBigAddition, explainBigAddition } from '../math/bigAddition';
+import { generateBigSubtraction, explainBigSubtraction } from '../math/bigSubtraction';
+import { generateMultiplication, explainMultiplication } from '../math/multiplication';
+import { generateDivision, explainDivision } from '../math/division';
 import { generateWordProblem, type WordVariant, type WordVerdict } from '../math/wordProblem';
 import { generateRotationProblem } from '../geometry/rotation';
 import { generateComposeProblem } from '../geometry/compose';
@@ -94,6 +97,40 @@ export function bigAdditionToBattle(rng: () => number = Math.random): BattleQues
   };
 }
 
+const FOOD_EMOJI = ['🍎', '🍪', '🍓', '🌰', '🍇', '🐟'];
+function pickEmoji(rng: () => number): string {
+  return FOOD_EMOJI[Math.floor(rng() * FOOD_EMOJI.length)];
+}
+
+export function bigSubtractionToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateBigSubtraction(rng, { subtrahendOnesOnly: true });
+  const answer = p.a - p.b;
+  const { choices, answerIndex } = toFourChoices(p.choices, answer, rng);
+  return {
+    unitId: 'big-subtraction',
+    promptText: `${p.a} ー ${p.b} ＝ ？`,
+    visual: { kind: 'equation', text: `${p.a} ー ${p.b}` },
+    choices,
+    answerIndex,
+    explainSteps: explainBigSubtraction(p),
+  };
+}
+
+export function multiplicationToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateMultiplication(rng);
+  const answer = p.a * p.b;
+  const emoji = pickEmoji(rng);
+  const { choices, answerIndex } = toFourChoices(p.choices, answer, rng);
+  return {
+    unitId: 'multiplication',
+    promptText: `${emoji} ${p.b}こずつ ${p.a}つ。ぜんぶで なんこ？`,
+    visual: { kind: 'equation', text: `${p.a} × ${p.b}` },
+    choices,
+    answerIndex,
+    explainSteps: explainMultiplication(p, emoji),
+  };
+}
+
 const WORD_VERDICTS: WordVerdict[] = ['ぴったり', 'たりない', 'あまる'];
 
 export function wordToBattle(
@@ -108,6 +145,54 @@ export function wordToBattle(
     visual: { kind: 'word', text: p.text, emoji: p.emoji },
     choices,
     answerIndex: choices.indexOf(p.verdict),
+    explainSteps: [],
+  };
+}
+
+export function divisionToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateDivision(rng); // あまりなし
+  const emoji = pickEmoji(rng);
+  const { choices, answerIndex } = toFourChoices(p.choices, p.quotient, rng);
+  return {
+    unitId: 'division',
+    promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？`,
+    visual: { kind: 'equation', text: `${p.dividend} ÷ ${p.divisor}` },
+    choices,
+    answerIndex,
+    explainSteps: explainDivision(p, emoji),
+  };
+}
+
+export function divisionRemainderToBattle(rng: () => number = Math.random): BattleQuestion {
+  // あまりが かならず でる わりざん（しょうを きく / あまりを きく の どちらか）
+  let p = generateDivision(rng, true);
+  for (let i = 0; i < 20 && p.remainder === 0; i++) p = generateDivision(rng, true);
+  const emoji = pickEmoji(rng);
+  const eqText = `${p.dividend} ÷ ${p.divisor}`;
+  if (rng() < 0.5) {
+    // 「なんこ あまる？」… 0..divisor-1 を ちゅうしんに 4択
+    const set = new Set<number>([p.remainder]);
+    for (let v = 0; v < p.divisor && set.size < 4; v++) set.add(v);
+    let extra = p.divisor;
+    while (set.size < 4) set.add(extra++);
+    const arr = [...set].sort(() => rng() - 0.5);
+    return {
+      unitId: 'division-remainder',
+      promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると なんこ あまる？`,
+      visual: { kind: 'equation', text: eqText },
+      choices: arr.map(String),
+      answerIndex: arr.indexOf(p.remainder),
+      explainSteps: [],
+    };
+  }
+  // 「ひとり なんこ？」… しょうを きく（あまりは のこる）
+  const { choices, answerIndex } = toFourChoices(p.choices, p.quotient, rng);
+  return {
+    unitId: 'division-remainder',
+    promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？（あまりが でるよ）`,
+    visual: { kind: 'equation', text: eqText },
+    choices,
+    answerIndex,
     explainSteps: [],
   };
 }
@@ -169,6 +254,10 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'subtraction': subtractionToBattle,
   'cherry-calc': cherryCalcToBattle,
   'big-addition': bigAdditionToBattle,
+  'big-subtraction': bigSubtractionToBattle,
+  'multiplication': multiplicationToBattle,
+  'division': divisionToBattle,
+  'division-remainder': divisionRemainderToBattle,
   'word-addition': (rng) => wordToBattle('word-addition', rng),
   'word-subtraction': (rng) => wordToBattle('word-subtraction', rng),
   'shape-rotation': shapeRotationToBattle,
