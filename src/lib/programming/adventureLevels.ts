@@ -1472,6 +1472,40 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [r(2, 2), r(3, 3)], gems: [r(0, 5), r(5, 0)], gemEmoji: FISH, optimal: 20, maxSlots: 30, goalEmoji: HOME,
     prompt: '🌊みずうみの ボス！ さかな2ひきを あつめて おうちへ',
   },
+
+  // ─── 🍯 はちみつの き（adv-q121〜adv-q126）loopOnly・くりかえし入門 ───
+  // ふつうの 1マス矢印は つかわず、🔁ループ箱（おなじ むき×2〜5）だけで すすむ。
+  // はちみつ(🍯)を ひろって くまさん(🐻)へ。optimal は solve() の 実測値。
+  {
+    id: 'adv-q121', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 0),
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'おなじ むきを 🔁ループに まとめて すすもう',
+  },
+  {
+    id: 'adv-q122', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: '🔁ループ箱で まっすぐ くまさんへ',
+  },
+  {
+    id: 'adv-q123', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'した と みぎ、2つの 🔁ループで いけるかな',
+  },
+  {
+    id: 'adv-q124', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], gems: [r(4, 0)], gemEmoji: '🍯', optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'はちみつ🍯を とってから くまさんへ（🔁だけ）',
+  },
+  {
+    id: 'adv-q125', zoneId: 'honey', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'むきを かえて 🔁ループで のぼろう',
+  },
+  {
+    id: 'adv-q126', zoneId: 'honey', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [], gems: [r(5, 0)], gemEmoji: '🍯', optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: '🍯はちみつの ボス！ はちみつを とって くまさんへ（🔁だけ）',
+  },
 ];
 
 /** ゾーン定義を id で ひく */
