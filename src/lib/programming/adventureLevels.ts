@@ -1558,6 +1558,59 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     optimal: 10, maxSlots: 16,
     prompt: '🤖こうじょうの ボス！ ねじ⚙️を とって でんち🔋へ',
   },
+
+  // ─── 🍭 おかしの くに（adv-q133〜adv-q138）もしも分岐・穴埋め ───
+  // キャンディ(🍬)が かべ。「<むき> に すすめなかったら…」の ルールを 穴埋めで えらんで ケーキ(🎂)へ。
+  // 盤面は くもの てんごく（検証ずみ）の 一意解配置を ベースに、テーマだけ おかしに かえた もの。
+  // 穴の 一意解・最短一致は adventure.test.ts が 自動検証する。
+  {
+    id: 'adv-q133', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 2)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'どっちに すすめないか しらべよう「[？] に すすめなかったら ↓、すすめたら →」',
+  },
+  {
+    id: 'adv-q134', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(2, 0)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめなかったら どっちへ？「↓ に すすめなかったら [？]、すすめたら ↓」',
+  },
+  {
+    id: 'adv-q135', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
+    walls: [r(0, 1)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめるとき どっちへ？「← に すすめなかったら ↓、すすめたら [？]」',
+  },
+  {
+    id: 'adv-q136', zoneId: 'candy', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(3, 0)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'up', thenDir: 'right', elseDir: 'up', holeSensor: true, holeThen: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: 'うえへ のぼろう！「[？] に すすめなかったら [？]、すすめたら ↑」',
+  },
+  {
+    id: 'adv-q137', zoneId: 'candy', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 2)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true, holeElse: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: 'すすめないとき・すすめるとき！「→ に すすめなかったら [？]、すすめたら [？]」',
+  },
+  {
+    id: 'adv-q138', zoneId: 'candy', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 1), r(2, 4)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: '🍭おかしの ボス！ぜんぶ うめてゴール「[？] に すすめなかったら [？]、すすめたら [？]」',
+  },
 ];
 
 /** ゾーン定義を id で ひく */
