@@ -51,6 +51,9 @@ export function rollBonusSteps(rng: () => number = Math.random): number {
 /** 数直線推定で「正解」とみなす許容差（0〜100 のうち ±この値）。やさしめに広く取る */
 export const NUMBERLINE_TOLERANCE = 8;
 
+/** 「だれとだれの差」クイズで使うコマ情報（数直線に並べて見せる） */
+export interface QuizPlayerRef { name: string; char: string; pos: number }
+
 export type BonusQuiz =
   | { kind: 'compare'; a: number; b: number; answer: number }   // 大きいのはどっち？
   // ◯◯はどのへん？ labels = 目盛りの「数字」を見せるキリ番（目盛線は全部出す・間引きで難化）
@@ -58,7 +61,10 @@ export type BonusQuiz =
   // ◯◯ は どっちに ちかい？（がい数の芽。low/high は両どなりのキリ番）
   | { kind: 'nearest'; value: number; low: number; high: number; answer: number }
   // ◯◯ より 10 おおきい/ちいさい かずは？（位取りの感覚・3択）
-  | { kind: 'plusten'; base: number; delta: 10 | -10; answer: number; choices: number[] };
+  | { kind: 'plusten'; base: number; delta: 10 | -10; answer: number; choices: number[] }
+  // だれとだれは なんマス はなれてる？（実際のコマ位置の差・数直線で数える・3択）
+  // a は数直線で左（pos 小）、b は右（pos 大）。answer = b.pos - a.pos。
+  | { kind: 'distance'; a: QuizPlayerRef; b: QuizPlayerRef; answer: number; choices: number[] };
 
 /** 大小比較の問題を1つ作る。a≠b で answer は大きいほう（提案B）。
  * b は a からのオフセットで作るため、rng が定数でも必ず a≠b になりループしない。 */
@@ -117,12 +123,56 @@ export function makePlusTenQuiz(rng: () => number = Math.random): BonusQuiz {
   return { kind: 'plusten', base, delta, answer, choices };
 }
 
-/** ボーナスマスで出す問題をランダムに作る（4タイプから・難しめに寄せる） */
-export function makeBonusQuiz(rng: () => number = Math.random): BonusQuiz {
+/**
+ * 「だれとだれは なんマス はなれてる？」の3択を作る（答え＝差）。
+ * まちがいの候補は「数えまちがい」(±1〜2) と「位取りまちがい」(±10) を1つずつ混ぜる。
+ * 数直線を見て数えれば解けるので、紛らわしくしすぎない。0〜100に収め重複なし。
+ */
+export function makeDistanceChoices(answer: number, rng: () => number = Math.random): number[] {
+  // 位取りずれ（十の位ちがい）。+10 が範囲外になるのは answer>90 のときだけで、その場合 -10 は安全。
+  const tenOff = answer + 10 <= 100 ? answer + 10 : answer - 10;
+  // 数えずれ。answer と tenOff に被らない近い数から1つ。
+  const oneCands = [answer + 1, answer - 1, answer + 2, answer - 2]
+    .filter(v => v >= 1 && v <= 100 && v !== answer && v !== tenOff);
+  const oneOff = oneCands[Math.floor(rng() * oneCands.length)];
+  const cands = [answer, tenOff, oneOff];
+  const shift = Math.floor(rng() * 3);                    // 並び順をランダムに
+  return cands.map((_, i) => cands[(i + shift) % 3]);
+}
+
+/**
+ * 「だれとだれは なんマス はなれてる？」を作る（実際のコマ位置の差・提案B/数直線連動）。
+ * 位置の異なる2人をランダムに選び、数直線で左(pos小)=a / 右(pos大)=b に並べる。
+ * 位置がみんな同じ（差が作れない）ときは null を返す（呼び出し側でほかのタイプにフォールバック）。
+ */
+export function makeDistanceQuiz(
+  players: QuizPlayerRef[], rng: () => number = Math.random,
+): Extract<BonusQuiz, { kind: 'distance' }> | null {
+  const pairs: [number, number][] = [];
+  for (let i = 0; i < players.length; i++)
+    for (let j = i + 1; j < players.length; j++)
+      if (players[i].pos !== players[j].pos) pairs.push([i, j]);
+  if (pairs.length === 0) return null;
+  const [i, j] = pairs[Math.floor(rng() * pairs.length)];
+  const [a, b] = players[i].pos < players[j].pos ? [players[i], players[j]] : [players[j], players[i]];
+  const answer = b.pos - a.pos;
+  return { kind: 'distance', a, b, answer, choices: makeDistanceChoices(answer, rng) };
+}
+
+/**
+ * ボーナスマスで出す問題をランダムに作る（5タイプから・難しめに寄せる）。
+ * players（実際のコマ位置）を渡すと「だれとだれの差」も候補に入る。
+ * 渡さない／差が作れない（全員同じ位置）ときは従来の4タイプから出す。
+ */
+export function makeBonusQuiz(
+  players?: QuizPlayerRef[], rng: () => number = Math.random,
+): BonusQuiz {
+  const distance = players ? makeDistanceQuiz(players, rng) : null;
   const r = rng();
-  if (r < 0.25) return makeCompareQuiz(rng);
-  if (r < 0.50) return makeNearestQuiz(rng);
-  if (r < 0.75) return makePlusTenQuiz(rng);
+  if (distance && r < 0.30) return distance;
+  if (r < 0.50) return makeCompareQuiz(rng);
+  if (r < 0.65) return makeNearestQuiz(rng);
+  if (r < 0.80) return makePlusTenQuiz(rng);
   return makeNumberLineQuiz(rng);
 }
 

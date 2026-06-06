@@ -310,7 +310,9 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       setShowBonusIntro(true);
       setBonusPlayerIdx(pIdx);
       setIsAnimating(false);
-      timerRef.current = setTimeout(() => { setShowBonusIntro(false); setQuiz(makeBonusQuiz()); }, 2000);
+      // 「だれとだれの差」用に、いまのコマ位置・名前・キャラを渡す（実際の盤面で出題）
+      const refs = ps.map(p => ({ name: p.name, char: p.character, pos: p.position }));
+      timerRef.current = setTimeout(() => { setShowBonusIntro(false); setQuiz(makeBonusQuiz(refs)); }, 2000);
     } else {
       checkGameOver(ps);
     }
