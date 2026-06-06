@@ -309,6 +309,56 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'おおきな だいとうげが めのまえに たちはだかる。\nネストしたループで パターンを つかみ、\nすくない めいれいで いただきを めざそう！',
     wall: '🪨', tile: 'bg-indigo-50', wallTile: 'bg-indigo-200', board: 'bg-indigo-100/80',
   },
+  {
+    id: 'lake',
+    name: 'きらめく みずうみ',
+    emoji: '🌊',
+    bg: 'from-cyan-100 to-blue-50',
+    accent: 'sky',
+    tagline: 'みずうみの ほとりを すすもう',
+    story: 'しずかな みずうみに やってきた。\nはすの はを よけて、むこうぎしの おうちを めざそう！',
+    wall: '🪷', tile: 'bg-cyan-50', wallTile: 'bg-cyan-200', board: 'bg-cyan-200/70',
+  },
+  {
+    id: 'honey',
+    name: 'はちみつの き',
+    emoji: '🍯',
+    bg: 'from-yellow-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'おなじ うごきは ループで まとめよう',
+    story: 'あまい においの はちみつの き。\nおなじ みちが ずっと つづくよ。🔁ループ箱で くまさんへ とどけよう！',
+    wall: '🐝', tile: 'bg-yellow-50', wallTile: 'bg-yellow-200', board: 'bg-yellow-200/70',
+  },
+  {
+    id: 'robot',
+    name: 'ロボットこうじょう',
+    emoji: '🤖',
+    bg: 'from-slate-100 to-zinc-50',
+    accent: 'indigo',
+    tagline: 'ロボットの むきを かえて すすもう',
+    story: 'ぴかぴかの ロボットこうじょう。\nロボットが むいている ほうを きじゅんに、まえへ すすんだり むきを かえたりして ゴールへ！',
+    wall: '🚧', tile: 'bg-slate-50', wallTile: 'bg-slate-300', board: 'bg-slate-200/70',
+  },
+  {
+    id: 'candy',
+    name: 'おかしの くに',
+    emoji: '🍭',
+    bg: 'from-pink-100 to-rose-50',
+    accent: 'violet',
+    tagline: 'すすめない とき どっちへ いく？',
+    story: 'あまーい おかしの くに。\nキャンディの かべに すすめない とき、「もしも」の ルールで かしこく すすもう！',
+    wall: '🍬', wallName: 'キャンディ', tile: 'bg-pink-50', wallTile: 'bg-pink-200', board: 'bg-pink-200/70',
+  },
+  {
+    id: 'toy',
+    name: 'おもちゃ こうじょう',
+    emoji: '🎁',
+    bg: 'from-rose-100 to-orange-50',
+    accent: 'amber',
+    tagline: 'てじゅんの なかみを かんがえよう！',
+    story: 'たのしい おもちゃ こうじょう。\nメインプログラムは もう できてるよ。\nてじゅんの なかみを きめて、おもちゃを かんせいさせよう！',
+    wall: '🧸', tile: 'bg-rose-50', wallTile: 'bg-rose-200', board: 'bg-rose-100/80',
+  },
 ];
 
 const GEM = '🎁';
@@ -325,6 +375,13 @@ const MUSHROOM = '🍄';
 const COTTAGE = '🏡';
 const SHELL = '🐚';
 const TRIDENT = '🔱';
+const FISH = '🐟';
+const BEAR = '🐻';
+const COG = '⚙️';
+const BATTERY = '🔋';
+const CHOCO = '🍫';
+const CAKE = '🎂';
+const TOYGOAL = '🪀';
 
 /**
  * 問題集の 本体。配列の じゅんばん = 出題じゅんばん。
@@ -1381,6 +1438,39 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     optimal: 1, maxSlots: 15,
     relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }] } },
     prompt: 'ボス！ むきに ちゅうい。「みぎをむく」を たして かんりょう',
+  },
+
+  // ─── 🌊 きらめく みずうみ（adv-q115〜adv-q120）矢印ならべ・さかなあつめ ───
+  // はす(🪷)を よけて さかな(🐟)を ひろい、むこうぎしの おうちへ。やさしめの 道作り。
+  {
+    id: 'adv-q115', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [], gems: [r(0, 3)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'さかな🐟を ひろって おうちへ いこう',
+  },
+  {
+    id: 'adv-q116', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(1, 1), r(2, 2)], gems: [r(3, 0)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'はすの はを よけて さかな🐟を とりに いこう',
+  },
+  {
+    id: 'adv-q117', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 2), r(3, 2)], gems: [r(0, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'みちを よく みて さかな🐟を とろう',
+  },
+  {
+    id: 'adv-q118', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], gems: [r(2, 0), r(2, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'さかな🐟が 2ひき！ ぜんぶ ひろって おうちへ',
+  },
+  {
+    id: 'adv-q119', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 1), r(3, 3)], gems: [r(2, 2)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'まんなかの さかな🐟を とおって おうちへ',
+  },
+  {
+    id: 'adv-q120', zoneId: 'lake', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(2, 2), r(3, 3)], gems: [r(0, 5), r(5, 0)], gemEmoji: FISH, optimal: 20, maxSlots: 30, goalEmoji: HOME,
+    prompt: '🌊みずうみの ボス！ さかな2ひきを あつめて おうちへ',
   },
 ];
 
