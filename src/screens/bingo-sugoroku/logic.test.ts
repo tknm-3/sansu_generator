@@ -18,7 +18,6 @@ import {
   rollPredictBonusSteps,
   shouldTriggerPredictBonus,
   PREDICT_BONUS_MAX,
-  PREDICT_BONUS_TOLERANCE,
 } from './logic';
 
 describe('generateBonusSquares（キリ番固定）', () => {
@@ -231,8 +230,22 @@ describe('isNumberLineCorrect', () => {
 
 describe('makePredictQuiz（どこに止まる？予想）', () => {
   it('target は from + roll（最大100で頭打ち）', () => {
-    expect(makePredictQuiz(23, 4)).toEqual({ from: 23, roll: 4, target: 27, tolerance: PREDICT_BONUS_TOLERANCE });
+    expect(makePredictQuiz(23, 4).target).toBe(27);
     expect(makePredictQuiz(98, 5).target).toBe(100); // 100で頭打ち
+  });
+  it('4択を返し、正解(target)を含む', () => {
+    const q = makePredictQuiz(23, 4);
+    expect(q.choices).toHaveLength(4);
+    expect(q.choices).toContain(27);
+    expect(new Set(q.choices).size).toBe(4);            // 重複なし
+    q.choices.forEach(c => expect(c).toBeGreaterThanOrEqual(1));
+    q.choices.forEach(c => expect(c).toBeLessThanOrEqual(100));
+  });
+  it('target=100（頭打ち）でも4択そろう', () => {
+    const q = makePredictQuiz(98, 5);
+    expect(q.choices).toHaveLength(4);
+    expect(q.choices).toContain(100);
+    q.choices.forEach(c => expect(c).toBeLessThanOrEqual(100));
   });
 });
 

@@ -23,21 +23,27 @@ interface Props { onExit: () => void }
 export function buildPreRollSpeech(
   pos: number,
   reachNums: number[],
+  others: { name: string; pos: number }[] = [],
   rng: () => number = Math.random,
 ): string {
   const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
 
   const prefix = pick([
-    `いまは ${pos} ばんめ。`,
-    `${pos} まいめ だよ。`,
-    `いま ${pos} に いるよ。`,
+    `いまは ${pos} マスめ。`,
+    `${pos} マスめ だよ。`,
+    `いま ${pos} マスめ。`,
   ]);
 
   const dice = [1, 2, 3, 4, 5, 6] as const;
   const goalStep  = dice.find(d => pos + d >= 100);
   const bonusStep = dice.find(d => isLandmark(pos + d));
   const bingoStep = dice.find(d => reachNums.includes(pos + d));
+  // 6以内で前の人にぴったり並べる（＝追いつける）目。一番近い前の人を狙う。
+  const ahead = others.filter(o => o.pos > pos).sort((a, b) => a.pos - b.pos);
+  const catchTarget = ahead.find(o => o.pos - pos <= 6);
+  const catchStep = catchTarget ? catchTarget.pos - pos : undefined;
 
+  // ゴールが見えたら最優先で煽る
   if (goalStep !== undefined) {
     return prefix + pick([
       `${goalStep} が でたら ゴール！`,
@@ -46,35 +52,30 @@ export function buildPreRollSpeech(
     ]);
   }
 
-  if (bingoStep !== undefined && bonusStep !== undefined && bingoStep !== bonusStep) {
-    return prefix + pick([
-      `${bingoStep} が でたら ビンゴ！ ${bonusStep} が でたら ボーナスマスだよ！`,
-      `${bingoStep} も ${bonusStep} も でると うれしいな！`,
-      `いくつが でると うれしいかな？`,
-    ]);
-  }
-
+  // 該当する「うれしい目」を全部あつめて、その中からランダムに1つ言う（毎回ちがう煽りに）
+  const lines: string[] = [];
   if (bingoStep !== undefined) {
-    return prefix + pick([
-      `${bingoStep} が でたら ビンゴ！ でるかな？`,
-      `${bingoStep} で ビンゴ！ どきどき！`,
-      `${bingoStep} が でると うれしいな！`,
-    ]);
+    lines.push(`${bingoStep} が でたら ビンゴの マスが あるよ！`);
+    lines.push(`${bingoStep} で ビンゴ！ どきどき！`);
+    lines.push(`${bingoStep} が でると ビンゴに ちかづくよ！`);
   }
-
   if (bonusStep !== undefined) {
-    return prefix + pick([
-      `${bonusStep} が でたら ボーナスマス！`,
-      `あと ${bonusStep} で キリバン！ でるかな？`,
-      `${bonusStep} を だそう！ キリバンだよ！`,
-    ]);
+    lines.push(`${bonusStep} が でたら ボーナスマス！`);
+    lines.push(`${bonusStep} で キリバン！ でるかな？`);
   }
+  if (catchStep !== undefined && catchTarget) {
+    lines.push(`${catchStep} が でたら ${catchTarget.name} に おいつけるよ！`);
+    lines.push(`${catchStep} で ${catchTarget.name} に ならべる！ がんばれ！`);
+  }
+  if (lines.length > 0) return prefix + pick(lines);
 
+  // なにも目立つ目がなければ ふつうの煽り
   return prefix + pick([
     `いくつが でるかな？`,
     `どきどき！ なにが でるかな？`,
     `いくつ すすめるかな？`,
     `うんめいの サイコロ！`,
+    `おおきいめ でるかな？`,
   ]);
 }
 
@@ -243,54 +244,36 @@ export function BingoSugorokuUnit({ onExit }: Props) {
 
   function handleRoll() {
     if (isAnimating || phase !== 'game') return;
-    const p = players[currentIdx];
     setIsAnimating(true);
-    setDiceValue(null);   // 煽りセリフのあいだは 🎲 を見せて結果を伏せる
-    setDiceShaking(true); // しゃべっている間も振って期待感を出す
+    setDiceValue(null);
+    setDiceShaking(true);
+    playSfx('dice'); // 振り始めと同時に鳴らして、音と見た目をそろえる
 
-    // 出目を確定させる本体。煽りセリフを言い切ってから始める
-    // （結果が先に出ると「なにが でるかな？」の煽りが間に合わない）。
-    let started = false;
-    const beginRoll = () => {
-      if (started) return;
-      started = true;
-      playSfx('dice'); // サイコロが回り出す瞬間に鳴らして、音と見た目をそろえる
-      const ROLL_TOTAL = 20;
-      const getDelay = (i: number) => i < 8 ? 55 : i < 14 ? 100 : 170;
-      const doRoll = (i: number) => {
-        setDiceValue(Math.ceil(Math.random() * 6));
-        if (i < ROLL_TOTAL - 1) {
-          timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
+    // 煽りセリフは手番が回ってきたときに言い切っているので、待たずに短く振る。
+    const ROLL_TOTAL = 12;
+    const getDelay = (i: number) => i < 6 ? 45 : i < 10 ? 80 : 130;
+    const doRoll = (i: number) => {
+      setDiceValue(Math.ceil(Math.random() * 6));
+      if (i < ROLL_TOTAL - 1) {
+        timerRef.current = setTimeout(() => doRoll(i + 1), getDelay(i));
+      } else {
+        const roll = Math.ceil(Math.random() * 6);
+        setDiceValue(roll);
+        setDiceShaking(false);
+        const cp = players[currentIdx];
+        const from = cp.position;
+        const to   = Math.min(from + roll, 100);
+        // 出た目で「どこに止まる？」予想ボーナスを抽選（負けてる人ほど起きやすい・一人2回まで）
+        const used = predictUsedRef.current[currentIdx] ?? 0;
+        if (shouldTriggerPredictBonus(currentIdx, used, players.map(p => p.position), to)) {
+          predictUsedRef.current[currentIdx] = used + 1;
+          setPredictQuiz(makePredictQuiz(from, roll)); // 移動は予想クイズの回答後に行う
         } else {
-          const roll = Math.ceil(Math.random() * 6);
-          setDiceValue(roll);
-          setDiceShaking(false);
-          const cp = players[currentIdx];
-          const from = cp.position;
-          const to   = Math.min(from + roll, 100);
-          // 出た目で「どこに止まる？」予想ボーナスを抽選（負けてる人ほど起きやすい・一人2回まで）
-          const used = predictUsedRef.current[currentIdx] ?? 0;
-          if (shouldTriggerPredictBonus(currentIdx, used, players.map(p => p.position), to)) {
-            predictUsedRef.current[currentIdx] = used + 1;
-            setPredictQuiz(makePredictQuiz(from, roll)); // 移動は予想クイズの回答後に行う
-          } else {
-            animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
-          }
+          animateMove(players, currentIdx, from, to, mp => handleAfterLand(mp, from, to, currentIdx));
         }
-      };
-      doRoll(0);
+      }
     };
-
-    // 保険: TTS非対応や onend が来ないブラウザでも最大2.5秒で振り始める。
-    // 専用のローカル変数で持つ。timerRef は beginRoll 内の出目アニメに使い回すので、
-    // ここで timerRef を clear すると進行中のサイコロ演出を止めてしまう
-    // （読み上げが2.5秒を超えると保険タイマー→出目アニメが先に走り、その後の
-    //   onEnd コールバックが timerRef を消してコマが動かなくなるバグになる）。
-    const fallbackTimer = setTimeout(beginRoll, 2500);
-    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)), () => {
-      clearTimeout(fallbackTimer);
-      beginRoll();
-    });
+    doRoll(0);
   }
 
   /**
@@ -386,6 +369,19 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   }
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  // 手番が回ってきたら、その人の現在地・嬉しい目をすぐ読み上げて期待感を出す。
+  // （サイコロを振る前に言い切るので、振ったあとは待たずに出目を出せる。）
+  // currentIdx / phase が変わったときだけ読む。players を依存に入れるとコマ移動の
+  // たびに読み直してしまうため、あえて currentIdx 時点の値をクロージャで使う。
+  useEffect(() => {
+    if (phase !== 'game' || winner) return;
+    const p = players[currentIdx];
+    if (!p) return;
+    const others = players.filter((_, i) => i !== currentIdx).map(o => ({ name: o.name, pos: o.position }));
+    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p), others));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIdx, phase]);
 
   // ── フェーズ別レンダー ───────────────────────────────────────────────────
 
@@ -564,7 +560,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
         <div className="flex flex-col items-center leading-none">
           <motion.div className="text-7xl leading-none select-none"
             animate={diceShaking ? { rotate:[-12,12,-10,10,-6,6,0], scale:[1,1.25,1.1,1.25,1.1,1.2,1] } : diceValue ? { scale:[1.4,1], rotate:[0,0] } : {}}
-            transition={diceShaking ? { duration: 0.45, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}>
+            transition={diceShaking ? { duration: 0.3, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.3 }}>
             {diceValue ? DICE_FACE[diceValue] : '🎲'}
           </motion.div>
           {/* 出目の数字（つぶ＝量 と 数字＝記号 を結びつける・提案C） */}

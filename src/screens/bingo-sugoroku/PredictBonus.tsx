@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { speakJa } from '../../features/speech/tts';
 import { playSfx } from '../../features/sound/sfx';
 import { PLAYER_STYLES, type Player } from './types';
-import { isNumberLineCorrect, type PredictQuiz } from './logic';
+import { type PredictQuiz } from './logic';
 
-const LANDMARKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 const RESULT_MS = 2200;
 
 interface Props {
@@ -19,32 +18,20 @@ function PredictCard({ quiz, player, styleIdx, onAnswer }: {
   quiz: PredictQuiz; player: Player; styleIdx: number; onAnswer: (correct: boolean) => void;
 }) {
   const s = PLAYER_STYLES[styleIdx % PLAYER_STYLES.length];
-  const trackRef = useRef<HTMLButtonElement>(null);
-  const [guess, setGuess] = useState<number | null>(null);
-  const [judged, setJudged] = useState(false);
-  const correct = guess !== null && isNumberLineCorrect(quiz.target, guess, quiz.tolerance);
+  const [chosen, setChosen] = useState<number | null>(null);
 
   useEffect(() => {
-    speakJa(`いま ${quiz.from}。${quiz.roll} すすむと どこ？`);
+    speakJa(`いま ${quiz.from} マスめ。${quiz.roll} すすむと？`);
   }, [quiz.from, quiz.roll]);
 
-  function placeFromClientX(clientX: number) {
-    const el = trackRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    setGuess(Math.round(frac * 100));
-  }
-
-  function confirm() {
-    if (guess === null || judged) return;
-    setJudged(true);
+  function pick(value: number) {
+    if (chosen !== null) return;
+    setChosen(value);
+    const correct = value === quiz.target;
     playSfx(correct ? 'correct' : 'wrong');
     speakJa(correct ? 'せいかい！ ボーナスで すすめるよ！' : `${quiz.target} だね`);
     setTimeout(() => onAnswer(correct), RESULT_MS);
   }
-
-  const pct = (n: number) => `${n}%`;
 
   return (
     <>
@@ -53,77 +40,50 @@ function PredictCard({ quiz, player, styleIdx, onAnswer }: {
         {player.character} {player.name}・ボーナスチャンス！
       </div>
 
-      {/* 今いるマスと出た目をはっきり見せる（要件: 何マスにいて何が出たか表示） */}
-      <div className="flex items-center justify-center gap-2 mb-1">
+      {/* いまいるマスと出た目をはっきり見せる */}
+      <div className="flex items-center justify-center gap-2 mb-3">
         <span className="rounded-xl bg-gray-100 px-3 py-1 text-lg font-bold text-gray-700">
-          いま <span className={`${s.text}`}>{quiz.from}</span> マス
+          いま <span className={s.text}>{quiz.from}</span> マスめ
         </span>
         <span className="rounded-xl bg-amber-100 px-3 py-1 text-lg font-bold text-amber-700">
           🎲 {quiz.roll} が でた！
         </span>
       </div>
+
       <div className="text-2xl font-bold text-gray-800 mb-1">
         {quiz.roll} すすむと どこに とまる？
       </div>
-      <div className="text-sm text-gray-400 mb-5">すうじの ばしょを タップしてね</div>
-
-      <div className="relative pt-8 pb-6 px-1">
-        {/* 今いるコマ（スタート地点）を数直線に表示 */}
-        <div className="absolute top-0 -translate-x-1/2 flex flex-col items-center" style={{ left: pct(quiz.from) }}>
-          <span className="block text-xl leading-none drop-shadow">{player.character}</span>
-          <span className="text-[10px] leading-none font-bold text-gray-400">いま</span>
-        </div>
-        {/* 自分のこたえ（コマ） */}
-        {guess !== null && (
-          <div className="absolute top-1 -translate-x-1/2" style={{ left: pct(guess) }}>
-            <span className="block text-2xl leading-none drop-shadow">🔻</span>
-          </div>
-        )}
-        {/* 正解の位置（判定後に表示） */}
-        {judged && (
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-            className="absolute -translate-x-1/2" style={{ left: pct(quiz.target), bottom: 4 }}>
-            <span className="block text-xl leading-none">⭐</span>
-          </motion.div>
-        )}
-
-        {/* 数直線（クリックで配置） */}
-        <button type="button" ref={trackRef} disabled={judged}
-          onClick={(e) => !judged && placeFromClientX(e.clientX)}
-          className="relative block w-full h-4 rounded-full bg-gray-200 cursor-pointer">
-          {/* 今いる位置までを薄く塗る（量感の足場） */}
-          <span className="absolute top-0 left-0 h-full rounded-full bg-gray-300" style={{ width: pct(quiz.from) }} />
-          {guess !== null && (
-            <span className={`absolute top-0 left-0 h-full rounded-full ${s.bg} ${judged && !correct ? 'opacity-40' : ''}`}
-              style={{ width: pct(guess) }} />
-          )}
-        </button>
-
-        {/* キリ番の目盛り（予想は正確さが要るので数字ラベルは全部出す・0/50/100は強調） */}
-        <div className="relative h-7 mt-1">
-          {LANDMARKS.map(n => {
-            const major = n === 0 || n === 50 || n === 100;
-            return (
-              <div key={n} className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: pct(n) }}>
-                <span className={major ? 'w-0.5 h-3 rounded-full bg-gray-500' : 'w-0.5 h-2 rounded-full bg-gray-400'} />
-                <span className={`mt-0.5 leading-none font-bold ${major ? 'text-sm text-gray-700' : 'text-xs text-gray-500'}`}>{n}</span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="text-sm text-gray-400 mb-5">
+        {quiz.from} ＋ {quiz.roll} は いくつ？
       </div>
 
-      {!judged ? (
-        <motion.button type="button" disabled={guess === null}
-          whileTap={guess !== null ? { scale: 0.95 } : undefined} onClick={confirm}
-          className={`mt-2 w-full rounded-2xl py-3 text-xl font-bold text-white transition-all
-            ${guess === null ? 'bg-gray-300 cursor-not-allowed' : `${s.bg} shadow-[0_4px_0_rgba(0,0,0,0.2)]`}`}>
-          これ！
-        </motion.button>
-      ) : (
+      {/* 4択（たし算の答えを選ぶ） */}
+      <div className="grid grid-cols-2 gap-3">
+        {quiz.choices.map((n, i) => {
+          const isAnswer = n === quiz.target;
+          const isChosen = chosen === n;
+          const revealed = chosen !== null;
+          const cls = !revealed
+            ? `bg-white border-2 ${s.border} ${s.text} hover:scale-105`
+            : isAnswer
+            ? 'bg-emerald-500 text-white border-2 border-emerald-600'
+            : isChosen
+            ? 'bg-gray-200 text-gray-400 border-2 border-gray-300'
+            : 'bg-white text-gray-300 border-2 border-gray-200';
+          return (
+            <motion.button key={i} type="button" disabled={revealed}
+              whileTap={!revealed ? { scale: 0.92 } : undefined} onClick={() => pick(n)}
+              className={`rounded-3xl py-6 text-4xl font-black shadow transition-all ${cls}`}>
+              {n}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {chosen !== null && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className={`mt-2 text-xl font-bold ${correct ? 'text-emerald-600' : 'text-orange-500'}`}>
-          {correct ? 'せいかい！🎉 ボーナスで すすめる！' : `おしい！${quiz.target} に とまるよ`}
+          className={`mt-4 text-xl font-bold ${chosen === quiz.target ? 'text-emerald-600' : 'text-orange-500'}`}>
+          {chosen === quiz.target ? 'せいかい！🎉 ボーナスで すすめる！' : `おしい！こたえは ${quiz.target}`}
         </motion.div>
       )}
     </>
@@ -131,8 +91,8 @@ function PredictCard({ quiz, player, styleIdx, onAnswer }: {
 }
 
 /**
- * 予想ボーナスチャンス。サイコロを振ったあと「いま from マス・roll が出た。
- * どこに とまる？」を数直線で当てる。正解すると親が 3〜5 マス ボーナスで進める。
+ * 予想ボーナスチャンス。サイコロを振ったあと「いま from マスめ。roll すすむと？」を
+ * 4択（たし算 from+roll の答え）で当てる。正解すると親が 3〜5 マス ボーナスで進める。
  * 文言は「まちがい」と言わず後押しする（authoring-problems のルール）。
  */
 export function PredictBonusOverlay({ quiz, player, styleIdx, onAnswer }: Props) {
