@@ -281,10 +281,14 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       doRoll(0);
     };
 
-    // 保険: TTS非対応や onend が来ないブラウザでも最大2.5秒で振り始める
-    timerRef.current = setTimeout(beginRoll, 2500);
+    // 保険: TTS非対応や onend が来ないブラウザでも最大2.5秒で振り始める。
+    // 専用のローカル変数で持つ。timerRef は beginRoll 内の出目アニメに使い回すので、
+    // ここで timerRef を clear すると進行中のサイコロ演出を止めてしまう
+    // （読み上げが2.5秒を超えると保険タイマー→出目アニメが先に走り、その後の
+    //   onEnd コールバックが timerRef を消してコマが動かなくなるバグになる）。
+    const fallbackTimer = setTimeout(beginRoll, 2500);
     speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)), () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      clearTimeout(fallbackTimer);
       beginRoll();
     });
   }
