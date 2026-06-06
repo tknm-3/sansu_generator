@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { speakJa } from '../../features/speech/tts';
 import { playSfx } from '../../features/sound/sfx';
 import { PLAYER_STYLES, type Player } from './types';
-import { isNumberLineCorrect, type BonusQuiz } from './logic';
+import { isNumberLineCorrect, type BonusQuiz, type QuizPlayerRef } from './logic';
 
 interface Props {
   quiz: BonusQuiz | null;
@@ -292,6 +292,91 @@ function PlusTenQuiz({
   );
 }
 
+// ── だれとだれは なんマス はなれてる？（差・数直線で数える・3択） ──────────────
+
+function PlayerPiece({ p, side }: { p: QuizPlayerRef; side: 'top' | 'bottom' }) {
+  // コマ（絵文字）と マス番号フキダシを数直線の pos% に置く。上下にずらして重なりを避ける
+  return (
+    <div className="absolute -translate-x-1/2 flex flex-col items-center" style={{ left: `${p.pos}%`, [side === 'top' ? 'bottom' : 'top']: '100%' }}>
+      {side === 'bottom' && <span className="block w-0.5 h-2 bg-gray-400" />}
+      <span className="text-2xl leading-none drop-shadow">{p.char}</span>
+      <span className="text-xs font-bold text-gray-600 leading-none">{p.pos}</span>
+      {side === 'top' && <span className="block w-0.5 h-2 bg-gray-400" />}
+    </div>
+  );
+}
+
+function DistanceQuiz({
+  quiz, styleIdx, onAnswer,
+}: {
+  quiz: Extract<BonusQuiz, { kind: 'distance' }>;
+  styleIdx: number;
+  onAnswer: (correct: boolean) => void;
+}) {
+  const s = PLAYER_STYLES[styleIdx % PLAYER_STYLES.length];
+  const [chosen, setChosen] = useState<number | null>(null);
+  const pct = (n: number) => `${n}%`;
+
+  useEffect(() => { speakJa(`${quiz.a.name} と ${quiz.b.name} は なんマス はなれてる？`); }, [quiz.a.name, quiz.b.name]);
+
+  function pick(value: number) {
+    if (chosen !== null) return;
+    setChosen(value);
+    const correct = value === quiz.answer;
+    playSfx(correct ? 'correct' : 'wrong');
+    speakJa(correct ? 'せいかい！' : `${quiz.answer} マス はなれてるよ`);
+    setTimeout(() => onAnswer(correct), RESULT_MS);
+  }
+
+  return (
+    <>
+      <div className="text-2xl font-bold text-gray-800 mb-1">
+        <span className="text-3xl">{quiz.a.char}</span> と <span className="text-3xl">{quiz.b.char}</span> は
+        <br />なんマス はなれてる？
+      </div>
+      <div className="text-sm text-gray-400 mb-7">すうじを かぞえてみてね</div>
+
+      {/* 2人のコマを置いた数直線。あいだ（差）を色で強調 */}
+      <div className="relative pt-9 pb-9 px-1">
+        <div className="relative block w-full h-4 rounded-full bg-gray-200">
+          <span className="absolute top-0 h-full rounded-full opacity-70"
+            style={{ left: pct(quiz.a.pos), width: pct(quiz.b.pos - quiz.a.pos), background: s.hex }} />
+          <PlayerPiece p={quiz.a} side="top" />
+          <PlayerPiece p={quiz.b} side="bottom" />
+        </div>
+      </div>
+
+      <div className="flex items-stretch justify-center gap-3">
+        {quiz.choices.map((n, i) => {
+          const isAnswer = n === quiz.answer;
+          const isChosen = chosen === n;
+          const revealed = chosen !== null;
+          const cls = !revealed
+            ? `bg-white border-2 ${s.border} ${s.text} hover:scale-105`
+            : isAnswer
+            ? 'bg-emerald-500 text-white border-2 border-emerald-600'
+            : isChosen
+            ? 'bg-gray-200 text-gray-400 border-2 border-gray-300'
+            : 'bg-white text-gray-300 border-2 border-gray-200';
+          return (
+            <motion.button key={i} type="button" disabled={revealed}
+              whileTap={!revealed ? { scale: 0.92 } : undefined} onClick={() => pick(n)}
+              className={`flex-1 max-w-[6rem] rounded-3xl py-6 text-4xl font-black shadow transition-all ${cls}`}>
+              {n}
+            </motion.button>
+          );
+        })}
+      </div>
+      {chosen !== null && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className={`mt-4 text-xl font-bold ${chosen === quiz.answer ? 'text-emerald-600' : 'text-orange-500'}`}>
+          {chosen === quiz.answer ? 'せいかい！🎉' : `${quiz.answer} マス はなれてるね`}
+        </motion.div>
+      )}
+    </>
+  );
+}
+
 /**
  * ボーナスマスのミニ問題オーバーレイ（提案B: 大小比較 / 提案D: 数直線推定）。
  * 正解すると onAnswer(true)（→ ビンゴマス選択へ）。不正解は onAnswer(false)。
@@ -313,6 +398,7 @@ export function BonusQuizOverlay({ quiz, player, styleIdx, onAnswer }: Props) {
             {quiz.kind === 'compare'    ? <CompareQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
              : quiz.kind === 'nearest'  ? <NearestQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
              : quiz.kind === 'plusten'  ? <PlusTenQuiz    quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
+             : quiz.kind === 'distance' ? <DistanceQuiz   quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />
              :                            <NumberLineQuiz quiz={quiz} styleIdx={styleIdx} onAnswer={onAnswer} />}
           </motion.div>
         </motion.div>

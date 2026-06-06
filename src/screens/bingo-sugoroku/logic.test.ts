@@ -7,6 +7,8 @@ import {
   makeBonusQuiz,
   makeNearestQuiz,
   makePlusTenQuiz,
+  makeDistanceQuiz,
+  makeDistanceChoices,
   isNumberLineCorrect,
   rollBonusSteps,
   shouldTriggerLandmarkBonus,
@@ -62,10 +64,64 @@ describe('makeNumberLineQuiz（数直線推定）', () => {
   });
 });
 
-describe('makeBonusQuiz（B/D ランダム）', () => {
-  it('rng<0.5 で compare、>=0.5 で numberline', () => {
-    expect(makeBonusQuiz(() => 0.1).kind).toBe('compare');
-    expect(makeBonusQuiz(() => 0.9).kind).toBe('numberline');
+describe('makeBonusQuiz（ランダム）', () => {
+  it('players なしなら distance は出ない（rng<0.5 で compare、>=0.8 で numberline）', () => {
+    expect(makeBonusQuiz(undefined, () => 0.1).kind).toBe('compare');
+    expect(makeBonusQuiz(undefined, () => 0.9).kind).toBe('numberline');
+  });
+  it('players ありで rng<0.3 なら distance、差が作れる', () => {
+    const players = [
+      { name: 'こども', char: '🐶', pos: 12 },
+      { name: 'パパ',   char: '🐱', pos: 40 },
+    ];
+    expect(makeBonusQuiz(players, () => 0.1).kind).toBe('distance');
+  });
+  it('players が全員同じ位置なら distance にフォールバックしない', () => {
+    const players = [
+      { name: 'こども', char: '🐶', pos: 30 },
+      { name: 'パパ',   char: '🐱', pos: 30 },
+    ];
+    expect(makeBonusQuiz(players, () => 0.1).kind).toBe('compare');
+  });
+});
+
+describe('makeDistanceQuiz（だれとだれの差）', () => {
+  it('位置の異なる2人から左(pos小)=a / 右(pos大)=b・answer=差', () => {
+    const players = [
+      { name: 'こども', char: '🐶', pos: 55 },
+      { name: 'パパ',   char: '🐱', pos: 23 },
+    ];
+    const q = makeDistanceQuiz(players, () => 0);
+    if (!q) throw new Error('distance のはず');
+    expect(q.a.pos).toBeLessThan(q.b.pos);
+    expect(q.answer).toBe(q.b.pos - q.a.pos);
+    expect(q.choices).toContain(q.answer);
+    expect(q.choices).toHaveLength(3);
+    expect(new Set(q.choices).size).toBe(3);
+  });
+  it('全員同じ位置なら null', () => {
+    const players = [
+      { name: 'こども', char: '🐶', pos: 30 },
+      { name: 'パパ',   char: '🐱', pos: 30 },
+    ];
+    expect(makeDistanceQuiz(players, () => 0)).toBe(null);
+  });
+});
+
+describe('makeDistanceChoices（差の3択）', () => {
+  it('answer を含む3つ・重複なし・0〜100', () => {
+    for (let answer = 1; answer <= 99; answer++) {
+      for (const r of [0, 0.3, 0.6, 0.99]) {
+        const cs = makeDistanceChoices(answer, () => r);
+        expect(cs).toContain(answer);
+        expect(cs).toHaveLength(3);
+        expect(new Set(cs).size).toBe(3);
+        for (const c of cs) {
+          expect(c).toBeGreaterThanOrEqual(0);
+          expect(c).toBeLessThanOrEqual(100);
+        }
+      }
+    }
   });
 });
 

@@ -52,3 +52,45 @@ describe('BonusQuizOverlay（数直線推定）', () => {
     expect(screen.getByText(/どのへん/)).toBeInTheDocument();
   });
 });
+
+describe('BonusQuizOverlay（だれとだれの差）', () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.runOnlyPendingTimers(); vi.useRealTimers(); cleanup(); });
+
+  const quiz: BonusQuiz = {
+    kind: 'distance',
+    a: { name: 'こども', char: '🦊', pos: 20 },
+    b: { name: 'パパ',   char: '🐼', pos: 50 },
+    answer: 30,
+    choices: [29, 30, 40],
+  };
+
+  it('「なんマス はなれてる？」と2人のコマ・マス番号を表示する', () => {
+    render(<BonusQuizOverlay quiz={quiz} player={player} styleIdx={0} onAnswer={vi.fn()} />);
+    expect(screen.getByText(/なんマス はなれてる/)).toBeInTheDocument();
+    // 見出しと数直線の両方にコマが出る（だから getAllBy）
+    expect(screen.getAllByText('🦊').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('🐼').length).toBeGreaterThan(0);
+    expect(screen.getByText('20')).toBeInTheDocument();   // a のマス番号
+    expect(screen.getByText('50')).toBeInTheDocument();   // b のマス番号
+  });
+
+  it('正しい差を選ぶと せいかい・onAnswer(true)', () => {
+    const onAnswer = vi.fn();
+    render(<BonusQuizOverlay quiz={quiz} player={player} styleIdx={0} onAnswer={onAnswer} />);
+    fireEvent.click(screen.getByRole('button', { name: '30' }));
+    expect(screen.getByText(/せいかい/)).toBeInTheDocument();
+    vi.advanceTimersByTime(2000);
+    expect(onAnswer).toHaveBeenCalledWith(true);
+  });
+
+  it('ちがう差を選ぶと 後押し文言・onAnswer(false)', () => {
+    const onAnswer = vi.fn();
+    render(<BonusQuizOverlay quiz={quiz} player={player} styleIdx={0} onAnswer={onAnswer} />);
+    fireEvent.click(screen.getByRole('button', { name: '40' }));
+    expect(screen.getByText(/30 マス はなれてるね/)).toBeInTheDocument();
+    expect(screen.queryByText(/せいかい/)).not.toBeInTheDocument();
+    vi.advanceTimersByTime(2000);
+    expect(onAnswer).toHaveBeenCalledWith(false);
+  });
+});
