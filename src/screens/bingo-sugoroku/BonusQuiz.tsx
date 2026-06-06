@@ -334,7 +334,17 @@ function DistanceQuiz({
         <span className="text-3xl">{quiz.a.char}</span> と <span className="text-3xl">{quiz.b.char}</span> は
         <br />なんマス はなれてる？
       </div>
-      <div className="text-sm text-gray-400 mb-7">すうじを かぞえてみてね</div>
+      <div className="text-sm text-gray-400 mb-3">すうじを かぞえてみてね</div>
+
+      {/* それぞれが何マス目にいるかをはっきり示す（数直線だけだと読み取りにくい） */}
+      <div className="flex items-center justify-center gap-3 mb-2">
+        {[quiz.a, quiz.b].map((p, i) => (
+          <span key={i} className="flex items-center gap-1 rounded-xl bg-gray-100 px-3 py-1.5 text-lg font-bold text-gray-700">
+            <span className="text-2xl leading-none">{p.char}</span>
+            <span className="text-gray-900">{p.pos}</span> マスめ
+          </span>
+        ))}
+      </div>
 
       {/* 2人のコマを置いた数直線。あいだ（差）を色で強調 */}
       <div className="relative pt-9 pb-9 px-1">

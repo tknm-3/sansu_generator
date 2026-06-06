@@ -71,8 +71,9 @@ describe('BonusQuizOverlay（だれとだれの差）', () => {
     // 見出しと数直線の両方にコマが出る（だから getAllBy）
     expect(screen.getAllByText('🦊').length).toBeGreaterThan(0);
     expect(screen.getAllByText('🐼').length).toBeGreaterThan(0);
-    expect(screen.getByText('20')).toBeInTheDocument();   // a のマス番号
-    expect(screen.getByText('50')).toBeInTheDocument();   // b のマス番号
+    // マス番号はカードと数直線の両方に出る（だから getAllBy）
+    expect(screen.getAllByText('20').length).toBeGreaterThan(0);   // a のマス番号
+    expect(screen.getAllByText('50').length).toBeGreaterThan(0);   // b のマス番号
   });
 
   it('正しい差を選ぶと せいかい・onAnswer(true)', () => {

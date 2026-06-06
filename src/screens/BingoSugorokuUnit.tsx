@@ -23,6 +23,7 @@ interface Props { onExit: () => void }
 export function buildPreRollSpeech(
   pos: number,
   reachNums: number[],
+  others: { name: string; pos: number }[] = [],
   rng: () => number = Math.random,
 ): string {
   const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
@@ -37,7 +38,12 @@ export function buildPreRollSpeech(
   const goalStep  = dice.find(d => pos + d >= 100);
   const bonusStep = dice.find(d => isLandmark(pos + d));
   const bingoStep = dice.find(d => reachNums.includes(pos + d));
+  // 6以内で前の人にぴったり並べる（＝追いつける）目。一番近い前の人を狙う。
+  const ahead = others.filter(o => o.pos > pos).sort((a, b) => a.pos - b.pos);
+  const catchTarget = ahead.find(o => o.pos - pos <= 6);
+  const catchStep = catchTarget ? catchTarget.pos - pos : undefined;
 
+  // ゴールが見えたら最優先で煽る
   if (goalStep !== undefined) {
     return prefix + pick([
       `${goalStep} が でたら ゴール！`,
@@ -46,35 +52,30 @@ export function buildPreRollSpeech(
     ]);
   }
 
-  if (bingoStep !== undefined && bonusStep !== undefined && bingoStep !== bonusStep) {
-    return prefix + pick([
-      `${bingoStep} が でたら ビンゴ！ ${bonusStep} が でたら ボーナスマスだよ！`,
-      `${bingoStep} も ${bonusStep} も でると うれしいな！`,
-      `いくつが でると うれしいかな？`,
-    ]);
-  }
-
+  // 該当する「うれしい目」を全部あつめて、その中からランダムに1つ言う（毎回ちがう煽りに）
+  const lines: string[] = [];
   if (bingoStep !== undefined) {
-    return prefix + pick([
-      `${bingoStep} が でたら ビンゴ！ でるかな？`,
-      `${bingoStep} で ビンゴ！ どきどき！`,
-      `${bingoStep} が でると うれしいな！`,
-    ]);
+    lines.push(`${bingoStep} が でたら ビンゴの マスが あるよ！`);
+    lines.push(`${bingoStep} で ビンゴ！ どきどき！`);
+    lines.push(`${bingoStep} が でると ビンゴに ちかづくよ！`);
   }
-
   if (bonusStep !== undefined) {
-    return prefix + pick([
-      `${bonusStep} が でたら ボーナスマス！`,
-      `あと ${bonusStep} で キリバン！ でるかな？`,
-      `${bonusStep} を だそう！ キリバンだよ！`,
-    ]);
+    lines.push(`${bonusStep} が でたら ボーナスマス！`);
+    lines.push(`${bonusStep} で キリバン！ でるかな？`);
   }
+  if (catchStep !== undefined && catchTarget) {
+    lines.push(`${catchStep} が でたら ${catchTarget.name} に おいつけるよ！`);
+    lines.push(`${catchStep} で ${catchTarget.name} に ならべる！ がんばれ！`);
+  }
+  if (lines.length > 0) return prefix + pick(lines);
 
+  // なにも目立つ目がなければ ふつうの煽り
   return prefix + pick([
     `いくつが でるかな？`,
     `どきどき！ なにが でるかな？`,
     `いくつ すすめるかな？`,
     `うんめいの サイコロ！`,
+    `おおきいめ でるかな？`,
   ]);
 }
 
@@ -377,7 +378,8 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     if (phase !== 'game' || winner) return;
     const p = players[currentIdx];
     if (!p) return;
-    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p)));
+    const others = players.filter((_, i) => i !== currentIdx).map(o => ({ name: o.name, pos: o.position }));
+    speakJa(buildPreRollSpeech(p.position, getReachNumbers(p), others));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIdx, phase]);
 
