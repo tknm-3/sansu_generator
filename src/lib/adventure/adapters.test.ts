@@ -127,17 +127,22 @@ describe('数直線わたり(numberLine)', () => {
   });
 });
 
-describe('みつもりめいじん(estimate)', () => {
-  it('estimate-pile を持ち、正解は count に最も近い 10の倍数', () => {
+describe('かぞえる もり(estimate-pile)', () => {
+  it('estimate-pile を持ち、正解は 正確な count・選択肢4つは重複なし', () => {
     for (let seed = 1; seed <= 40; seed++) {
       const q = estimateToBattle(seededRng(seed));
       expect(q.visual?.kind).toBe('estimate-pile');
       if (q.visual?.kind !== 'estimate-pile') throw new Error('kind mismatch');
       const { count } = q.visual;
-      const nearestTen = Math.round(count / 10) * 10;
-      expect(q.choices[q.answerIndex]).toBe(String(nearestTen));
-      // 選択肢は すべて 10の倍数
-      for (const c of q.choices) expect(Number(c) % 10).toBe(0);
+      // 正解は 正確な こ数
+      expect(q.choices[q.answerIndex]).toBe(String(count));
+      expect(q.choices).toHaveLength(4);
+      expect(new Set(q.choices).size).toBe(4);
+      // 選択肢は 妥当な範囲（1..99）
+      for (const c of q.choices) {
+        expect(Number(c)).toBeGreaterThanOrEqual(1);
+        expect(Number(c)).toBeLessThanOrEqual(99);
+      }
     }
   });
 });
