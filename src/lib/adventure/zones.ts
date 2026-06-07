@@ -54,6 +54,21 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     tint: 'rgba(200,80,100,.22)',
   },
   {
+    // 前半（10づくり・たし・ひき・さくらんぼ）を まぜて おさらい
+    // ＝間隔をあけた くりかえし＋いろんな しゅるいを 交互に（spacing / interleaving）
+    id: 'zone-review-basics',
+    name: 'おさらいの ひろば',
+    emoji: '🧮',
+    bgFrom: 'from-emerald-100',
+    bgTo: 'to-teal-200',
+    unitIds: ['make-ten', 'addition', 'subtraction', 'cherry-calc'],
+    layerCount: 8,
+    tagline: 'いままでの たしひきを まぜて おさらい',
+    story: 'ひろばで いままでの ちからを ためそう。\n10づくりも たしざんも ひきざんも、\nまぜて とくと もっと つよくなるよ！',
+    wall: '🍀',
+    tint: 'rgba(60,170,140,.22)',
+  },
+  {
     id: 'zone-bigadd',
     name: 'ふたけたの まち',
     emoji: '🏘️',
