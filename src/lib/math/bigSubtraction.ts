@@ -10,9 +10,22 @@ export interface BigSubtractionProblem {
   choices: number[];
 }
 
-export function generateBigSubtraction(rng: () => number = Math.random): BigSubtractionProblem {
-  const b = Math.floor(rng() * 40) + 10;
-  const a = b + Math.floor(rng() * 40) + 1;
+export function generateBigSubtraction(
+  rng: () => number = Math.random,
+  opts: { subtrahendOnesOnly?: boolean } = {},
+): BigSubtractionProblem {
+  let a: number;
+  let b: number;
+  if (opts.subtrahendOnesOnly) {
+    // ふたけた － ひとけた。くりさがりが かならず おきる やさしい もんだい
+    b = Math.floor(rng() * 8) + 2; // 2..9
+    const tA = Math.floor(rng() * 3) + 1; // じゅうのくらい 1..3
+    const oA = Math.floor(rng() * b); // いちのくらい 0..b-1 → かならず くりさがる
+    a = tA * 10 + oA;
+  } else {
+    b = Math.floor(rng() * 40) + 10;
+    a = b + Math.floor(rng() * 40) + 1;
+  }
   const answer = a - b;
   const onesA = a % 10;
   const tensA = Math.floor(a / 10);
