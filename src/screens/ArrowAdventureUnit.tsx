@@ -217,6 +217,12 @@ const REGION_TINT: Record<string, string> = {
   starbase: 'rgba(90,100,200,.30)',
   windmill: 'rgba(70,160,210,.28)',
   craft:    'rgba(220,160,70,.28)',
+  lava:     'rgba(230,110,60,.30)',
+  beach:    'rgba(220,180,80,.28)',
+  flower:   'rgba(210,90,170,.28)',
+  rock:     'rgba(120,170,70,.28)',
+  night:    'rgba(80,90,170,.30)',
+  leaf:     'rgba(90,160,110,.28)',
 };
 
 interface TownStop {

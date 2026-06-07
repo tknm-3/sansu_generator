@@ -399,6 +399,66 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'どうぐを つくる ふしぎな こうぼう。\nメインプログラムは できてるよ。\nてじゅん(📦)の なかみを きめて、どうぐを かんせいさせよう！',
     wall: '🔩', tile: 'bg-amber-50', wallTile: 'bg-amber-200', board: 'bg-amber-100/80',
   },
+  {
+    id: 'lava',
+    name: 'ようがんの どうくつ',
+    emoji: '🌋',
+    bg: 'from-orange-100 to-red-50',
+    accent: 'orange',
+    tagline: 'ようがんを よけて ほうせきを あつめよう',
+    story: 'あつい ようがんの どうくつ。\nようがん🔥を よけながら、ほうせき💎を ぜんぶ ひろって おうちへ かえろう！',
+    wall: '🔥', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-200/70',
+  },
+  {
+    id: 'beach',
+    name: 'すなはまの みち',
+    emoji: '🏖️',
+    bg: 'from-amber-100 to-yellow-50',
+    accent: 'amber',
+    tagline: 'なみうちぎわで ほうせきさがし',
+    story: 'きらきら ひかる すなはま。\nやしのき🌴を よけて、ほうせき💎を あつめながら すすもう！',
+    wall: '🌴', tile: 'bg-amber-50', wallTile: 'bg-amber-200', board: 'bg-amber-100/80',
+  },
+  {
+    id: 'flower',
+    name: 'はなばたけ',
+    emoji: '🌸',
+    bg: 'from-fuchsia-100 to-pink-50',
+    accent: 'violet',
+    tagline: 'おはなの あいだを すすもう',
+    story: 'いいにおいの はなばたけ。\nチューリップ🌷の あいだを とおって、ほうせき💎を ぜんぶ あつめよう！',
+    wall: '🌷', tile: 'bg-fuchsia-50', wallTile: 'bg-fuchsia-200', board: 'bg-fuchsia-200/70',
+  },
+  {
+    id: 'rock',
+    name: 'いわやまの とりで',
+    emoji: '⛰️',
+    bg: 'from-lime-100 to-green-50',
+    accent: 'lime',
+    tagline: 'いわを よけて てっぺんへ',
+    story: 'たかい いわやまの とりで。\nおおきな いわ🪨を よけながら、ほうせき💎を ひろって おうちへ！',
+    wall: '🪨', tile: 'bg-lime-50', wallTile: 'bg-lime-200', board: 'bg-lime-200/70',
+  },
+  {
+    id: 'night',
+    name: 'よぞらの まち',
+    emoji: '🌃',
+    bg: 'from-indigo-100 to-slate-50',
+    accent: 'indigo',
+    tagline: 'よるの まちで ほうせきさがし',
+    story: 'しずかな よぞらの まち。\nビル🏢の あいだを とおって、ひかる ほうせき💎を あつめよう！',
+    wall: '🏢', tile: 'bg-indigo-50', wallTile: 'bg-indigo-200', board: 'bg-indigo-200/70',
+  },
+  {
+    id: 'leaf',
+    name: 'おちばの こみち',
+    emoji: '🍂',
+    bg: 'from-emerald-100 to-teal-50',
+    accent: 'emerald',
+    tagline: 'おちばの みちを すすもう',
+    story: 'あきの おちばの こみち。\nおちば🍂を よけながら、ほうせき💎を ぜんぶ ひろって おうちへ かえろう！',
+    wall: '🍂', tile: 'bg-emerald-50', wallTile: 'bg-emerald-200', board: 'bg-emerald-200/70',
+  },
 ];
 
 const GEM = '🎁';
@@ -1801,6 +1861,108 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     procDef: ['forward', 'forward'],
     optimal: 2, maxSlots: 4,
     prompt: '🔧こうぼうの ボス！ のぼって まがって すすむ てじゅんを かんがえよう',
+  },
+
+  // ─── 🌋 ようがんの どうくつ（adv-q155〜adv-q157）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q155', zoneId: 'lava', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 3)], gems: [r(1, 1), r(2, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろいながら おうちへ いこう',
+  },
+  {
+    id: 'adv-q156', zoneId: 'lava', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 4)], gems: [r(1, 1), r(2, 2), r(3, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'ほうせき💎が 3つ ならんでる！ ぜんぶ あつめよう',
+  },
+  {
+    id: 'adv-q157', zoneId: 'lava', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(4, 4)], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: '🌋どうくつの ボス！ ようがんを よけて すすもう',
+  },
+
+  // ─── 🏖️ すなはまの みち（adv-q158〜adv-q160）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q158', zoneId: 'beach', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [r(3, 3)], gems: [r(2, 1), r(1, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろって おうちへ いこう',
+  },
+  {
+    id: 'adv-q159', zoneId: 'beach', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(0, 0)], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'やしのき🌴を よけて ほうせきを あつめよう',
+  },
+  {
+    id: 'adv-q160', zoneId: 'beach', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(5, 5)], gems: [r(4, 1), r(2, 3), r(1, 4)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: '🏖️すなはまの ボス！ ひろい はまべを すすもう',
+  },
+
+  // ─── 🌸 はなばたけ（adv-q161〜adv-q163）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q161', zoneId: 'flower', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(3, 0)], gems: [r(1, 1), r(2, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろいながら おうちへ いこう',
+  },
+  {
+    id: 'adv-q162', zoneId: 'flower', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(2, 4), r(4, 2)], gems: [r(1, 1), r(3, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'チューリップ🌷の あいだを とおろう',
+  },
+  {
+    id: 'adv-q163', zoneId: 'flower', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(0, 5)], gems: [r(1, 1), r(3, 3), r(4, 4)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: '🌸はなばたけの ボス！ ほうせきを おとさず すすもう',
+  },
+
+  // ─── ⛰️ いわやまの とりで（adv-q164〜adv-q166）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q164', zoneId: 'rock', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [r(3, 3)], gems: [r(2, 1), r(1, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろって てっぺんへ いこう',
+  },
+  {
+    id: 'adv-q165', zoneId: 'rock', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(2, 2)], gems: [r(3, 1), r(1, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'いわ🪨を よけて ほうせきを あつめよう',
+  },
+  {
+    id: 'adv-q166', zoneId: 'rock', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(5, 5)], gems: [r(4, 1), r(3, 2), r(1, 4)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: '⛰️いわやまの ボス！ たかい とりでを のぼろう',
+  },
+
+  // ─── 🌃 よぞらの まち（adv-q167〜adv-q169）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q167', zoneId: 'night', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(3, 0)], gems: [r(1, 1), r(2, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろいながら おうちへ いこう',
+  },
+  {
+    id: 'adv-q168', zoneId: 'night', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(4, 0)], gems: [r(1, 1), r(2, 2), r(3, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'ビル🏢の あいだを とおって あつめよう',
+  },
+  {
+    id: 'adv-q169', zoneId: 'night', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(0, 0)], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: '🌃よぞらの ボス！ ひかる ほうせきを あつめよう',
+  },
+
+  // ─── 🍂 おちばの こみち（adv-q170〜adv-q172）矢印ならべ・ほうせきを ぜんぶ ひろう ───
+  {
+    id: 'adv-q170', zoneId: 'leaf', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [r(0, 0)], gems: [r(2, 1), r(1, 2)], gemEmoji: CRYSTAL, optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ほうせき💎を ひろって おうちへ いこう',
+  },
+  {
+    id: 'adv-q171', zoneId: 'leaf', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(0, 0)], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'おちば🍂を よけて ほうせきを あつめよう',
+  },
+  {
+    id: 'adv-q172', zoneId: 'leaf', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(5, 5)], gems: [r(4, 1), r(3, 2), r(2, 3), r(1, 4)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 18, goalEmoji: HOME,
+    prompt: '🍂こみちの ボス！ ほうせきを ぜんぶ あつめて おうちへ',
   },
 ];
 
