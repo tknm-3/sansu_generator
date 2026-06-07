@@ -1439,37 +1439,39 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     prompt: 'ボス！ むきに ちゅうい。「みぎをむく」を たして かんりょう',
   },
 
-  // ─── 🌊 きらめく みずうみ（adv-q115〜adv-q120）矢印ならべ・さかなあつめ ───
-  // はす(🪷)を よけて さかな(🐟)を ひろい、むこうぎしの おうちへ。やさしめの 道作り。
+  // ─── 🌊 きらめく みずうみ（adv-q115〜adv-q120）矢印ならべ・さかなの かいだん ───
+  // 左下から むこうぎしの おうち(右上)へ。さかな(🐟)を ななめに ならべ、はす(🪷)で
+  // まっすぐ みちを ふさぐので、「↑→↑→…」と じゅんばんに 組まないと わたれない 階段。
   {
-    id: 'adv-q115', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [], gems: [r(0, 3)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
-    prompt: 'さかな🐟を ひろって おうちへ いこう',
+    id: 'adv-q115', zoneId: 'lake', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3),
+    walls: [], gems: [r(2, 1), r(1, 2)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'さかな🐟を ひろいながら おうちへ いこう',
   },
   {
-    id: 'adv-q116', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
-    walls: [r(1, 1), r(2, 2)], gems: [r(3, 0)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
-    prompt: 'はすの はを よけて さかな🐟を とりに いこう',
+    id: 'adv-q116', zoneId: 'lake', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(2, 2)], gems: [r(3, 1), r(1, 3)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'はす🪷を よけて さかな🐟を あつめよう',
   },
   {
-    id: 'adv-q117', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(1, 2), r(3, 2)], gems: [r(0, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
-    prompt: 'みちを よく みて さかな🐟を とろう',
+    id: 'adv-q117', zoneId: 'lake', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'さかな🐟が ならんでる！ じゅんばんに ひろおう',
   },
   {
-    id: 'adv-q118', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [], gems: [r(2, 0), r(2, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
-    prompt: 'さかな🐟が 2ひき！ ぜんぶ ひろって おうちへ',
+    id: 'adv-q118', zoneId: 'lake', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(3, 2), r(2, 3)], gems: [r(4, 1), r(1, 4)], gemEmoji: FISH, optimal: 10, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'ひろい みずうみ！ さかな🐟を おとさず すすもう',
   },
   {
-    id: 'adv-q119', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
-    walls: [r(1, 1), r(3, 3)], gems: [r(2, 2)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
-    prompt: 'まんなかの さかな🐟を とおって おうちへ',
+    id: 'adv-q119', zoneId: 'lake', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [], gems: [r(4, 1), r(3, 2), r(2, 3), r(1, 4)], gemEmoji: FISH, optimal: 10, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'さかな🐟が いっぱい！ かいだんを のぼるように',
   },
   {
-    id: 'adv-q120', zoneId: 'lake', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
-    walls: [r(2, 2), r(3, 3)], gems: [r(0, 5), r(5, 0)], gemEmoji: FISH, optimal: 20, maxSlots: 30, goalEmoji: HOME,
-    prompt: '🌊みずうみの ボス！ さかな2ひきを あつめて おうちへ',
+    id: 'adv-q120', zoneId: 'lake', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5),
+    walls: [r(5, 2), r(2, 1), r(3, 4), r(0, 3)],
+    gems: [r(4, 1), r(3, 2), r(2, 3), r(1, 4)], gemEmoji: FISH, optimal: 10, maxSlots: 20, goalEmoji: HOME,
+    prompt: '🌊みずうみの ボス！ さかな🐟を ぜんぶ あつめて おうちへ',
   },
 
   // ─── 🍯 はちみつの き（adv-q121〜adv-q126）loopOnly・くりかえし入門 ───
