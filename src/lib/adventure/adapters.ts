@@ -172,7 +172,15 @@ export function divisionRemainderToBattle(rng: () => number = Math.random): Batt
   let p = generateDivision(rng, true);
   for (let i = 0; i < 20 && p.remainder === 0; i++) p = generateDivision(rng, true);
   const emoji = pickEmoji(rng);
-  const eqText = `${p.dividend} ÷ ${p.divisor}`;
+  // わける まえの 山＋かご、こたえた あとは わけて「あまり」を 目で見せる
+  const visual = {
+    kind: 'divide' as const,
+    emoji,
+    dividend: p.dividend,
+    divisor: p.divisor,
+    quotient: p.quotient,
+    remainder: p.remainder,
+  };
   if (rng() < 0.5) {
     // 「なんこ あまる？」… 0..divisor-1 を ちゅうしんに 4択
     const set = new Set<number>([p.remainder]);
@@ -183,7 +191,7 @@ export function divisionRemainderToBattle(rng: () => number = Math.random): Batt
     return {
       unitId: 'division-remainder',
       promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると なんこ あまる？`,
-      visual: { kind: 'equation', text: eqText },
+      visual,
       choices: arr.map(String),
       answerIndex: arr.indexOf(p.remainder),
       explainSteps: [],
@@ -194,7 +202,7 @@ export function divisionRemainderToBattle(rng: () => number = Math.random): Batt
   return {
     unitId: 'division-remainder',
     promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？（あまりが でるよ）`,
-    visual: { kind: 'equation', text: eqText },
+    visual,
     choices,
     answerIndex,
     explainSteps: [],
