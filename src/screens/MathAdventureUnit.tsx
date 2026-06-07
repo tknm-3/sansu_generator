@@ -11,6 +11,7 @@ import { ComposeSvg, PatternSequence, PatternIcon, SpatialScene } from '../compo
 import { GroupsVisual } from '../components/GroupsVisual';
 import { NumberLineVisual } from '../components/NumberLineVisual';
 import { TenFrameSum } from '../components/TenFrameSum';
+import { EstimatePile } from '../components/EstimatePile';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -559,16 +560,11 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
                 />
               </div>
             )}
-            {question.visual?.kind === 'estimate-pile' && (() => {
-              const v = question.visual;
-              return (
-                <div className="mb-2 flex flex-wrap justify-center gap-px leading-none" style={{ maxHeight: 150, overflow: 'hidden' }}>
-                  {Array.from({ length: v.count }).map((_, i) => (
-                    <span key={i} className="text-base">{v.emoji}</span>
-                  ))}
-                </div>
-              );
-            })()}
+            {question.visual?.kind === 'estimate-pile' && (
+              <div className="mb-2 flex justify-center" style={{ maxHeight: 170, overflow: 'hidden' }}>
+                <EstimatePile emoji={question.visual.emoji} count={question.visual.count} />
+              </div>
+            )}
             {question.visual?.kind === 'ten-frame-sum' && (
               <div className="mb-2 flex justify-center">
                 <TenFrameSum a={question.visual.a} b={question.visual.b} emojiA={question.visual.emojiA} emojiB={question.visual.emojiB} />
