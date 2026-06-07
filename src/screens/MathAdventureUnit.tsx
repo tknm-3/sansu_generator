@@ -499,14 +499,20 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
                     ))}
                   </div>
                   {v.count > 25 && <div className="text-lg" style={{ color: SEPIA }}>（{v.count}こ）</div>}
+                  {v.equationText && (
+                    <div className="text-3xl font-bold mt-1" style={{ color: SEPIA }}>{v.equationText}</div>
+                  )}
                 </div>
               );
             })()}
             {question.visual?.kind === 'groups' && (() => {
               const v = question.visual;
               return (
-                <div className="mb-2 flex justify-center">
+                <div className="mb-2 flex flex-col items-center gap-2">
                   <GroupsVisual emoji={v.emoji} perGroup={v.perGroup} groups={v.groups} />
+                  {v.equationText && (
+                    <div className="text-3xl font-bold" style={{ color: SEPIA }}>{v.equationText}</div>
+                  )}
                 </div>
               );
             })()}

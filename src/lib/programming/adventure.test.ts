@@ -137,6 +137,67 @@ describe('ぼうけん 問題集', () => {
     expect(isCleared(result), `${q.id} の 解が ゴールに つかない`).toBe(true);
   });
 
+  // 🌊 みずうみは「↑→↑→…」の 階段を 組ませる ゾーン。L字（ぜんぶ↑→ぜんぶ→）の
+  // ショートカットで 解けると 学びが うすい。最短(optimal手数)の どの 組み方でも
+  // まがりかどが おおい こと＝L字や コの字では わたれない ことを 保証する。
+  const lakeQuests = arrowQuests.filter((q) => q.zoneId === 'lake');
+  const DELTA: Record<Dir, Pos> = {
+    up: { r: -1, c: 0 }, down: { r: 1, c: 0 }, left: { r: 0, c: -1 }, right: { r: 0, c: 1 },
+  };
+  const MOVE_DIRS: Dir[] = ['up', 'down', 'left', 'right'];
+
+  // 最短(optimal手数)で ゴール＆さかな全部 を みたす みちの うち、まがりかどが
+  // いちばん すくない ものの かど数 を かえす（DP: state=pos|mask|lastDir、層=step）。
+  function minCornersShortest(q: AdventureQuest): number {
+    const gems = q.gems ?? [];
+    const gemIndex = new Map(gems.map((g, i) => [`${g.r},${g.c}`, i]));
+    const allMask = (1 << gems.length) - 1;
+    const wallSet = new Set(q.walls.map((w) => `${w.r},${w.c}`));
+    const inB = (p: Pos) => p.r >= 0 && p.r < q.rows && p.c >= 0 && p.c < q.cols;
+    const maskAt = (p: Pos, m: number) => {
+      const i = gemIndex.get(`${p.r},${p.c}`);
+      return i === undefined ? m : m | (1 << i);
+    };
+    type St = { pos: Pos; mask: number; lastDir: Dir | 'none'; turns: number };
+    const key = (p: Pos, m: number, d: Dir | 'none') => `${p.r},${p.c}|${m}|${d}`;
+    const startMask = maskAt(q.start, 0);
+    let layer = new Map<string, St>([
+      [key(q.start, startMask, 'none'), { pos: q.start, mask: startMask, lastDir: 'none', turns: 0 }],
+    ]);
+    let best = Infinity;
+    for (let step = 0; step <= q.optimal; step++) {
+      if (step === q.optimal) {
+        for (const st of layer.values()) {
+          if (samePos(st.pos, q.goal) && st.mask === allMask) best = Math.min(best, st.turns);
+        }
+        break;
+      }
+      const next = new Map<string, St>();
+      for (const st of layer.values()) {
+        for (const d of MOVE_DIRS) {
+          const np = { r: st.pos.r + DELTA[d].r, c: st.pos.c + DELTA[d].c };
+          if (!inB(np) || wallSet.has(`${np.r},${np.c}`)) continue;
+          const nm = maskAt(np, st.mask);
+          const nt = st.turns + (st.lastDir !== 'none' && st.lastDir !== d ? 1 : 0);
+          const k = key(np, nm, d);
+          const cur = next.get(k);
+          if (!cur || nt < cur.turns) next.set(k, { pos: np, mask: nm, lastDir: d, turns: nt });
+        }
+      }
+      layer = next;
+    }
+    return best;
+  }
+
+  it('みずうみゾーンが 6問 ある', () => {
+    expect(lakeQuests.length).toBe(6);
+  });
+
+  it.each(lakeQuests)('$id（みずうみ）は L字で ズルできない（最短でも まがりかど3いじょう）', (q) => {
+    const c = minCornersShortest(q);
+    expect(c, `${q.id} は 最短手数の まがりかどが ${c}（L字や コの字で ズルできてしまう）`).toBeGreaterThanOrEqual(3);
+  });
+
   it.each(branchQuests)('$id（分岐）は 正解プログラムで クリアできて optimal が ステップ数と 一致する', (q) => {
     const fill = q.branchFill!;
     expect(fill, `${q.id} に branchFill が ない`).toBeDefined();
