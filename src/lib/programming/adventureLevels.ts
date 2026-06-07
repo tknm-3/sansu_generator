@@ -379,7 +379,6 @@ const FISH = '🐟';
 const BEAR = '🐻';
 const COG = '⚙️';
 const BATTERY = '🔋';
-const CHOCO = '🍫';
 const CAKE = '🎂';
 const TOYGOAL = '🪀';
 
@@ -1610,6 +1609,64 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true } }] },
     optimal: 8, maxSlots: 8,
     prompt: '🍭おかしの ボス！ぜんぶ うめてゴール「[？] に すすめなかったら [？]、すすめたら [？]」',
+  },
+
+  // ─── 🎁 おもちゃ こうじょう（adv-q139〜adv-q144）proc_b・てじゅんの なかみを きめる ───
+  // メインプログラム（call の ならび）は できている。てじゅん(📦)の なかみを きめて ゴールへ。
+  // optimal は なかみの 命令数。みじかい なかみでは クリアできないことを adventure.test.ts が検証。
+  {
+    id: 'adv-q139', zoneId: 'toy', rows: 4, cols: 1, start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward'],
+    optimal: 1, maxSlots: 4,
+    prompt: 'てじゅんの なかみを きめて、3かい よんで ゴールへ！',
+  },
+  {
+    id: 'adv-q140', zoneId: 'toy', rows: 5, cols: 1, start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'なんマス すすむ てじゅんに すれば いいかな？',
+  },
+  {
+    id: 'adv-q141', zoneId: 'toy', rows: 3, cols: 3, start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'のぼって まがって すすむ てじゅんを かんがえよう',
+  },
+  {
+    id: 'adv-q142', zoneId: 'toy', rows: 4, cols: 4, start: r(3, 0), goal: r(3, 2), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'U字に まわる てじゅんを かんがえよう！',
+  },
+  {
+    id: 'adv-q143', zoneId: 'toy', rows: 3, cols: 5, start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'リボン🎀を とおりながら、てじゅんで ゴールへ！',
+  },
+  {
+    id: 'adv-q144', zoneId: 'toy', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🎁こうじょうの ボス！ てじゅんで どのくらい すすむか きめよう',
   },
 ];
 
