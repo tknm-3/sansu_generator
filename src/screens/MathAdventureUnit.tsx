@@ -21,8 +21,7 @@ import {
   saveRun,
   clearRun,
   recordZoneClear,
-  isZoneCleared,
-  isZoneUnlocked,
+  zoneStatus,
   calcSparkles,
   loadHistory,
 } from '../lib/adventure/progress';
@@ -139,8 +138,10 @@ function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
       <div className="relative z-10 mt-4 flex-1 overflow-y-auto px-4 pb-6">
         <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {MATH_ADVENTURE_ZONES.map((zone, i) => {
-            const unlocked = isZoneUnlocked(i, ZONE_IDS);
-            const cleared = isZoneCleared(zone.id);
+            const status = zoneStatus(i, ZONE_IDS);
+            const unlocked = status !== 'locked';
+            const isCurrent = status === 'current';
+            const isNew = status === 'new';
             return (
               <motion.button
                 key={zone.id}
@@ -148,13 +149,21 @@ function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
                 disabled={!unlocked}
                 onClick={() => { playSfx('tap'); onSelectZone(i); }}
                 whileTap={unlocked ? { scale: 0.94 } : {}}
+                animate={isCurrent ? { scale: [1, 1.03, 1] } : {}}
+                transition={isCurrent ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
                 className="relative rounded-2xl p-4 text-left"
                 style={{
                   background: unlocked
                     ? 'radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,245,220,.8))'
                     : 'rgba(231,211,168,.5)',
-                  border: `2px solid ${unlocked ? 'rgba(123,90,58,.45)' : 'rgba(123,90,58,.2)'}`,
-                  boxShadow: unlocked ? '0 3px 0 rgba(90,55,20,.25), inset 0 1px 0 rgba(255,255,255,.6)' : 'none',
+                  border: `2px solid ${
+                    isCurrent ? '#d98a1f' : unlocked ? 'rgba(123,90,58,.45)' : 'rgba(123,90,58,.2)'
+                  }`,
+                  boxShadow: isCurrent
+                    ? '0 0 0 3px rgba(217,138,31,.35), 0 3px 0 rgba(90,55,20,.25)'
+                    : unlocked
+                      ? '0 3px 0 rgba(90,55,20,.25), inset 0 1px 0 rgba(255,255,255,.6)'
+                      : 'none',
                   opacity: unlocked ? 1 : 0.55,
                 }}
               >
@@ -163,7 +172,24 @@ function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
                 {zone.tagline && unlocked && (
                   <div className="mt-0.5 text-[10px]" style={{ color: '#9a7c54' }}>{zone.tagline}</div>
                 )}
-                {cleared && <span className="absolute top-2 right-2 text-sm">🔖</span>}
+                {/* じょうたいバッジ：よんだ🔖 / つづき👉 / まだ🆕 が 一目で わかる */}
+                {status === 'cleared' && <span className="absolute top-2 right-2 text-sm">🔖</span>}
+                {isCurrent && (
+                  <span
+                    className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                    style={{ background: '#d98a1f' }}
+                  >
+                    👉 つづき
+                  </span>
+                )}
+                {isNew && (
+                  <span
+                    className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                    style={{ background: '#3fae8c' }}
+                  >
+                    🆕 まだ
+                  </span>
+                )}
               </motion.button>
             );
           })}
