@@ -12,6 +12,7 @@ import { GroupsVisual } from '../components/GroupsVisual';
 import { NumberLineVisual } from '../components/NumberLineVisual';
 import { TenFrameSum } from '../components/TenFrameSum';
 import { EstimatePile } from '../components/EstimatePile';
+import { DivideVisual } from '../components/DivideVisual';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -151,20 +152,25 @@ function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
                 whileTap={unlocked ? { scale: 0.94 } : {}}
                 animate={isCurrent ? { scale: [1, 1.03, 1] } : {}}
                 transition={isCurrent ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : {}}
-                className="relative rounded-2xl p-4 text-left"
+                className="relative rounded-2xl p-4 pt-5 text-left overflow-hidden"
                 style={{
                   background: unlocked
                     ? 'radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,245,220,.8))'
                     : 'rgba(231,211,168,.5)',
-                  border: `2px solid ${
-                    isCurrent ? '#d98a1f' : unlocked ? 'rgba(123,90,58,.45)' : 'rgba(123,90,58,.2)'
-                  }`,
+                  border: isCurrent
+                    ? '2px solid #d98a1f'
+                    : isNew
+                      ? '2px dashed #2f9e74'
+                      : `2px solid ${unlocked ? 'rgba(123,90,58,.45)' : 'rgba(123,90,58,.2)'}`,
                   boxShadow: isCurrent
                     ? '0 0 0 3px rgba(217,138,31,.35), 0 3px 0 rgba(90,55,20,.25)'
-                    : unlocked
-                      ? '0 3px 0 rgba(90,55,20,.25), inset 0 1px 0 rgba(255,255,255,.6)'
-                      : 'none',
-                  opacity: unlocked ? 1 : 0.55,
+                    : isNew
+                      ? '0 0 0 3px rgba(47,158,116,.28), 0 3px 0 rgba(90,55,20,.2)'
+                      : unlocked
+                        ? '0 3px 0 rgba(90,55,20,.25), inset 0 1px 0 rgba(255,255,255,.6)'
+                        : 'none',
+                  // クリア済みは すこし おちつかせ、まだの章を めだたせる
+                  opacity: !unlocked ? 0.55 : status === 'cleared' ? 0.82 : 1,
                 }}
               >
                 <div className="text-3xl mb-1">{unlocked ? zone.emoji : '🔒'}</div>
@@ -172,23 +178,44 @@ function HubScreen({ characterName, charEmoji, onSelectZone, onBack }: {
                 {zone.tagline && unlocked && (
                   <div className="mt-0.5 text-[10px]" style={{ color: '#9a7c54' }}>{zone.tagline}</div>
                 )}
-                {/* じょうたいバッジ：よんだ🔖 / つづき👉 / まだ🆕 が 一目で わかる */}
-                {status === 'cleared' && <span className="absolute top-2 right-2 text-sm">🔖</span>}
-                {isCurrent && (
+                {/* じょうたいバッジ：よんだ✓ / つづき👉 / まだ🆕 が 一目で わかる */}
+                {status === 'cleared' && (
                   <span
                     className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-                    style={{ background: '#d98a1f' }}
+                    style={{ background: '#9a7c54' }}
                   >
-                    👉 つづき
+                    ✓ よんだ
                   </span>
                 )}
-                {isNew && (
-                  <span
-                    className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-                    style={{ background: '#3fae8c' }}
+                {isCurrent && (
+                  <motion.span
+                    className="absolute top-1.5 right-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow"
+                    style={{ background: '#d98a1f' }}
+                    animate={{ scale: [1, 1.12, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
                   >
-                    🆕 まだ
-                  </span>
+                    👉 つづき
+                  </motion.span>
+                )}
+                {isNew && (
+                  <>
+                    {/* 左上に めだつ おびバッジ＋ぴょこぴょこ */}
+                    <motion.span
+                      className="absolute -left-7 top-2 rotate-[-30deg] px-7 py-0.5 text-[10px] font-extrabold text-white shadow"
+                      style={{ background: '#2f9e74' }}
+                      animate={{ scale: [1, 1.06, 1] }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      🆕 まだ
+                    </motion.span>
+                    <motion.span
+                      className="absolute bottom-1.5 right-1.5 text-base"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      ✨
+                    </motion.span>
+                  </>
                 )}
               </motion.button>
             );
@@ -451,14 +478,14 @@ function ShapeChoiceGrid({ count, answerIndex, chosen, locked, onPick, children 
   );
 }
 
-function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong }: {
+function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }: {
   question: BattleQuestion;
   run: RunState;
   node: MapNode;
   zone: ReturnType<typeof getZone>;
-  charEmoji: string;
   onCorrect: () => void;
   onWrong: () => void;
+  onBack: () => void;
 }) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
@@ -485,7 +512,15 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
       <LibraryTexture />
       <header className="relative z-10 w-full flex items-center justify-between px-4 pt-4 pr-16">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{charEmoji}</span>
+          <button
+            type="button"
+            onClick={() => { playSfx('tap'); onBack(); }}
+            className="rounded-xl border-[1.5px] px-2.5 py-1.5 text-sm font-bold shrink-0"
+            style={{ background: 'rgba(255,255,255,.6)', borderColor: 'rgba(123,90,58,.35)', color: '#6b4f30' }}
+            aria-label="マップに もどる"
+          >
+            ← マップ
+          </button>
           <span
             className="text-sm font-bold px-2 py-1 rounded-lg"
             style={{ background: 'rgba(255,255,255,.65)', color: SEPIA, border: '1px solid rgba(123,90,58,.3)' }}
@@ -589,6 +624,18 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
             {question.visual?.kind === 'estimate-pile' && (
               <div className="mb-2 flex justify-center" style={{ maxHeight: 170, overflow: 'hidden' }}>
                 <EstimatePile emoji={question.visual.emoji} count={question.visual.count} />
+              </div>
+            )}
+            {question.visual?.kind === 'divide' && (
+              <div className="mb-2 flex justify-center">
+                <DivideVisual
+                  emoji={question.visual.emoji}
+                  dividend={question.visual.dividend}
+                  divisor={question.visual.divisor}
+                  quotient={question.visual.quotient}
+                  remainder={question.visual.remainder}
+                  reveal={chosen !== null}
+                />
               </div>
             )}
             {question.visual?.kind === 'ten-frame-sum' && (
@@ -921,9 +968,9 @@ export function MathAdventureUnit({ characterName, characterId, onExit }: Props)
         run={run}
         node={activeNode}
         zone={currentZone}
-        charEmoji={charEmoji}
         onCorrect={handleCorrect}
         onWrong={handleWrong}
+        onBack={() => setView('map')}
       />
     );
   }

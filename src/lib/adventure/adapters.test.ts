@@ -96,6 +96,18 @@ describe('battle adapters', () => {
       expect(askQuotient).toBe(true);
       expect(askRemainder).toBe(true);
     });
+
+    it('あまりが 見える divide ビジュアルを持つ（remainder>=1・dividend=divisor*quotient+remainder）', () => {
+      for (let seed = 1; seed <= 40; seed++) {
+        const q = divisionRemainderToBattle(seededRng(seed));
+        expect(q.visual?.kind).toBe('divide');
+        if (q.visual?.kind !== 'divide') throw new Error('kind mismatch');
+        const { dividend, divisor, quotient, remainder } = q.visual;
+        expect(remainder).toBeGreaterThanOrEqual(1); // あまりが かならず でる
+        expect(remainder).toBeLessThan(divisor);
+        expect(dividend).toBe(divisor * quotient + remainder);
+      }
+    });
   });
 });
 
