@@ -268,10 +268,14 @@ export function numberLineToBattle(rng: () => number = Math.random): BattleQuest
     .sort((a, b) => Math.abs(a - target) - Math.abs(b - target))
     .slice(0, 3);
   const arr = [target, ...others].sort(() => rng() - 0.5);
+  // はんぶんは「配置式」: 数を 自分で 線の上に おく（推定力を 直接きたえる / Siegler）
+  const placement = rng() < 0.5;
   return {
     unitId: 'number-line',
-    promptText: '🐸カエルは いくつの ところ？',
-    visual: { kind: 'number-line', max, target, marker: '🐸' },
+    promptText: placement
+      ? `🐸カエルを ${target}の ところに おいてね`
+      : '🐸カエルは いくつの ところ？',
+    visual: { kind: 'number-line', max, target, marker: '🐸', placement },
     choices: arr.map(String),
     answerIndex: arr.indexOf(target),
     explainSteps: [],

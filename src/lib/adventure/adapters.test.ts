@@ -137,6 +137,34 @@ describe('数直線わたり(numberLine)', () => {
       }
     }
   });
+
+  it('配置式(placement)も 読み取り式も 両方 出る', () => {
+    let placement = false;
+    let read = false;
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = numberLineToBattle(seededRng(seed));
+      if (q.visual?.kind !== 'number-line') throw new Error('kind mismatch');
+      if (q.visual.placement) placement = true;
+      else read = true;
+    }
+    expect(placement).toBe(true);
+    expect(read).toBe(true);
+  });
+
+  it('配置式でも target/choices は 正しく 整合する（採点の もとになる）', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = numberLineToBattle(seededRng(seed));
+      if (q.visual?.kind !== 'number-line') throw new Error('kind mismatch');
+      const { target, max, placement } = q.visual;
+      if (!placement) continue;
+      expect(target).toBeGreaterThanOrEqual(0);
+      expect(target).toBeLessThanOrEqual(max);
+      // 配置式でも target は 正解（採点に つかう）
+      expect(q.choices[q.answerIndex]).toBe(String(target));
+      // prompt に target（おく べき 数）が 出ている
+      expect(q.promptText).toContain(String(target));
+    }
+  });
 });
 
 describe('かぞえる もり(estimate-pile)', () => {
