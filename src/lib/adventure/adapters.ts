@@ -125,8 +125,8 @@ export function multiplicationToBattle(rng: () => number = Math.random): BattleQ
   return {
     unitId: 'multiplication',
     promptText: `${emoji} ${p.b}こずつ ${p.a}つ。ぜんぶで なんこ？`,
-    // 「○こずつ の かたまりが △つ」を 目で見て かぞえられるように
-    visual: { kind: 'groups', emoji, perGroup: p.b, groups: p.a },
+    // 「○こずつ の かたまりが △つ」を 目で見て かぞえられるように＋これが ○×△ だと わかるように
+    visual: { kind: 'groups', emoji, perGroup: p.b, groups: p.a, equationText: `${p.b} × ${p.a}` },
     choices,
     answerIndex,
     explainSteps: explainMultiplication(p, emoji),
@@ -159,8 +159,8 @@ export function divisionToBattle(rng: () => number = Math.random): BattleQuestio
   return {
     unitId: 'division',
     promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？`,
-    // わける まえの 山（ぜんぶの かず）を 目で見せる
-    visual: { kind: 'objects', emoji, count: p.dividend },
+    // わける まえの 山（ぜんぶの かず）を 目で見せる＋これが ○÷△ だと わかるように
+    visual: { kind: 'objects', emoji, count: p.dividend, equationText: `${p.dividend} ÷ ${p.divisor}` },
     choices,
     answerIndex,
     explainSteps: explainDivision(p, emoji),
