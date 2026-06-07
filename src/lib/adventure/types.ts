@@ -15,7 +15,7 @@ export type BattleVisual =
   | { kind: 'shape-compose'; questionSvg: string; choiceSvgs: string[] }
   | { kind: 'shape-pattern'; sequence: (PatternItem | null)[]; choiceItems: PatternItem[] }
   | { kind: 'shape-spatial'; objects: SceneObj[] }
-  | { kind: 'number-line'; max: number; target: number; marker: string }
+  | { kind: 'number-line'; max: number; target: number; marker: string; placement?: boolean }
   | { kind: 'estimate-pile'; emoji: string; count: number }
   | { kind: 'divide'; emoji: string; dividend: number; divisor: number; quotient: number; remainder: number }
   | { kind: 'ten-frame-sum'; a: number; b: number; emojiA: string; emojiB: string };

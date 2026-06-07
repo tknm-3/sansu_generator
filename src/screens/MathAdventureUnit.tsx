@@ -10,6 +10,7 @@ import { ShapeSvg } from '../components/shapes/ShapeSvg';
 import { ComposeSvg, PatternSequence, PatternIcon, SpatialScene } from '../components/shapes/ShapeVisuals';
 import { GroupsVisual } from '../components/GroupsVisual';
 import { NumberLineVisual } from '../components/NumberLineVisual';
+import { NumberLinePlacement } from '../components/NumberLinePlacement';
 import { TenFrameSum } from '../components/TenFrameSum';
 import { EstimatePile } from '../components/EstimatePile';
 import { DivideVisual } from '../components/DivideVisual';
@@ -489,6 +490,8 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
 }) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
+  // 配置式（数直線）用: こどもが おいた 数
+  const [placed, setPlaced] = useState<number | null>(null);
 
   const handlePick = useCallback((index: number) => {
     if (locked) return;
@@ -502,6 +505,24 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
       setTimeout(onWrong, 900);
     }
   }, [locked, question.answerIndex, onCorrect, onWrong]);
+
+  const isPlacement = question.visual?.kind === 'number-line' && !!question.visual.placement;
+
+  const handlePlace = useCallback((value: number) => {
+    if (locked || question.visual?.kind !== 'number-line') return;
+    const { target, max } = question.visual;
+    setPlaced(value);
+    setLocked(true);
+    // ちかさで 合否: max の 8%以内（さいてい 2）なら せいかい
+    const tol = Math.max(2, Math.round(max * 0.08));
+    if (Math.abs(value - target) <= tol) {
+      playSfx('correct');
+      setTimeout(onCorrect, 1300);
+    } else {
+      playSfx('wrong');
+      setTimeout(onWrong, 1300);
+    }
+  }, [locked, question.visual, onCorrect, onWrong]);
 
   const isCorrect = chosen === question.answerIndex;
   const isWrong = chosen !== null && !isCorrect;
@@ -613,12 +634,23 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
             )}
             {question.visual?.kind === 'number-line' && (
               <div className="mb-1">
-                <NumberLineVisual
-                  max={question.visual.max}
-                  target={question.visual.target}
-                  marker={question.visual.marker}
-                  reveal={chosen !== null && isCorrect}
-                />
+                {question.visual.placement ? (
+                  <NumberLinePlacement
+                    max={question.visual.max}
+                    target={question.visual.target}
+                    marker={question.visual.marker}
+                    placed={placed}
+                    reveal={placed !== null}
+                    onPlace={handlePlace}
+                  />
+                ) : (
+                  <NumberLineVisual
+                    max={question.visual.max}
+                    target={question.visual.target}
+                    marker={question.visual.marker}
+                    reveal={chosen !== null && isCorrect}
+                  />
+                )}
               </div>
             )}
             {question.visual?.kind === 'estimate-pile' && (
@@ -668,10 +700,29 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
               {isCorrect ? '🎉 せいかい！' : (question.visual?.kind === 'shape-rotation' || question.visual?.kind === 'shape-pattern' ? 'これが こたえ！' : `こたえは ${question.choices[question.answerIndex]} だよ`)}
             </motion.div>
           )}
+          {isPlacement && placed !== null && question.visual?.kind === 'number-line' && (() => {
+            const { target, max } = question.visual;
+            const diff = Math.abs(placed - target);
+            const ok = diff <= Math.max(2, Math.round(max * 0.08));
+            const txt = diff <= Math.max(1, Math.round(max * 0.02))
+              ? '🎯 ぴったり！'
+              : ok ? '✨ おしい！ せいかい！' : `もうすこし！ ${target}は ここ📍`;
+            return (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className={`text-2xl font-bold ${ok ? 'text-emerald-600' : 'text-red-500'}`}
+              >
+                {txt}
+              </motion.div>
+            );
+          })()}
         </AnimatePresence>
 
         {(() => {
           const v = question.visual;
+          // 配置式は 線の上で こたえるので 選択肢ボタンは 出さない
+          if (isPlacement) return null;
           const gridProps = {
             answerIndex: question.answerIndex,
             chosen,
