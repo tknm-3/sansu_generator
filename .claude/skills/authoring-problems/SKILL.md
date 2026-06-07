@@ -203,3 +203,7 @@ npx vitest run                                          # 全部
     の **`math-adventure:history`** に `{zones:[{zoneId,...}],...}` を全ゾーン分シードして解錠する
     （プロフィールキーは `math-app:` 名前空間だが、冒険の履歴は `math-adventure:` 名前空間で別）。
     マップのバトルノードは `button:not([disabled])` で ⚔️ を含む最初のものをタップ（🔒/✅は除外）。
+  ・**塊／山と「式」をセットで見せる**: 絵だけだと「これが 何×何 / 何÷何 か」が伝わらないので、
+    `groups`/`objects` ビジュアルに `equationText?` を足して 絵の下に式を表示する。**式の順番は絵の
+    見た目とそろえる**（かけ算は「○こずつ△つ」＝ `perGroup × groups`、わり算は山の数 ÷ 人数）。
+    回帰テストで `equationText === \`${perGroup} × ${groups}\`` / `^${count} ÷ \d+$` を固定する。
