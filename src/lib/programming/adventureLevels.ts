@@ -309,6 +309,56 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'おおきな だいとうげが めのまえに たちはだかる。\nネストしたループで パターンを つかみ、\nすくない めいれいで いただきを めざそう！',
     wall: '🪨', tile: 'bg-indigo-50', wallTile: 'bg-indigo-200', board: 'bg-indigo-100/80',
   },
+  {
+    id: 'lake',
+    name: 'きらめく みずうみ',
+    emoji: '🌊',
+    bg: 'from-cyan-100 to-blue-50',
+    accent: 'sky',
+    tagline: 'みずうみの ほとりを すすもう',
+    story: 'しずかな みずうみに やってきた。\nはすの はを よけて、むこうぎしの おうちを めざそう！',
+    wall: '🪷', tile: 'bg-cyan-50', wallTile: 'bg-cyan-200', board: 'bg-cyan-200/70',
+  },
+  {
+    id: 'honey',
+    name: 'はちみつの き',
+    emoji: '🍯',
+    bg: 'from-yellow-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'おなじ うごきは ループで まとめよう',
+    story: 'あまい においの はちみつの き。\nおなじ みちが ずっと つづくよ。🔁ループ箱で くまさんへ とどけよう！',
+    wall: '🐝', tile: 'bg-yellow-50', wallTile: 'bg-yellow-200', board: 'bg-yellow-200/70',
+  },
+  {
+    id: 'robot',
+    name: 'ロボットこうじょう',
+    emoji: '🤖',
+    bg: 'from-slate-100 to-zinc-50',
+    accent: 'indigo',
+    tagline: 'ロボットの むきを かえて すすもう',
+    story: 'ぴかぴかの ロボットこうじょう。\nロボットが むいている ほうを きじゅんに、まえへ すすんだり むきを かえたりして ゴールへ！',
+    wall: '🚧', tile: 'bg-slate-50', wallTile: 'bg-slate-300', board: 'bg-slate-200/70',
+  },
+  {
+    id: 'candy',
+    name: 'おかしの くに',
+    emoji: '🍭',
+    bg: 'from-pink-100 to-rose-50',
+    accent: 'violet',
+    tagline: 'すすめない とき どっちへ いく？',
+    story: 'あまーい おかしの くに。\nキャンディの かべに すすめない とき、「もしも」の ルールで かしこく すすもう！',
+    wall: '🍬', wallName: 'キャンディ', tile: 'bg-pink-50', wallTile: 'bg-pink-200', board: 'bg-pink-200/70',
+  },
+  {
+    id: 'toy',
+    name: 'おもちゃ こうじょう',
+    emoji: '🎁',
+    bg: 'from-rose-100 to-orange-50',
+    accent: 'amber',
+    tagline: 'てじゅんの なかみを かんがえよう！',
+    story: 'たのしい おもちゃ こうじょう。\nメインプログラムは もう できてるよ。\nてじゅんの なかみを きめて、おもちゃを かんせいさせよう！',
+    wall: '🧸', tile: 'bg-rose-50', wallTile: 'bg-rose-200', board: 'bg-rose-100/80',
+  },
 ];
 
 const GEM = '🎁';
@@ -325,6 +375,12 @@ const MUSHROOM = '🍄';
 const COTTAGE = '🏡';
 const SHELL = '🐚';
 const TRIDENT = '🔱';
+const FISH = '🐟';
+const BEAR = '🐻';
+const COG = '⚙️';
+const BATTERY = '🔋';
+const CAKE = '🎂';
+const TOYGOAL = '🪀';
 
 /**
  * 問題集の 本体。配列の じゅんばん = 出題じゅんばん。
@@ -1381,6 +1437,236 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     optimal: 1, maxSlots: 15,
     relPrefill: { openLoop: { times: 3, body: [{ kind: 'loop', times: 4, body: ['forward'] }] } },
     prompt: 'ボス！ むきに ちゅうい。「みぎをむく」を たして かんりょう',
+  },
+
+  // ─── 🌊 きらめく みずうみ（adv-q115〜adv-q120）矢印ならべ・さかなあつめ ───
+  // はす(🪷)を よけて さかな(🐟)を ひろい、むこうぎしの おうちへ。やさしめの 道作り。
+  {
+    id: 'adv-q115', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [], gems: [r(0, 3)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'さかな🐟を ひろって おうちへ いこう',
+  },
+  {
+    id: 'adv-q116', zoneId: 'lake', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(1, 1), r(2, 2)], gems: [r(3, 0)], gemEmoji: FISH, optimal: 6, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'はすの はを よけて さかな🐟を とりに いこう',
+  },
+  {
+    id: 'adv-q117', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 2), r(3, 2)], gems: [r(0, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'みちを よく みて さかな🐟を とろう',
+  },
+  {
+    id: 'adv-q118', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], gems: [r(2, 0), r(2, 4)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'さかな🐟が 2ひき！ ぜんぶ ひろって おうちへ',
+  },
+  {
+    id: 'adv-q119', zoneId: 'lake', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 1), r(3, 3)], gems: [r(2, 2)], gemEmoji: FISH, optimal: 8, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'まんなかの さかな🐟を とおって おうちへ',
+  },
+  {
+    id: 'adv-q120', zoneId: 'lake', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(2, 2), r(3, 3)], gems: [r(0, 5), r(5, 0)], gemEmoji: FISH, optimal: 20, maxSlots: 30, goalEmoji: HOME,
+    prompt: '🌊みずうみの ボス！ さかな2ひきを あつめて おうちへ',
+  },
+
+  // ─── 🍯 はちみつの き（adv-q121〜adv-q126）loopOnly・くりかえし入門 ───
+  // ふつうの 1マス矢印は つかわず、🔁ループ箱（おなじ むき×2〜5）だけで すすむ。
+  // はちみつ(🍯)を ひろって くまさん(🐻)へ。optimal は solve() の 実測値。
+  {
+    id: 'adv-q121', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 0),
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'おなじ むきを 🔁ループに まとめて すすもう',
+  },
+  {
+    id: 'adv-q122', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
+    walls: [], optimal: 4, maxSlots: 10, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: '🔁ループ箱で まっすぐ くまさんへ',
+  },
+  {
+    id: 'adv-q123', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'した と みぎ、2つの 🔁ループで いけるかな',
+  },
+  {
+    id: 'adv-q124', zoneId: 'honey', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [], gems: [r(4, 0)], gemEmoji: '🍯', optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'はちみつ🍯を とってから くまさんへ（🔁だけ）',
+  },
+  {
+    id: 'adv-q125', zoneId: 'honey', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [], optimal: 8, maxSlots: 12, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: 'むきを かえて 🔁ループで のぼろう',
+  },
+  {
+    id: 'adv-q126', zoneId: 'honey', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [], gems: [r(5, 0)], gemEmoji: '🍯', optimal: 10, maxSlots: 14, allowLoop: true, loopOnly: true, goalEmoji: BEAR,
+    prompt: '🍯はちみつの ボス！ はちみつを とって くまさんへ（🔁だけ）',
+  },
+
+  // ─── 🤖 ロボットこうじょう（adv-q127〜adv-q132）そうたい方向・ループなし ───
+  // キャラの むき が きじゅん。まえへ／みぎをむく／ひだりをむく で ねじ(⚙️)を ひろい でんち(🔋)へ。
+  // optimal は そうたい命令の かず（まわる も 1手）。relSolution は solveRelative() の 最短解。
+  {
+    id: 'adv-q127', zoneId: 'robot', rows: 5, cols: 1, start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward'],
+    optimal: 4, maxSlots: 6,
+    prompt: 'まえへ すすんで でんち🔋へ いこう',
+  },
+  {
+    id: 'adv-q128', zoneId: 'robot', rows: 1, cols: 5, start: r(0, 0), goal: r(0, 4), startFacing: 'right',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'forward'],
+    optimal: 4, maxSlots: 6,
+    prompt: 'むいている ほうへ すすもう',
+  },
+  {
+    id: 'adv-q129', zoneId: 'robot', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward'],
+    optimal: 7, maxSlots: 10,
+    prompt: 'てっぺんで むきを かえて すすもう',
+  },
+  {
+    id: 'adv-q130', zoneId: 'robot', rows: 3, cols: 3, start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], gems: [r(2, 2)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward'],
+    optimal: 6, maxSlots: 9,
+    prompt: 'ねじ⚙️を とおって でんち🔋へ',
+  },
+  {
+    id: 'adv-q131', zoneId: 'robot', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], gems: [r(3, 3)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward'],
+    optimal: 8, maxSlots: 11,
+    prompt: 'ねじ⚙️を ひろってから ゴールへ',
+  },
+  {
+    id: 'adv-q132', zoneId: 'robot', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [r(2, 2)], gems: [r(4, 4)], goalEmoji: BATTERY, gemEmoji: COG,
+    kind: 'relative',
+    relSolution: ['turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward', 'forward'],
+    optimal: 10, maxSlots: 16,
+    prompt: '🤖こうじょうの ボス！ ねじ⚙️を とって でんち🔋へ',
+  },
+
+  // ─── 🍭 おかしの くに（adv-q133〜adv-q138）もしも分岐・穴埋め ───
+  // キャンディ(🍬)が かべ。「<むき> に すすめなかったら…」の ルールを 穴埋めで えらんで ケーキ(🎂)へ。
+  // 盤面は くもの てんごく（検証ずみ）の 一意解配置を ベースに、テーマだけ おかしに かえた もの。
+  // 穴の 一意解・最短一致は adventure.test.ts が 自動検証する。
+  {
+    id: 'adv-q133', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 2)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeSensor: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'どっちに すすめないか しらべよう「[？] に すすめなかったら ↓、すすめたら →」',
+  },
+  {
+    id: 'adv-q134', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(2, 0)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeThen: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめなかったら どっちへ？「↓ に すすめなかったら [？]、すすめたら ↓」',
+  },
+  {
+    id: 'adv-q135', zoneId: 'candy', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 0),
+    walls: [r(0, 1)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 6, rule: { sensor: 'left', thenDir: 'down', elseDir: 'left', holeElse: true } }] },
+    optimal: 6, maxSlots: 6,
+    prompt: 'すすめるとき どっちへ？「← に すすめなかったら ↓、すすめたら [？]」',
+  },
+  {
+    id: 'adv-q136', zoneId: 'candy', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4),
+    walls: [r(3, 0)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'up', thenDir: 'right', elseDir: 'up', holeSensor: true, holeThen: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: 'うえへ のぼろう！「[？] に すすめなかったら [？]、すすめたら ↑」',
+  },
+  {
+    id: 'adv-q137', zoneId: 'candy', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 2)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'right', thenDir: 'down', elseDir: 'right', holeThen: true, holeElse: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: 'すすめないとき・すすめるとき！「→ に すすめなかったら [？]、すすめたら [？]」',
+  },
+  {
+    id: 'adv-q138', zoneId: 'candy', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(0, 1), r(2, 4)], goalEmoji: CAKE,
+    kind: 'branch',
+    branchFill: { phases: [{ loopTimes: 8, rule: { sensor: 'down', thenDir: 'right', elseDir: 'down', holeSensor: true, holeThen: true, holeElse: true } }] },
+    optimal: 8, maxSlots: 8,
+    prompt: '🍭おかしの ボス！ぜんぶ うめてゴール「[？] に すすめなかったら [？]、すすめたら [？]」',
+  },
+
+  // ─── 🎁 おもちゃ こうじょう（adv-q139〜adv-q144）proc_b・てじゅんの なかみを きめる ───
+  // メインプログラム（call の ならび）は できている。てじゅん(📦)の なかみを きめて ゴールへ。
+  // optimal は なかみの 命令数。みじかい なかみでは クリアできないことを adventure.test.ts が検証。
+  {
+    id: 'adv-q139', zoneId: 'toy', rows: 4, cols: 1, start: r(3, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward'],
+    optimal: 1, maxSlots: 4,
+    prompt: 'てじゅんの なかみを きめて、3かい よんで ゴールへ！',
+  },
+  {
+    id: 'adv-q140', zoneId: 'toy', rows: 5, cols: 1, start: r(4, 0), goal: r(0, 0), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'なんマス すすむ てじゅんに すれば いいかな？',
+  },
+  {
+    id: 'adv-q141', zoneId: 'toy', rows: 3, cols: 3, start: r(2, 0), goal: r(0, 2), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'のぼって まがって すすむ てじゅんを かんがえよう',
+  },
+  {
+    id: 'adv-q142', zoneId: 'toy', rows: 4, cols: 4, start: r(3, 0), goal: r(3, 2), startFacing: 'up',
+    walls: [], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, 'turn_right', { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'U字に まわる てじゅんを かんがえよう！',
+  },
+  {
+    id: 'adv-q143', zoneId: 'toy', rows: 3, cols: 5, start: r(2, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: 'リボン🎀を とおりながら、てじゅんで ゴールへ！',
+  },
+  {
+    id: 'adv-q144', zoneId: 'toy', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(0, 0)], goalEmoji: TOYGOAL, gemEmoji: '🎀',
+    kind: 'proc',
+    procMain: [{ kind: 'call' }, { kind: 'call' }, 'turn_right', { kind: 'call' }, { kind: 'call' }],
+    procDef: ['forward', 'forward'],
+    optimal: 2, maxSlots: 4,
+    prompt: '🎁こうじょうの ボス！ てじゅんで どのくらい すすむか きめよう',
   },
 ];
 

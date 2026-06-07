@@ -208,6 +208,11 @@ const REGION_TINT: Record<string, string> = {
   proc_b:  'rgba(200,80,100,.28)',
   nloop_a: 'rgba(60,150,130,.28)',
   nloop_b: 'rgba(100,70,180,.30)',
+  lake:    'rgba(70,150,200,.30)',
+  honey:   'rgba(220,180,60,.30)',
+  robot:   'rgba(110,120,160,.30)',
+  candy:   'rgba(220,120,170,.30)',
+  toy:     'rgba(220,140,90,.28)',
 };
 
 interface TownStop {
