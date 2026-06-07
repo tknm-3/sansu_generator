@@ -210,6 +210,19 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     wall: '🪷',
     tint: 'rgba(70,150,210,.22)',
   },
+  {
+    id: 'zone-estimate',
+    name: 'みつもりの もり',
+    emoji: '🍪',
+    bgFrom: 'from-amber-100',
+    bgTo: 'to-orange-200',
+    unitIds: ['estimate-pile'],
+    layerCount: 8,
+    tagline: 'だいたい いくつか みつもろう',
+    story: 'もりには おやつが どっさり。\nぜんぶ かぞえなくても いいよ。\n「だいたい いくつ?」を あてよう！',
+    wall: '🌰',
+    tint: 'rgba(210,150,70,.22)',
+  },
 ];
 
 export function getZone(id: string): AdventureZoneDef {

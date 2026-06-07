@@ -14,6 +14,7 @@ import {
   shapePatternToBattle,
   shapeSpatialToBattle,
   numberLineToBattle,
+  estimateToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -40,6 +41,7 @@ describe('battle adapters', () => {
     { name: 'division', fn: divisionToBattle },
     { name: 'divisionRemainder', fn: divisionRemainderToBattle },
     { name: 'numberLine', fn: numberLineToBattle },
+    { name: 'estimate', fn: estimateToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -113,6 +115,21 @@ describe('数直線わたり(numberLine)', () => {
         expect(n).toBeGreaterThanOrEqual(0);
         expect(n).toBeLessThanOrEqual(max);
       }
+    }
+  });
+});
+
+describe('みつもりめいじん(estimate)', () => {
+  it('estimate-pile を持ち、正解は count に最も近い 10の倍数', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = estimateToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('estimate-pile');
+      if (q.visual?.kind !== 'estimate-pile') throw new Error('kind mismatch');
+      const { count } = q.visual;
+      const nearestTen = Math.round(count / 10) * 10;
+      expect(q.choices[q.answerIndex]).toBe(String(nearestTen));
+      // 選択肢は すべて 10の倍数
+      for (const c of q.choices) expect(Number(c) % 10).toBe(0);
     }
   });
 });

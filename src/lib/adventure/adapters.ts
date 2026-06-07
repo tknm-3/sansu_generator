@@ -275,6 +275,36 @@ export function numberLineToBattle(rng: () => number = Math.random): BattleQuest
   };
 }
 
+/** みつもりめいじん: たくさんの ものを 見て「だいたい いくつ?」を 10の倍数から 当てる（見積もり・概数） */
+export function estimateToBattle(rng: () => number = Math.random): BattleQuestion {
+  const emoji = pickEmoji(rng);
+  // 23〜78こ（正確に数えにくい量）。こたえは いちばん近い 10の倍数
+  const count = 23 + Math.floor(rng() * 56);
+  const nearestTen = Math.round(count / 10) * 10;
+  // 選択肢は 10の倍数を 20間隔で（推定で「どっちに近い?」を問う）
+  const set = new Set<number>([nearestTen]);
+  let k = 1;
+  while (set.size < 4 && k < 40) {
+    const sign = set.size % 2 === 0 ? 1 : -1;
+    const cand = nearestTen + sign * 20 * Math.ceil(k / 2);
+    if (cand >= 10 && cand <= 100) set.add(cand);
+    k++;
+  }
+  for (let d = 10; set.size < 4 && d <= 100; d += 10) {
+    if (nearestTen + d <= 100) set.add(nearestTen + d);
+    if (set.size < 4 && nearestTen - d >= 10) set.add(nearestTen - d);
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return {
+    unitId: 'estimate-pile',
+    promptText: `${emoji} だいたい いくつ？`,
+    visual: { kind: 'estimate-pile', emoji, count },
+    choices: arr.map(String),
+    answerIndex: arr.indexOf(nearestTen),
+    explainSteps: [],
+  };
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -307,6 +337,7 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'shape-pattern': shapePatternToBattle,
   'shape-spatial': shapeSpatialToBattle,
   'number-line': numberLineToBattle,
+  'estimate-pile': estimateToBattle,
 };
 
 export function generateBattleQuestion(

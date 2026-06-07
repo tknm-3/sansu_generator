@@ -552,6 +552,16 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
                 />
               </div>
             )}
+            {question.visual?.kind === 'estimate-pile' && (() => {
+              const v = question.visual;
+              return (
+                <div className="mb-2 flex flex-wrap justify-center gap-px leading-none" style={{ maxHeight: 150, overflow: 'hidden' }}>
+                  {Array.from({ length: v.count }).map((_, i) => (
+                    <span key={i} className="text-base">{v.emoji}</span>
+                  ))}
+                </div>
+              );
+            })()}
             {!question.visual && (
               <div className="text-2xl font-bold" style={{ color: SEPIA }}>{question.promptText}</div>
             )}
