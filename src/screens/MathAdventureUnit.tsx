@@ -567,7 +567,13 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
             )}
             {question.visual?.kind === 'ten-frame-sum' && (
               <div className="mb-2 flex justify-center">
-                <TenFrameSum a={question.visual.a} b={question.visual.b} emojiA={question.visual.emojiA} emojiB={question.visual.emojiB} />
+                <TenFrameSum
+                  a={question.visual.a}
+                  b={question.visual.b}
+                  emojiA={question.visual.emojiA}
+                  emojiB={question.visual.emojiB}
+                  answered={chosen !== null}
+                />
               </div>
             )}
             {!question.visual && (
