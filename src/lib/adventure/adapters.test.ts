@@ -117,6 +117,12 @@ describe('数直線わたり(numberLine)', () => {
         expect(n).toBeGreaterThanOrEqual(0);
         expect(n).toBeLessThanOrEqual(max);
       }
+      // 選択肢どうしが 近すぎない（位置で見分けられる）: max に応じた gap 以上 離れている
+      const gap = max <= 20 ? 2 : max <= 50 ? 5 : 10;
+      const nums = q.choices.map(Number).sort((a, b) => a - b);
+      for (let i = 1; i < nums.length; i++) {
+        expect(nums[i] - nums[i - 1]).toBeGreaterThanOrEqual(gap);
+      }
     }
   });
 });

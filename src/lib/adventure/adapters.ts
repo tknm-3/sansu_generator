@@ -249,22 +249,17 @@ export function numberLineToBattle(rng: () => number = Math.random): BattleQuest
   for (let i = 0; i < 10 && (target % 10 === 0 || target === max / 2); i++) {
     target = lo + Math.floor(rng() * (hi - lo + 1));
   }
-  // 選択肢の間隔（位置で見分けられる距離に）
-  const gap = max <= 20 ? 2 : max <= 50 ? 5 : 8;
-  const set = new Set<number>([target]);
-  let k = 1;
-  while (set.size < 4 && k < 40) {
-    const sign = set.size % 2 === 0 ? 1 : -1;
-    const cand = target + sign * gap * Math.ceil(k / 2);
-    if (cand >= 0 && cand <= max) set.add(cand);
-    k++;
+  // 選択肢は「target から gap の倍数だけ離れた値」を 近い順に3つ＝位置で 必ず見分けられる距離に
+  const gap = max <= 20 ? 2 : max <= 50 ? 5 : 10;
+  const pool = new Set<number>();
+  for (let i = 1; i <= Math.ceil(max / gap); i++) {
+    if (target - i * gap >= 0) pool.add(target - i * gap);
+    if (target + i * gap <= max) pool.add(target + i * gap);
   }
-  // それでも足りなければ近傍で埋める
-  for (let d = 1; set.size < 4 && d <= max; d++) {
-    if (target + d <= max) set.add(target + d);
-    if (set.size < 4 && target - d >= 0) set.add(target - d);
-  }
-  const arr = [...set].sort(() => rng() - 0.5);
+  const others = [...pool]
+    .sort((a, b) => Math.abs(a - target) - Math.abs(b - target))
+    .slice(0, 3);
+  const arr = [target, ...others].sort(() => rng() - 0.5);
   return {
     unitId: 'number-line',
     promptText: '🐸カエルは いくつの ところ？',
