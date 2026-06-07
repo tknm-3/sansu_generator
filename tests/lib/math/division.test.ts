@@ -12,6 +12,16 @@ describe('generateDivision', () => {
     const p = generateDivision();
     expect(p.choices).toContain(p.quotient);
   });
+  it('maxDivisor/maxQuotient で 5の段まで（2..5）に しぼれる', () => {
+    for (let i = 0; i < 40; i++) {
+      const p = generateDivision(Math.random, false, { maxDivisor: 5, maxQuotient: 5 });
+      expect(p.divisor).toBeGreaterThanOrEqual(2);
+      expect(p.divisor).toBeLessThanOrEqual(5);
+      expect(p.quotient).toBeGreaterThanOrEqual(2);
+      expect(p.quotient).toBeLessThanOrEqual(5);
+      expect(p.dividend).toBe(p.divisor * p.quotient);
+    }
+  });
 });
 
 describe('generateDivision remainder', () => {

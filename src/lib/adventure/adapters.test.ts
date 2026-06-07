@@ -5,6 +5,10 @@ import {
   subtractionToBattle,
   cherryCalcToBattle,
   bigAdditionToBattle,
+  bigSubtractionToBattle,
+  multiplicationToBattle,
+  divisionToBattle,
+  divisionRemainderToBattle,
   wordToBattle,
   shapeComposeToBattle,
   shapePatternToBattle,
@@ -30,6 +34,10 @@ describe('battle adapters', () => {
     { name: 'subtraction', fn: subtractionToBattle },
     { name: 'cherryCalc', fn: cherryCalcToBattle },
     { name: 'bigAddition', fn: bigAdditionToBattle },
+    { name: 'bigSubtraction', fn: bigSubtractionToBattle },
+    { name: 'multiplication', fn: multiplicationToBattle },
+    { name: 'division', fn: divisionToBattle },
+    { name: 'divisionRemainder', fn: divisionRemainderToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -67,6 +75,20 @@ describe('battle adapters', () => {
         expect(q.answerIndex).toBeGreaterThanOrEqual(0);
         expect(q.answerIndex).toBeLessThan(3);
       }
+    });
+  });
+
+  describe('divisionRemainder', () => {
+    it('しょうを きく と あまりを きく の 両方が 出る', () => {
+      let askQuotient = false;
+      let askRemainder = false;
+      for (let seed = 1; seed <= 40; seed++) {
+        const q = divisionRemainderToBattle(seededRng(seed));
+        if (q.promptText.includes('あまる')) askRemainder = true;
+        else askQuotient = true;
+      }
+      expect(askQuotient).toBe(true);
+      expect(askRemainder).toBe(true);
     });
   });
 });
@@ -112,6 +134,36 @@ describe('図形バトルは視覚的なビジュアルで出す', () => {
         expect(typeof obj.col).toBe('number');
         expect(typeof obj.row).toBe('number');
       }
+    }
+  });
+});
+
+// 図書館モードの かけ算・わり算は「5の段まで」かつ 視覚的に かたまり/山を見せる
+describe('かけ算バトルは かたまりを 目で見せる（5の段まで）', () => {
+  it('groups ビジュアルで、かたまり数・1つあたりが 2..5', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = multiplicationToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('groups');
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect(q.visual.groups).toBeGreaterThanOrEqual(2);
+      expect(q.visual.groups).toBeLessThanOrEqual(5);
+      expect(q.visual.perGroup).toBeGreaterThanOrEqual(2);
+      expect(q.visual.perGroup).toBeLessThanOrEqual(5);
+      // ビジュアルの かけ算が こたえと あう
+      const answer = q.visual.groups * q.visual.perGroup;
+      expect(q.choices[q.answerIndex]).toBe(String(answer));
+    }
+  });
+});
+
+describe('わり算バトルは わける まえの 山を 見せる（5の段まで）', () => {
+  it('objects ビジュアルで、ぜんぶの かずが 25いか', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = divisionToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('objects');
+      if (q.visual?.kind !== 'objects') throw new Error('kind mismatch');
+      expect(q.visual.count).toBeGreaterThanOrEqual(4);
+      expect(q.visual.count).toBeLessThanOrEqual(25);
     }
   });
 });

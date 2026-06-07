@@ -8,6 +8,7 @@ import { CHARACTER_DEFS } from '../features/character/characterDefs';
 import { BattleButtons } from '../components/BattleButtons';
 import { ShapeSvg } from '../components/shapes/ShapeSvg';
 import { ComposeSvg, PatternSequence, PatternIcon, SpatialScene } from '../components/shapes/ShapeVisuals';
+import { GroupsVisual } from '../components/GroupsVisual';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -491,11 +492,19 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
               return (
                 <div className="mb-2">
                   <div className="text-3xl mb-1 flex flex-wrap justify-center gap-0.5">
-                    {Array.from({ length: Math.min(v.count, 10) }).map((_, i) => (
+                    {Array.from({ length: Math.min(v.count, 25) }).map((_, i) => (
                       <span key={i}>{v.emoji}</span>
                     ))}
                   </div>
-                  {v.count > 10 && <div className="text-lg" style={{ color: SEPIA }}>（{v.count}こ）</div>}
+                  {v.count > 25 && <div className="text-lg" style={{ color: SEPIA }}>（{v.count}こ）</div>}
+                </div>
+              );
+            })()}
+            {question.visual?.kind === 'groups' && (() => {
+              const v = question.visual;
+              return (
+                <div className="mb-2 flex justify-center">
+                  <GroupsVisual emoji={v.emoji} perGroup={v.perGroup} groups={v.groups} />
                 </div>
               );
             })()}
