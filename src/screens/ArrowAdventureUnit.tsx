@@ -213,6 +213,10 @@ const REGION_TINT: Record<string, string> = {
   robot:   'rgba(110,120,160,.30)',
   candy:   'rgba(220,120,170,.30)',
   toy:     'rgba(220,140,90,.28)',
+  gemcave:  'rgba(150,90,200,.30)',
+  starbase: 'rgba(90,100,200,.30)',
+  windmill: 'rgba(70,160,210,.28)',
+  craft:    'rgba(220,160,70,.28)',
 };
 
 interface TownStop {

@@ -255,3 +255,20 @@ npx vitest run                                          # 全部
   伝わらないので、`groups`/`objects` ビジュアルに `equationText?` を足して 絵の下に式を表示する。**式の順番は絵の
   見た目とそろえる**（かけ算は「○こずつ△つ」＝ `perGroup × groups`、わり算は山の数 ÷ 人数）。
   回帰テストで `equationText === \`${perGroup} × ${groups}\`` / `^${count} ÷ \d+$` を固定する。
+- [2026-06-07] 冒険/新ゾーン4つ追加（💎ほうせきの どうくつ・🚀ほしの きち・🎡くるくる ふうしゃ・
+  🔧ふしぎな こうぼう）: 種類別に「矢印ならべ(gem複数+壁)×3／そうたい(gem2中央寄り+壁)×3／
+  そうたい×ループ×2／proc_b×2」を ゾーンに わりあてた。学んだこと:
+  ・**矢印で gem を 複数おくとき、はじっこ どうしに 置くと 往復で optimal が はねあがる**
+    （4×4で gem 2つを 角に → optimal 10で こどもには ながい）。**gem を start→goal の 単調経路
+    （右と下だけ／上と右だけ）の 上に ならべる**と optimal が マンハッタン最短のまま（対角線上
+    (1,1)(2,2)(3,3) など）。壁は 経路外の マスに 置けば 最短を くずさない。
+  ・**そうたい(relative・ループなし)で gem 2個＋5×5 は optimal が 11前後**に なりやすい（中央寄り gem の
+    detour で 回転が ふえる）。10ちょうどは つくりにくいので 4×4(9手)→5×5(11手)で 段差を つける。
+    relSolution は **`solveRelative()` の 出力を そのまま 写す**（手書きは ずれる。一時 vitest で
+    `console.log` → `--disable-console-intercept`）。
+  ・**ループ系/proc系は 既存ゾーン（rloop_a の q79/q81・toy の q139/q141）を テーマ替えで 流用**するのが安全。
+    そうたい×ループは `relPrefill`(足場)必須（`relativeLoopQuests` 全件 coverage テストが ある）。
+    proc_b は procMain固定＋procDef正解で「短い中身では クリア不可」テストが かかる＝既検証の構造を まねる。
+  ・忘れず: `ArrowAdventureUnit.tsx` の **`REGION_TINT` に 新ゾーンid を 追加**（`ACCENT` は 既存キー再利用可）。
+    `adventure.test.ts` の `lakeQuests`(minCornersShortest>=3) は **lake限定**なので 新しい矢印ゾーンには
+    かからない＝L字ズルを ふせぎたい矢印ゾーンを 作るなら 同テストを その zoneId にも 広げる。
