@@ -72,63 +72,6 @@ export function BonusIntroOverlay({
   );
 }
 
-// ── ボーナスマス ビンゴカード選択 ──────────────────────────────────────────
-
-export function BonusPickOverlay({
-  show, players, bonusPlayerIdx, onPick,
-}: {
-  show: boolean;
-  players: Player[];
-  bonusPlayerIdx: number | null;
-  onPick: (cellIdx: number) => void;
-}) {
-  const p = bonusPlayerIdx !== null ? players[bonusPlayerIdx] : null;
-  const s = bonusPlayerIdx !== null ? PLAYER_STYLES[bonusPlayerIdx % PLAYER_STYLES.length] : null;
-
-  return (
-    <AnimatePresence>
-      {show && p && s && bonusPlayerIdx !== null && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50 p-4">
-          <motion.div initial={{ scale: 0.8, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className="bg-white rounded-3xl p-6 text-center shadow-2xl w-full max-w-xs">
-            <div className="text-4xl mb-2">⭐</div>
-            <div className="text-2xl font-bold text-orange-600 mb-1">ボーナスマス！</div>
-            <div className="text-base font-bold text-gray-700 mb-4">
-              {p.character} {p.name}<br />
-              <span className="text-sm text-gray-500">ぬりつぶすマスを えらんでね！</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mx-auto" style={{ maxWidth: 200 }}>
-              {p.numbers.map((n, i) => {
-                const isChecked = p.checked[i];
-                const isCenter  = i === 4;
-                return (
-                  <motion.button
-                    key={i}
-                    type="button"
-                    disabled={isChecked}
-                    onClick={() => !isChecked && onPick(i)}
-                    whileTap={!isChecked ? { scale: 0.88 } : undefined}
-                    className={`
-                      aspect-square rounded-2xl text-sm font-extrabold transition-all
-                      ${isChecked
-                        ? `${s.bg} text-white opacity-50 cursor-not-allowed`
-                        : `bg-white border-2 ${s.border} ${s.text} shadow hover:scale-105 cursor-pointer`}
-                    `}
-                  >
-                    {isCenter ? '★' : n}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 // ── ビンゴ演出 ──────────────────────────────────────────────────────────────
 
 export function BingoOverlay({ show }: { show: { name: string; steps: number } | null }) {

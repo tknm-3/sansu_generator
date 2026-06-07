@@ -9,7 +9,7 @@ import { NumberLineBar } from './bingo-sugoroku/NumberLineBar';
 import { BonusQuizOverlay } from './bingo-sugoroku/BonusQuiz';
 import { PredictBonusOverlay } from './bingo-sugoroku/PredictBonus';
 import { SetupCountScreen, SetupCardsScreen } from './bingo-sugoroku/SetupScreens';
-import { GoalOverlay, BonusIntroOverlay, BonusPickOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
+import { GoalOverlay, BonusIntroOverlay, BingoOverlay } from './bingo-sugoroku/Overlays';
 
 type Phase = 'setup-count' | 'setup-cards' | 'game' | 'gameover';
 
@@ -103,7 +103,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   const [showBingo, setShowBingo]       = useState<{ name: string; steps: number } | null>(null);
   const [showGoal, setShowGoal]         = useState<{ name: string; character: string } | null>(null);
   const [showBonusIntro, setShowBonusIntro] = useState(false);
-  const [choosingBonus, setChoosingBonus]   = useState(false);
   const [bonusPlayerIdx, setBonusPlayerIdx] = useState<number | null>(null);
   const [quiz, setQuiz]                     = useState<BonusQuiz | null>(null);
   const [predictQuiz, setPredictQuiz]       = useState<PredictQuiz | null>(null);
@@ -305,23 +304,40 @@ export function BingoSugorokuUnit({ onExit }: Props) {
     }
   }
 
-  /** ボーナスのミニ問題に答えたあと。正解→ビンゴマス選択、不正解→つぎのひとへ */
+  /** ボーナスのミニ問題に答えたあと。正解→ランダムでビンゴマスを塗る、不正解→つぎのひとへ */
   function handleQuizAnswer(correct: boolean) {
     setQuiz(null);
     if (correct) {
-      setChoosingBonus(true);
+      applyBonusBingoMark();
     } else {
       setBonusPlayerIdx(null);
       checkGameOver(players);
     }
   }
 
-  /** ボーナスマスで選んだビンゴカードのセルをチェックしてビンゴ判定 */
-  function handleBonusPick(cellIdx: number) {
-    setChoosingBonus(false);
+  /**
+   * ボーナスマスのクイズ正解後。ぬるマスは本人に選ばせず、ランダムで1つ自動で塗る。
+   * すでにカードが全部うまっていて ぬるマスが無いときは進めなくなってしまうので、
+   * そのときは ビンゴしたのと同じくらい進むボーナス（resolveBingoQueue）にする。
+   */
+  function applyBonusBingoMark() {
     const pIdx = bonusPlayerIdx ?? currentIdx;
     setBonusPlayerIdx(null);
     setIsAnimating(true);
+
+    // まだ ぬっていないマス（中央フリースペースは最初から true なので自然に除外される）
+    const openCells = players[pIdx].numbers
+      .map((_, i) => i)
+      .filter(i => !players[pIdx].checked[i]);
+
+    // ぬるマスが無い → 進めなくなるので、ビンゴ相当のボーナスで進める（連鎖込み）
+    if (openCells.length === 0) {
+      resolveBingoQueue(players, [pIdx], (finalPlayers) => checkGameOver(finalPlayers));
+      return;
+    }
+
+    // 未チェックのマスからランダムに1つ選んで塗る
+    const cellIdx = openCells[Math.floor(Math.random() * openCells.length)];
 
     const up = players.map((pl, i) => {
       if (i !== pIdx) return pl;
@@ -330,9 +346,8 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       return { ...pl, checked: newChecked };
     });
 
-    // 選んだセルをフラッシュ
-    const flashSet = new Set<number>([cellIdx]);
-    setFlashCards(new Map([[pIdx, flashSet]]));
+    // 塗ったセルをフラッシュ
+    setFlashCards(new Map([[pIdx, new Set<number>([cellIdx])]]));
     setTimeout(() => setFlashCards(new Map()), 700);
 
     const { updated, events } = processAllBingos(up);
@@ -438,7 +453,7 @@ export function BingoSugorokuUnit({ onExit }: Props) {
   // ビンゴカードに含まれるマス → オーナー（プレイヤーインデックス）のリスト
   const squareOwners = buildSquareOwnerMap(players);
 
-  const blocked = isAnimating || showBonusIntro || choosingBonus || !!quiz || !!predictQuiz || !!showGoal;
+  const blocked = isAnimating || showBonusIntro || !!quiz || !!predictQuiz || !!showGoal;
 
   return (
     <div className="flex h-screen flex-col bg-gradient-to-br from-sky-100 to-rose-50 overflow-hidden">
@@ -580,7 +595,6 @@ export function BingoSugorokuUnit({ onExit }: Props) {
       <BonusIntroOverlay  show={showBonusIntro} players={players} bonusPlayerIdx={bonusPlayerIdx} />
       <BonusQuizOverlay   quiz={quiz} player={bonusPlayerIdx !== null ? players[bonusPlayerIdx] : null} styleIdx={bonusPlayerIdx ?? 0} onAnswer={handleQuizAnswer} />
       <PredictBonusOverlay quiz={predictQuiz} player={current ?? null} styleIdx={currentIdx} onAnswer={handlePredictAnswer} />
-      <BonusPickOverlay   show={choosingBonus}  players={players} bonusPlayerIdx={bonusPlayerIdx} onPick={handleBonusPick} />
       <BingoOverlay       show={showBingo} />
     </div>
   );
