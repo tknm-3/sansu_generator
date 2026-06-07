@@ -15,6 +15,7 @@ import {
   shapeSpatialToBattle,
   numberLineToBattle,
   estimateToBattle,
+  tenFrameSumToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -42,6 +43,7 @@ describe('battle adapters', () => {
     { name: 'divisionRemainder', fn: divisionRemainderToBattle },
     { name: 'numberLine', fn: numberLineToBattle },
     { name: 'estimate', fn: estimateToBattle },
+    { name: 'tenFrameSum', fn: tenFrameSumToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -130,6 +132,22 @@ describe('みつもりめいじん(estimate)', () => {
       expect(q.choices[q.answerIndex]).toBe(String(nearestTen));
       // 選択肢は すべて 10の倍数
       for (const c of q.choices) expect(Number(c) % 10).toBe(0);
+    }
+  });
+});
+
+describe('パッとそろばん(tenFrameSum)', () => {
+  it('ten-frame-sum を持ち、正解は a+b・a,b は 2..9', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = tenFrameSumToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('ten-frame-sum');
+      if (q.visual?.kind !== 'ten-frame-sum') throw new Error('kind mismatch');
+      const { a, b } = q.visual;
+      expect(a).toBeGreaterThanOrEqual(2);
+      expect(a).toBeLessThanOrEqual(9);
+      expect(b).toBeGreaterThanOrEqual(2);
+      expect(b).toBeLessThanOrEqual(9);
+      expect(q.choices[q.answerIndex]).toBe(String(a + b));
     }
   });
 });

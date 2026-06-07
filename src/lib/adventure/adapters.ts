@@ -305,6 +305,31 @@ export function estimateToBattle(rng: () => number = Math.random): BattleQuestio
   };
 }
 
+/** パッとそろばん: 10の枠で a＋b を 色ちがいの かたまりで 見せ、合計を 素早く 答える（概念的サビタイジング・暗算の自動化） */
+export function tenFrameSumToBattle(rng: () => number = Math.random): BattleQuestion {
+  const a = 2 + Math.floor(rng() * 8); // 2..9
+  const b = 2 + Math.floor(rng() * 8); // 2..9
+  const answer = a + b; // 4..18（くりあがりも 出る）
+  // 合計の 近くで 重複なし 4択
+  const set = new Set<number>([answer]);
+  let k = 1;
+  while (set.size < 4 && k < 30) {
+    const sign = set.size % 2 === 0 ? 1 : -1;
+    const cand = answer + sign * Math.ceil(k / 2);
+    if (cand >= 0) set.add(cand);
+    k++;
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return {
+    unitId: 'ten-frame-sum',
+    promptText: '⚡ パッと いくつ？',
+    visual: { kind: 'ten-frame-sum', a, b, emojiA: '🔴', emojiB: '🟡' },
+    choices: arr.map(String),
+    answerIndex: arr.indexOf(answer),
+    explainSteps: [],
+  };
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -338,6 +363,7 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'shape-spatial': shapeSpatialToBattle,
   'number-line': numberLineToBattle,
   'estimate-pile': estimateToBattle,
+  'ten-frame-sum': tenFrameSumToBattle,
 };
 
 export function generateBattleQuestion(

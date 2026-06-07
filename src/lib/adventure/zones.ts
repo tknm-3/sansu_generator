@@ -223,6 +223,19 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     wall: '🌰',
     tint: 'rgba(210,150,70,.22)',
   },
+  {
+    id: 'zone-tenframe',
+    name: 'パッとそろばん',
+    emoji: '⚡',
+    bgFrom: 'from-violet-100',
+    bgTo: 'to-fuchsia-200',
+    unitIds: ['ten-frame-sum'],
+    layerCount: 8,
+    tagline: '10の枠で パッと たしざん',
+    story: '10の まほうの枠が ならぶ へや。\n「5と3で8」みたいに、かたまりで\nパッと よむと、はやく こたえられるよ！',
+    wall: '🔢',
+    tint: 'rgba(150,90,210,.22)',
+  },
 ];
 
 export function getZone(id: string): AdventureZoneDef {
