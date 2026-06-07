@@ -9,6 +9,7 @@ import { BattleButtons } from '../components/BattleButtons';
 import { ShapeSvg } from '../components/shapes/ShapeSvg';
 import { ComposeSvg, PatternSequence, PatternIcon, SpatialScene } from '../components/shapes/ShapeVisuals';
 import { GroupsVisual } from '../components/GroupsVisual';
+import { NumberLineVisual } from '../components/NumberLineVisual';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -539,6 +540,16 @@ function BattleScreen({ question, run, node, zone, charEmoji, onCorrect, onWrong
             {question.visual?.kind === 'shape-spatial' && (
               <div className="flex justify-center mb-1 overflow-x-auto">
                 <SpatialScene objects={question.visual.objects} />
+              </div>
+            )}
+            {question.visual?.kind === 'number-line' && (
+              <div className="mb-1">
+                <NumberLineVisual
+                  max={question.visual.max}
+                  target={question.visual.target}
+                  marker={question.visual.marker}
+                  reveal={chosen !== null && isCorrect}
+                />
               </div>
             )}
             {!question.visual && (

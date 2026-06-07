@@ -237,6 +237,44 @@ export function shapeSpatialToBattle(_rng: () => number = Math.random): BattleQu
   };
 }
 
+/** 数直線わたり: カエルが立つ位置を見て「いくつ?」を当てる（線形数感覚・推定） */
+export function numberLineToBattle(rng: () => number = Math.random): BattleQuestion {
+  // できる子向け: 0〜100 を中心に、20・50 も混ぜてレンジに変化を出す
+  const max = [20, 50, 100, 100][Math.floor(rng() * 4)];
+  // 端ちょうど・目盛りちょうどは避けて「推定」を促す
+  const lo = Math.round(max * 0.08);
+  const hi = Math.round(max * 0.92);
+  let target = lo + Math.floor(rng() * (hi - lo + 1));
+  // 0/まんなか/max ぴったりは避ける
+  for (let i = 0; i < 10 && (target % 10 === 0 || target === max / 2); i++) {
+    target = lo + Math.floor(rng() * (hi - lo + 1));
+  }
+  // 選択肢の間隔（位置で見分けられる距離に）
+  const gap = max <= 20 ? 2 : max <= 50 ? 5 : 8;
+  const set = new Set<number>([target]);
+  let k = 1;
+  while (set.size < 4 && k < 40) {
+    const sign = set.size % 2 === 0 ? 1 : -1;
+    const cand = target + sign * gap * Math.ceil(k / 2);
+    if (cand >= 0 && cand <= max) set.add(cand);
+    k++;
+  }
+  // それでも足りなければ近傍で埋める
+  for (let d = 1; set.size < 4 && d <= max; d++) {
+    if (target + d <= max) set.add(target + d);
+    if (set.size < 4 && target - d >= 0) set.add(target - d);
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return {
+    unitId: 'number-line',
+    promptText: '🐸カエルは いくつの ところ？',
+    visual: { kind: 'number-line', max, target, marker: '🐸' },
+    choices: arr.map(String),
+    answerIndex: arr.indexOf(target),
+    explainSteps: [],
+  };
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -268,6 +306,7 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'shape-compose': shapeComposeToBattle,
   'shape-pattern': shapePatternToBattle,
   'shape-spatial': shapeSpatialToBattle,
+  'number-line': numberLineToBattle,
 };
 
 export function generateBattleQuestion(

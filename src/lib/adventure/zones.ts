@@ -196,6 +196,20 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     wall: '📚',
     tint: 'rgba(200,150,50,.22)',
   },
+  // ── 理数センス道場（ラスボス後に解放される 上級の まき） ──
+  {
+    id: 'zone-numberline',
+    name: 'かずの しまわたり',
+    emoji: '🐸',
+    bgFrom: 'from-sky-100',
+    bgTo: 'to-cyan-200',
+    unitIds: ['number-line'],
+    layerCount: 8,
+    tagline: 'カエルが いる かずを あてよう',
+    story: 'かわに かずの しまが いっぱい。\nカエルが どの かずに いるか、\nめもりを みて あててね！',
+    wall: '🪷',
+    tint: 'rgba(70,150,210,.22)',
+  },
 ];
 
 export function getZone(id: string): AdventureZoneDef {

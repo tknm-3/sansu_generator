@@ -13,6 +13,7 @@ import {
   shapeComposeToBattle,
   shapePatternToBattle,
   shapeSpatialToBattle,
+  numberLineToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -38,6 +39,7 @@ describe('battle adapters', () => {
     { name: 'multiplication', fn: multiplicationToBattle },
     { name: 'division', fn: divisionToBattle },
     { name: 'divisionRemainder', fn: divisionRemainderToBattle },
+    { name: 'numberLine', fn: numberLineToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -90,6 +92,28 @@ describe('battle adapters', () => {
       expect(askQuotient).toBe(true);
       expect(askRemainder).toBe(true);
     });
+  });
+});
+
+describe('数直線わたり(numberLine)', () => {
+  it('number-line ビジュアルを持ち、target は 0..max の範囲で 正解と一致', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = numberLineToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('number-line');
+      if (q.visual?.kind !== 'number-line') throw new Error('kind mismatch');
+      const { max, target } = q.visual;
+      expect([20, 50, 100]).toContain(max);
+      expect(target).toBeGreaterThanOrEqual(0);
+      expect(target).toBeLessThanOrEqual(max);
+      // 選択肢の正解は target
+      expect(q.choices[q.answerIndex]).toBe(String(target));
+      // 全選択肢が 0..max に収まる
+      for (const c of q.choices) {
+        const n = Number(c);
+        expect(n).toBeGreaterThanOrEqual(0);
+        expect(n).toBeLessThanOrEqual(max);
+      }
+    }
   });
 });
 

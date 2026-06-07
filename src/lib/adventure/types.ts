@@ -14,7 +14,8 @@ export type BattleVisual =
   | { kind: 'shape-rotation'; shapeId: string; rotationLabel: string }
   | { kind: 'shape-compose'; questionSvg: string; choiceSvgs: string[] }
   | { kind: 'shape-pattern'; sequence: (PatternItem | null)[]; choiceItems: PatternItem[] }
-  | { kind: 'shape-spatial'; objects: SceneObj[] };
+  | { kind: 'shape-spatial'; objects: SceneObj[] }
+  | { kind: 'number-line'; max: number; target: number; marker: string };
 
 export interface BattleQuestion {
   unitId: string;
