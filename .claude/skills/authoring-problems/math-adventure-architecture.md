@@ -77,7 +77,8 @@ npx vitest run src/lib/adventure/adapters.test.ts
 | kind | 用途 | 必須フィールド |
 |---|---|---|
 | `equation` | 計算式（`3 ＋ 5`） | `text: string` |
-| `objects` | 絵文字を並べる（`🟡×6`) | `emoji`, `count`, `addCount?` |
+| `objects` | 絵文字を並べる（`🟡×6`／わり算の わける まえの 山）| `emoji`, `count`, `addCount?` |
+| `groups` | おなじ かずの かたまりを わくで囲って並べる（かけ算「○こずつ△つ」）| `emoji`, `perGroup`, `groups` |
 | `word` | 文章問題（さんすう専用。図形では使わない）| `text`, `emoji` |
 | `shape-rotation` | 図形の回転 | `shapeId`, `rotationLabel`（＋`choiceTransforms`）|
 | `shape-compose` | かたちをあわせる | `questionSvg`, `choiceSvgs`（生SVG）|
@@ -112,6 +113,8 @@ npx vitest run src/lib/adventure/adapters.test.ts
 | `subtraction` | `subtractionToBattle` | `equation` |
 | `cherry-calc` | `cherryCalcToBattle` | `equation` |
 | `big-addition` | `bigAdditionToBattle` | `equation` |
+| `multiplication` | `multiplicationToBattle` | `groups`（5の段まで・塊を見せる）|
+| `division` | `divisionToBattle` | `objects`（5の段まで・わける前の山を見せる）|
 | `word-addition` | `wordToBattle('word-addition',…)` | `word` |
 | `word-subtraction` | `wordToBattle('word-subtraction',…)` | `word` |
 | `shape-rotation` | `shapeRotationToBattle` | `shape-rotation` |
