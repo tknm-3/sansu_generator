@@ -138,6 +138,36 @@ describe('図形バトルは視覚的なビジュアルで出す', () => {
   });
 });
 
+// 図書館モードの かけ算・わり算は「5の段まで」かつ 視覚的に かたまり/山を見せる
+describe('かけ算バトルは かたまりを 目で見せる（5の段まで）', () => {
+  it('groups ビジュアルで、かたまり数・1つあたりが 2..5', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = multiplicationToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('groups');
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect(q.visual.groups).toBeGreaterThanOrEqual(2);
+      expect(q.visual.groups).toBeLessThanOrEqual(5);
+      expect(q.visual.perGroup).toBeGreaterThanOrEqual(2);
+      expect(q.visual.perGroup).toBeLessThanOrEqual(5);
+      // ビジュアルの かけ算が こたえと あう
+      const answer = q.visual.groups * q.visual.perGroup;
+      expect(q.choices[q.answerIndex]).toBe(String(answer));
+    }
+  });
+});
+
+describe('わり算バトルは わける まえの 山を 見せる（5の段まで）', () => {
+  it('objects ビジュアルで、ぜんぶの かずが 25いか', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = divisionToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('objects');
+      if (q.visual?.kind !== 'objects') throw new Error('kind mismatch');
+      expect(q.visual.count).toBeGreaterThanOrEqual(4);
+      expect(q.visual.count).toBeLessThanOrEqual(25);
+    }
+  });
+});
+
 describe('zone adapter coverage', () => {
   it('全ゾーンの unitId にアダプターが登録されている', () => {
     for (const zone of MATH_ADVENTURE_ZONES) {

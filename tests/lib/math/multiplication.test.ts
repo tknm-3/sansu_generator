@@ -20,6 +20,15 @@ describe('generateMultiplication', () => {
     expect(p.groups).toHaveLength(p.a);
     p.groups.forEach((g) => expect(g).toBe(p.b));
   });
+  it('maxFactor で 5の段まで（2..5）に しぼれる', () => {
+    for (let i = 0; i < 40; i++) {
+      const p = generateMultiplication(Math.random, { maxFactor: 5 });
+      expect(p.a).toBeGreaterThanOrEqual(2);
+      expect(p.a).toBeLessThanOrEqual(5);
+      expect(p.b).toBeGreaterThanOrEqual(2);
+      expect(p.b).toBeLessThanOrEqual(5);
+    }
+  });
 });
 
 describe('checkMultiplication', () => {
