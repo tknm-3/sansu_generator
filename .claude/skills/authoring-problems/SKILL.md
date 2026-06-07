@@ -188,3 +188,18 @@ npx vitest run                                          # 全部
   ・落とし穴: スクショ検証で `getByRole('button',{name:/スタート/})` は「スタート」と「▶ スタート」の
     2つに マッチして 失敗 → **`name:'▶ スタート'` の 完全一致**で 取る。足場の 表示は「🔁×N に 途中まで
     矢印＋？プレースホルダ」で 出る（renderLoopBuilding の ？）。
+- [2026-06-07] としょかん/かけ算・わり算が「式だけ＆9の段まで」で難しかった → **5の段までに絞り＋
+  視覚化**した。学んだこと:
+  ・**数を絞るのは生成ロジック側にオプションを足す**（既定は据え置き）。`generateMultiplication(rng,
+    {maxFactor})` / `generateDivision(rng, withRemainder, {maxDivisor,maxQuotient})`。図書館アダプター
+    （`adapters.ts`）だけ `{maxFactor:5}` 等を渡す＝標準単元(`MultiplicationUnit`等)は無変更。
+  ・**かけ算は `BattleVisual.kind:'groups'`** を新設し、既存の `GroupsVisual`（`src/components/`）を
+    `BattleScreen` でそのまま再利用（「○こずつの かたまりが △つ」を わくで囲って見せる＝単一実装）。
+    わり算は `objects` で わける前の山を見せる（答えは見せない）。`objects` の表示上限は 10→25 に拡大
+    （5の段なら被除数 ≤25）。回帰テストは `adapters.test.ts` の「かけ算は塊／わり算は山」で kind と
+    数の範囲(2..5)を検証。
+  ・**スクショ経路**: ホーム「なにをやる？」は カテゴリ選択で だいとしょかんは無い。**さんすう →
+    「ふしぎな だいとしょかん」**の順。ゾーンは前ゾーンクリアでアンロックされるので、`localStorage`
+    の **`math-adventure:history`** に `{zones:[{zoneId,...}],...}` を全ゾーン分シードして解錠する
+    （プロフィールキーは `math-app:` 名前空間だが、冒険の履歴は `math-adventure:` 名前空間で別）。
+    マップのバトルノードは `button:not([disabled])` で ⚔️ を含む最初のものをタップ（🔒/✅は除外）。

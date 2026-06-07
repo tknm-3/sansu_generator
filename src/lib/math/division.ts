@@ -8,12 +8,22 @@ export interface DivisionProblem {
   choices: number[];
 }
 
+export interface DivisionOptions {
+  /** わる数（人数）の さいだい（きほん 8）。5の段までなら 5 */
+  maxDivisor?: number;
+  /** こたえ（しょう）の さいだい（きほん 9）。5の段までなら 5 */
+  maxQuotient?: number;
+}
+
 export function generateDivision(
   rng: () => number = Math.random,
   withRemainder = false,
+  options: DivisionOptions = {},
 ): DivisionProblem {
-  const divisor = Math.floor(rng() * 7) + 2;
-  const quotient = Math.floor(rng() * 8) + 2;
+  const maxDivisor = options.maxDivisor ?? 8;
+  const maxQuotient = options.maxQuotient ?? 9;
+  const divisor = Math.floor(rng() * (maxDivisor - 1)) + 2;
+  const quotient = Math.floor(rng() * (maxQuotient - 1)) + 2;
   const remainder = withRemainder ? Math.floor(rng() * (divisor - 1)) : 0;
   const dividend = divisor * quotient + remainder;
   const choices = new Set<number>([quotient]);

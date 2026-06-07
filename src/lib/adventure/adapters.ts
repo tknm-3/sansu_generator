@@ -117,14 +117,16 @@ export function bigSubtractionToBattle(rng: () => number = Math.random): BattleQ
 }
 
 export function multiplicationToBattle(rng: () => number = Math.random): BattleQuestion {
-  const p = generateMultiplication(rng);
+  // 5の段まで（2〜5 × 2〜5）に しぼって やさしくする
+  const p = generateMultiplication(rng, { maxFactor: 5 });
   const answer = p.a * p.b;
   const emoji = pickEmoji(rng);
   const { choices, answerIndex } = toFourChoices(p.choices, answer, rng);
   return {
     unitId: 'multiplication',
     promptText: `${emoji} ${p.b}こずつ ${p.a}つ。ぜんぶで なんこ？`,
-    visual: { kind: 'equation', text: `${p.a} × ${p.b}` },
+    // 「○こずつ の かたまりが △つ」を 目で見て かぞえられるように
+    visual: { kind: 'groups', emoji, perGroup: p.b, groups: p.a },
     choices,
     answerIndex,
     explainSteps: explainMultiplication(p, emoji),
@@ -150,13 +152,15 @@ export function wordToBattle(
 }
 
 export function divisionToBattle(rng: () => number = Math.random): BattleQuestion {
-  const p = generateDivision(rng); // あまりなし
+  // 5の段まで（人数 2〜5・こたえ 2〜5）に しぼって やさしくする
+  const p = generateDivision(rng, false, { maxDivisor: 5, maxQuotient: 5 }); // あまりなし
   const emoji = pickEmoji(rng);
   const { choices, answerIndex } = toFourChoices(p.choices, p.quotient, rng);
   return {
     unitId: 'division',
     promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？`,
-    visual: { kind: 'equation', text: `${p.dividend} ÷ ${p.divisor}` },
+    // わける まえの 山（ぜんぶの かず）を 目で見せる
+    visual: { kind: 'objects', emoji, count: p.dividend },
     choices,
     answerIndex,
     explainSteps: explainDivision(p, emoji),

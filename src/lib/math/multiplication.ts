@@ -7,9 +7,22 @@ export interface MultiplicationProblem {
   choices: number[];
 }
 
-export function generateMultiplication(rng: () => number = Math.random): MultiplicationProblem {
-  const a = Math.floor(rng() * 8) + 2;
-  const b = Math.floor(rng() * 8) + 2;
+export interface MultiplicationOptions {
+  /** かける数・かけられる数の さいしょう（きほん 2） */
+  minFactor?: number;
+  /** かける数・かけられる数の さいだい（きほん 9）。5の段までなら 5 */
+  maxFactor?: number;
+}
+
+export function generateMultiplication(
+  rng: () => number = Math.random,
+  options: MultiplicationOptions = {},
+): MultiplicationProblem {
+  const minFactor = options.minFactor ?? 2;
+  const maxFactor = options.maxFactor ?? 9;
+  const span = maxFactor - minFactor + 1;
+  const a = Math.floor(rng() * span) + minFactor;
+  const b = Math.floor(rng() * span) + minFactor;
   const answer = a * b;
   const choices = new Set<number>([answer]);
   while (choices.size < 3) {
