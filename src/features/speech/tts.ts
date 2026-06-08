@@ -53,8 +53,10 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined' && 'speechS
  * 日本語で読み上げ。非対応なら何もしない（優雅な劣化）。
  * onEnd を渡すと読み上げ終了（またはエラー・非対応）後に必ず一度だけ呼ぶ。
  * 「言い切ってから次の演出へ」進めたいとき（例: すごろくの煽りセリフ→サイコロ）に使う。
+ * opts.rate で読み上げ速度を変えられる（未指定 0.95）。小さいこ向けは 0.7 くらいで
+ * ゆっくり話す（数字を一緒に数えやすくするため）。
  */
-export function speakJa(text: string, onEnd?: () => void): void {
+export function speakJa(text: string, onEnd?: () => void, opts?: { rate?: number }): void {
   if (!isSpeechSupported()) {
     onEnd?.();
     return;
@@ -62,7 +64,7 @@ export function speakJa(text: string, onEnd?: () => void): void {
   try {
     const u = new SpeechSynthesisUtterance(speechifyMath(text));
     u.lang = 'ja-JP';
-    u.rate = 0.95;
+    u.rate = opts?.rate ?? 0.95;
     if (onEnd) {
       let done = false;
       const finish = () => { if (!done) { done = true; onEnd(); } };

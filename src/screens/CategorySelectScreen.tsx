@@ -8,6 +8,15 @@ interface Props {
 
 const CATEGORIES = [
   {
+    id: 'baby' as Category,
+    label: 'ちいさいこ',
+    emoji: '🧸',
+    description: 'サイコロ ころころ！ いっしょに かぞえよう…',
+    bg: 'from-pink-300 to-rose-200',
+    shadow: '#9f1239',
+    button: 'bg-rose-500',
+  },
+  {
     id: 'sansu' as Category,
     label: 'さんすう',
     emoji: '🔢',
