@@ -216,12 +216,36 @@ export const UNITS: UnitMeta[] = [
   },
   // ── ちいさいこ カテゴリ（2〜3さい向け・タップだけ）──
   {
+    id: 'count-animals',
+    category: 'baby',
+    title: 'なんびき かな？',
+    grade: '2〜3さい',
+    curriculum: '数の素地：1〜3匹をパッと見て数える（サビタイジング・数唱）',
+    emoji: '🐰',
+  },
+  {
     id: 'dice-walk',
     category: 'baby',
     title: 'ころころ すすめ！',
     grade: '2〜3さい',
     curriculum: '数の素地：サイコロの数だけ一直線のマスを進む（数唱・1対1対応・数字認識）。すごろくへの橋渡し',
     emoji: '🎲',
+  },
+  {
+    id: 'pair-place',
+    category: 'baby',
+    title: 'ぴったり おいて',
+    grade: '2〜3さい',
+    curriculum: '数の素地：おさらに 1つずつ おく（1対1対応・基数性）',
+    emoji: '🍪',
+  },
+  {
+    id: 'match-same',
+    category: 'baby',
+    title: 'おなじ どれ？',
+    grade: '2〜3さい',
+    curriculum: '論理の素地：見本と同じものを選ぶ（分類・属性のマッチング）',
+    emoji: '🔷',
   },
   // ── ファミリー カテゴリ ──
   {

@@ -39,6 +39,10 @@ import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
 import { BingoSugorokuUnit } from './screens/BingoSugorokuUnit';
 import { DiceWalkUnit } from './screens/DiceWalkUnit';
+import { BabyHomeScreen } from './screens/BabyHomeScreen';
+import { CountAnimalsUnit } from './screens/CountAnimalsUnit';
+import { PairPlaceUnit } from './screens/PairPlaceUnit';
+import { MatchSameUnit } from './screens/MatchSameUnit';
 import { setBgmTrack } from './features/sound/bgm';
 import { loadCharacter, getCharName, saveCharacterNameForId } from './features/character/character';
 import { CHARACTER_DEFS } from './features/character/characterDefs';
@@ -58,7 +62,8 @@ type Screen =
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
   | { kind: 'bingoSugoroku' }
-  | { kind: 'babyDiceWalk' }
+  | { kind: 'babyHome' }
+  | { kind: 'babyUnit'; unitId: string }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
   | { kind: 'progAdventure' }
   | { kind: 'progMaker' }
@@ -138,7 +143,7 @@ export default function App() {
     if (cat === 'katachi') setScreen({ kind: 'katachiHome' });
     else if (cat === 'programming') setScreen({ kind: 'programmingHome' });
     else if (cat === 'family') setScreen({ kind: 'bingoSugoroku' });
-    else if (cat === 'baby') setScreen({ kind: 'babyDiceWalk' });
+    else if (cat === 'baby') setScreen({ kind: 'babyHome' });
     else setScreen({ kind: 'home' });
   }
 
@@ -179,15 +184,38 @@ export default function App() {
       return <BingoSugorokuUnit key={refresh} onExit={() => setScreen({ kind: 'categorySelect' })} />;
     }
 
-    if (screen.kind === 'babyDiceWalk') {
+    if (screen.kind === 'babyHome') {
       return (
-        <DiceWalkUnit
+        <BabyHomeScreen
           key={refresh}
-          characterId={character.id}
           characterName={character.name}
-          onExit={() => setScreen({ kind: 'categorySelect' })}
+          characterId={character.id}
+          onSelectUnit={(unitId) => setScreen({ kind: 'babyUnit', unitId })}
+          onBack={() => setScreen({ kind: 'categorySelect' })}
         />
       );
+    }
+
+    if (screen.kind === 'babyUnit') {
+      const backToBabyHome = () => setScreen({ kind: 'babyHome' });
+      switch (screen.unitId) {
+        case 'count-animals':
+          return <CountAnimalsUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
+        case 'pair-place':
+          return <PairPlaceUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
+        case 'match-same':
+          return <MatchSameUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
+        case 'dice-walk':
+        default:
+          return (
+            <DiceWalkUnit
+              key={refresh}
+              characterId={character.id}
+              characterName={character.name}
+              onExit={backToBabyHome}
+            />
+          );
+      }
     }
 
     if (screen.kind === 'programmingHome') {
