@@ -1,4 +1,4 @@
-export type Category = 'sansu' | 'katachi' | 'programming' | 'family';
+export type Category = 'sansu' | 'katachi' | 'programming' | 'family' | 'baby';
 
 export interface UnitMeta {
   id: string;
@@ -213,6 +213,15 @@ export const UNITS: UnitMeta[] = [
     grade: '小1〜小2',
     curriculum: 'プログラミング総合：問題集モード（ゾーンを じゅんに 解放）。いつでも あそべる',
     emoji: '🗺️',
+  },
+  // ── ちいさいこ カテゴリ（2〜3さい向け・タップだけ）──
+  {
+    id: 'dice-walk',
+    category: 'baby',
+    title: 'ころころ すすめ！',
+    grade: '2〜3さい',
+    curriculum: '数の素地：サイコロの数だけ一直線のマスを進む（数唱・1対1対応・数字認識）。すごろくへの橋渡し',
+    emoji: '🎲',
   },
   // ── ファミリー カテゴリ ──
   {

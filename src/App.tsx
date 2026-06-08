@@ -38,6 +38,7 @@ import { CharacterDetail } from './features/character/CharacterDetail';
 import { NamingScreen } from './features/character/NamingScreen';
 import { BgmToggle } from './features/sound/BgmToggle';
 import { BingoSugorokuUnit } from './screens/BingoSugorokuUnit';
+import { DiceWalkUnit } from './screens/DiceWalkUnit';
 import { setBgmTrack } from './features/sound/bgm';
 import { loadCharacter, getCharName, saveCharacterNameForId } from './features/character/character';
 import { CHARACTER_DEFS } from './features/character/characterDefs';
@@ -57,6 +58,7 @@ type Screen =
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
   | { kind: 'bingoSugoroku' }
+  | { kind: 'babyDiceWalk' }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
   | { kind: 'progAdventure' }
   | { kind: 'progMaker' }
@@ -136,6 +138,7 @@ export default function App() {
     if (cat === 'katachi') setScreen({ kind: 'katachiHome' });
     else if (cat === 'programming') setScreen({ kind: 'programmingHome' });
     else if (cat === 'family') setScreen({ kind: 'bingoSugoroku' });
+    else if (cat === 'baby') setScreen({ kind: 'babyDiceWalk' });
     else setScreen({ kind: 'home' });
   }
 
@@ -174,6 +177,17 @@ export default function App() {
 
     if (screen.kind === 'bingoSugoroku') {
       return <BingoSugorokuUnit key={refresh} onExit={() => setScreen({ kind: 'categorySelect' })} />;
+    }
+
+    if (screen.kind === 'babyDiceWalk') {
+      return (
+        <DiceWalkUnit
+          key={refresh}
+          characterId={character.id}
+          characterName={character.name}
+          onExit={() => setScreen({ kind: 'categorySelect' })}
+        />
+      );
     }
 
     if (screen.kind === 'programmingHome') {
