@@ -658,18 +658,24 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
                 <EstimatePile emoji={question.visual.emoji} count={question.visual.count} />
               </div>
             )}
-            {question.visual?.kind === 'divide' && (
-              <div className="mb-2 flex justify-center">
-                <DivideVisual
-                  emoji={question.visual.emoji}
-                  dividend={question.visual.dividend}
-                  divisor={question.visual.divisor}
-                  quotient={question.visual.quotient}
-                  remainder={question.visual.remainder}
-                  reveal={chosen !== null}
-                />
-              </div>
-            )}
+            {question.visual?.kind === 'divide' && (() => {
+              const v = question.visual;
+              return (
+                <div className="mb-2 flex flex-col items-center gap-2">
+                  <DivideVisual
+                    emoji={v.emoji}
+                    dividend={v.dividend}
+                    divisor={v.divisor}
+                    quotient={v.quotient}
+                    remainder={v.remainder}
+                    reveal={chosen !== null}
+                  />
+                  {v.equationText && (
+                    <div className="text-3xl font-bold" style={{ color: SEPIA }}>{v.equationText}</div>
+                  )}
+                </div>
+              );
+            })()}
             {question.visual?.kind === 'ten-frame-sum' && (
               <div className="mb-2 flex justify-center">
                 <TenFrameSum

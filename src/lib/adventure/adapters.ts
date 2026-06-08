@@ -159,8 +159,17 @@ export function divisionToBattle(rng: () => number = Math.random): BattleQuestio
   return {
     unitId: 'division',
     promptText: `${emoji} ${p.dividend}こを ${p.divisor}人で わけると ひとり なんこ？`,
-    // わける まえの 山（ぜんぶの かず）を 目で見せる＋これが ○÷△ だと わかるように
-    visual: { kind: 'objects', emoji, count: p.dividend, equationText: `${p.dividend} ÷ ${p.divisor}` },
+    // こたえる まえ: わける まえの 山＋かご。こたえた あと: かごに おなじ かずずつ
+    // わけた 絵を 見せる（視覚的に「わける」が わかるように）。あまりなしなので remainder=0。
+    visual: {
+      kind: 'divide',
+      emoji,
+      dividend: p.dividend,
+      divisor: p.divisor,
+      quotient: p.quotient,
+      remainder: 0,
+      equationText: `${p.dividend} ÷ ${p.divisor}`,
+    },
     choices,
     answerIndex,
     explainSteps: explainDivision(p, emoji),

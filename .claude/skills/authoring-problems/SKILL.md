@@ -272,3 +272,11 @@ npx vitest run                                          # 全部
   ・忘れず: `ArrowAdventureUnit.tsx` の **`REGION_TINT` に 新ゾーンid を 追加**（`ACCENT` は 既存キー再利用可）。
     `adventure.test.ts` の `lakeQuests`(minCornersShortest>=3) は **lake限定**なので 新しい矢印ゾーンには
     かからない＝L字ズルを ふせぎたい矢印ゾーンを 作るなら 同テストを その zoneId にも 広げる。
+- [2026-06-08] としょかん/わけわけ どうくつ（`division`）を `objects`（山だけ）から `divide` ビジュアルに変更。
+  既存の `DivideVisual`（あまりんぼの たに で使用）を 流用＝こたえる まえは 山＋かご、こたえた あとは
+  かごに おなじ かずずつ わけた 絵を 見せる。「わける」が 視覚的に わかるように した。学んだこと:
+  ・`DivideVisual` は remainder=0 でも そのまま使える（あまり枠は `remainder > 0` のときだけ描画）。
+    あまりなしゾーンは `remainder: 0` を 渡すだけ＝コンポーネントは 共有のまま 増やさない。
+  ・`divide` 型に `equationText?` を 足し、絵の下に `${dividend} ÷ ${divisor}` を そえる（式の向きは 山の数÷人数）。
+  ・回帰テストは `divisionToBattle` が `divide` kind・`remainder===0`・`dividend===divisor*quotient`・
+    `equationText===\`${dividend} ÷ ${divisor}\`` を返すことを固定（`adapters.test.ts`）。

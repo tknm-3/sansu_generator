@@ -114,7 +114,7 @@ npx vitest run src/lib/adventure/adapters.test.ts
 | `cherry-calc` | `cherryCalcToBattle` | `equation` |
 | `big-addition` | `bigAdditionToBattle` | `equation` |
 | `multiplication` | `multiplicationToBattle` | `groups`（5の段まで・塊を見せる）|
-| `division` | `divisionToBattle` | `objects`（5の段まで・わける前の山を見せる）|
+| `division` | `divisionToBattle` | `divide`（5の段まで・わける前の山＋こたえ後にかごへ分けた絵。あまりなし）|
 | `word-addition` | `wordToBattle('word-addition',…)` | `word` |
 | `word-subtraction` | `wordToBattle('word-subtraction',…)` | `word` |
 | `shape-rotation` | `shapeRotationToBattle` | `shape-rotation` |
