@@ -654,7 +654,7 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
               </div>
             )}
             {question.visual?.kind === 'estimate-pile' && (
-              <div className="mb-2 flex justify-center" style={{ maxHeight: 170, overflow: 'hidden' }}>
+              <div className="mb-2 flex justify-center">
                 <EstimatePile emoji={question.visual.emoji} count={question.visual.count} />
               </div>
             )}
@@ -678,6 +678,7 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
                   emojiA={question.visual.emojiA}
                   emojiB={question.visual.emojiB}
                   answered={chosen !== null}
+                  taken={question.visual.taken}
                 />
               </div>
             )}

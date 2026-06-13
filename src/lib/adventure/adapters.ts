@@ -336,6 +336,57 @@ export function tenFrameSumToBattle(rng: () => number = Math.random): BattleQues
   };
 }
 
+/** パッとひきざん: 10の枠に total こ ならべ、b こ「とった（✕）」のを 見せて のこりを 答える（ひき算のサビタイジング） */
+export function tenFrameSubToBattle(rng: () => number = Math.random): BattleQuestion {
+  const total = 4 + Math.floor(rng() * 7); // 4..10
+  const take = 1 + Math.floor(rng() * (total - 2)); // 1..total-2（のこりが 2いじょう）
+  const rest = total - take; // のこり = こたえ
+  // のこりの 近くで 重複なし 4択（0..total）
+  const set = new Set<number>([rest]);
+  let k = 1;
+  while (set.size < 4 && k < 30) {
+    const sign = set.size % 2 === 0 ? 1 : -1;
+    const cand = rest + sign * Math.ceil(k / 2);
+    if (cand >= 0 && cand <= total) set.add(cand);
+    k++;
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return {
+    unitId: 'ten-frame-sub',
+    promptText: `⚡ ${take}こ とったら のこりは？`,
+    // a=のこり（そのまま）, b=とった分（✕で うすく）
+    visual: { kind: 'ten-frame-sum', a: rest, b: take, emojiA: '🟢', emojiB: '🔴', taken: true },
+    choices: arr.map(String),
+    answerIndex: arr.indexOf(rest),
+    explainSteps: [],
+  };
+}
+
+/** 10のおともだち: 10の枠に aこ あるのを 見せて「あと いくつで 10？」を 答える（10の補数・くりあがりの素地） */
+export function tenFrameComplementToBattle(rng: () => number = Math.random): BattleQuestion {
+  const a = 1 + Math.floor(rng() * 9); // 1..9
+  const need = 10 - a; // こたえ = あと いくつで 10
+  // need の 近くで 重複なし 4択（0..10）
+  const set = new Set<number>([need]);
+  let k = 1;
+  while (set.size < 4 && k < 30) {
+    const sign = set.size % 2 === 0 ? 1 : -1;
+    const cand = need + sign * Math.ceil(k / 2);
+    if (cand >= 0 && cand <= 10) set.add(cand);
+    k++;
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return {
+    unitId: 'ten-frame-complement',
+    promptText: '⚡ あと いくつで 10？',
+    // a こ だけ ぬる、のこりは 空（点線）。b=0
+    visual: { kind: 'ten-frame-sum', a, b: 0, emojiA: '🔵', emojiB: '🟡' },
+    choices: arr.map(String),
+    answerIndex: arr.indexOf(need),
+    explainSteps: [],
+  };
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -370,6 +421,8 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'number-line': numberLineToBattle,
   'estimate-pile': estimateToBattle,
   'ten-frame-sum': tenFrameSumToBattle,
+  'ten-frame-sub': tenFrameSubToBattle,
+  'ten-frame-complement': tenFrameComplementToBattle,
 };
 
 export function generateBattleQuestion(
