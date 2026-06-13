@@ -12,6 +12,11 @@ import { generateRotationProblem } from '../geometry/rotation';
 import { generateComposeProblem } from '../geometry/compose';
 import { generatePatternProblem } from '../geometry/pattern';
 import { generateSpatialProblem } from '../geometry/spatial';
+import {
+  generateTangramCompose,
+  generateTangramMissing,
+  generateTangramDecompose,
+} from '../geometry/tangram';
 
 /** 3択の数値配列に4つ目のダミー選択肢を追加してシャッフル。answerIndex を返す */
 function toFourChoices(
@@ -245,6 +250,48 @@ export function shapeSpatialToBattle(_rng: () => number = Math.random): BattleQu
   };
 }
 
+// ── スーパーマーケットの くに（タングラム）──
+// すべて shape-compose ビジュアル（questionSvg＋choiceSvgs）に乗せて 図形で見せる。
+
+/** タングラム・くみあわせ: ピースを あわせると どの しなものが できる？ */
+export function tangramComposeToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateTangramCompose(rng);
+  return {
+    unitId: 'tangram-compose',
+    promptText: p.questionLabel,
+    visual: { kind: 'shape-compose', questionSvg: p.questionSvg, choiceSvgs: p.choices.map((c) => c.svg) },
+    choices: p.choices.map((c) => c.label),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+  };
+}
+
+/** タングラム・たりないピース: あなに ぴったり あう ピースは どれ？ */
+export function tangramMissingToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateTangramMissing(rng);
+  return {
+    unitId: 'tangram-missing',
+    promptText: p.questionLabel,
+    visual: { kind: 'shape-compose', questionSvg: p.questionSvg, choiceSvgs: p.choices.map((c) => c.svg) },
+    choices: p.choices.map((c) => c.label),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+  };
+}
+
+/** タングラム・ぶんかい: この しなものは どの ピースで できてる？ */
+export function tangramDecomposeToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateTangramDecompose(rng);
+  return {
+    unitId: 'tangram-decompose',
+    promptText: p.questionLabel,
+    visual: { kind: 'shape-compose', questionSvg: p.questionSvg, choiceSvgs: p.choices.map((c) => c.svg) },
+    choices: p.choices.map((c) => c.label),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+  };
+}
+
 /** 数直線わたり: カエルが立つ位置を見て「いくつ?」を当てる（線形数感覚・推定） */
 export function numberLineToBattle(rng: () => number = Math.random): BattleQuestion {
   // できる子向け: 0〜100 を中心に、20・50 も混ぜてレンジに変化を出す
@@ -418,6 +465,9 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'shape-compose': shapeComposeToBattle,
   'shape-pattern': shapePatternToBattle,
   'shape-spatial': shapeSpatialToBattle,
+  'tangram-compose': tangramComposeToBattle,
+  'tangram-missing': tangramMissingToBattle,
+  'tangram-decompose': tangramDecomposeToBattle,
   'number-line': numberLineToBattle,
   'estimate-pile': estimateToBattle,
   'ten-frame-sum': tenFrameSumToBattle,
