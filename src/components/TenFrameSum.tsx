@@ -12,33 +12,43 @@ interface Props {
   flashMs?: number;
   /** こたえた あとは ずっと 見せる（こたえあわせ用） */
   answered?: boolean;
+  /** ひきざん表示: b の かたまりを「とった（✕で うすく）」ように 見せる */
+  taken?: boolean;
 }
 
-/** 10の枠（5×2）を ならべて a＋b を 色ちがいの かたまりで 見せる。 */
-function Frames({ a, b, emojiA, emojiB }: { a: number; b: number; emojiA: string; emojiB: string }) {
+/**
+ * 10の枠（5×2）を ならべて a＋b を 色ちがいの かたまりで 見せる。
+ * `taken` のときは b の かたまりを「とった」ように うすく ✕ で みせる（ひきざん用）。
+ */
+function Frames({ a, b, emojiA, emojiB, taken }: { a: number; b: number; emojiA: string; emojiB: string; taken?: boolean }) {
   const total = a + b;
   const frameCount = Math.max(1, Math.ceil(total / 10));
-  const cells: (string | null)[] = [];
+  // 各マスの 種類: 'a'（のこす/たす1色目）/ 'b'（たす2色目 or とる）/ null（空）
+  const kinds: ('a' | 'b' | null)[] = [];
   for (let i = 0; i < frameCount * 10; i++) {
-    if (i < a) cells.push(emojiA);
-    else if (i < total) cells.push(emojiB);
-    else cells.push(null);
+    if (i < a) kinds.push('a');
+    else if (i < total) kinds.push('b');
+    else kinds.push(null);
   }
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
       {Array.from({ length: frameCount }).map((_, f) => (
         <div key={f} className="grid grid-cols-5 gap-1 rounded-xl border-[3px] border-sky-300 bg-white p-1.5">
-          {cells.slice(f * 10, f * 10 + 10).map((c, i) => (
-            <div
-              key={i}
-              className={
-                'flex h-7 w-7 items-center justify-center rounded-md text-lg leading-none ' +
-                (c ? 'bg-rose-50' : 'border border-dashed border-sky-200 bg-sky-50/50')
-              }
-            >
-              {c ?? ''}
-            </div>
-          ))}
+          {kinds.slice(f * 10, f * 10 + 10).map((k, i) => {
+            const isTaken = taken && k === 'b';
+            return (
+              <div
+                key={i}
+                className={
+                  'relative flex h-7 w-7 items-center justify-center rounded-md text-lg leading-none ' +
+                  (k ? (isTaken ? 'bg-gray-100' : 'bg-rose-50') : 'border border-dashed border-sky-200 bg-sky-50/50')
+                }
+              >
+                <span className={isTaken ? 'opacity-30' : ''}>{k === 'a' ? emojiA : k === 'b' ? emojiB : ''}</span>
+                {isTaken && <span className="absolute text-xl font-bold text-red-400">✕</span>}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>
@@ -52,7 +62,7 @@ function Frames({ a, b, emojiA, emojiB }: { a: number; b: number; emojiA: string
  * タイマーは この インスタンス内の 単一 ref で管理し、問題切替(a,b変化)・アンマウントで
  * 必ず clear する（timerRef 使い回しの 取りこぼしを さける）。
  */
-export function TenFrameSum({ a, b, emojiA = '🔴', emojiB = '🟡', flashMs = 1600, answered = false }: Props) {
+export function TenFrameSum({ a, b, emojiA = '🔴', emojiB = '🟡', flashMs = 1600, answered = false, taken = false }: Props) {
   const [shown, setShown] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -82,7 +92,7 @@ export function TenFrameSum({ a, b, emojiA = '🔴', emojiB = '🟡', flashMs = 
     <div className="flex flex-col items-center gap-2" style={{ minHeight: 120, justifyContent: 'center' }}>
       {visible ? (
         <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.15 }}>
-          <Frames a={a} b={b} emojiA={emojiA} emojiB={emojiB} />
+          <Frames a={a} b={b} emojiA={emojiA} emojiB={emojiB} taken={taken} />
         </motion.div>
       ) : (
         <button

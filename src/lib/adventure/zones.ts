@@ -251,6 +251,32 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     wall: '🔢',
     tint: 'rgba(150,90,210,.22)',
   },
+  {
+    id: 'zone-tenframe-sub',
+    name: 'パッとひきざん',
+    emoji: '✂️',
+    bgFrom: 'from-rose-100',
+    bgTo: 'to-red-200',
+    unitIds: ['ten-frame-sub'],
+    layerCount: 8,
+    tagline: '10の枠で パッと ひきざん',
+    story: '10の まほうの枠から おやつを とるよ。\nとった ぶんは ✕に なるから、\nのこりが いくつか パッと よんでね！',
+    wall: '✂️',
+    tint: 'rgba(210,90,90,.22)',
+  },
+  {
+    id: 'zone-tenframe-ten',
+    name: '10の おともだち',
+    emoji: '🤝',
+    bgFrom: 'from-teal-100',
+    bgTo: 'to-emerald-200',
+    unitIds: ['ten-frame-complement'],
+    layerCount: 8,
+    tagline: 'あと いくつで 10？',
+    story: '10に なると なかよしの しるし。\nいま いくつ あるか パッと みて、\nあと いくつで 10に なるか こたえてね！',
+    wall: '🟢',
+    tint: 'rgba(70,180,140,.22)',
+  },
 ];
 
 export function getZone(id: string): AdventureZoneDef {

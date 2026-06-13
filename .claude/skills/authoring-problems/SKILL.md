@@ -272,3 +272,15 @@ npx vitest run                                          # 全部
   ・忘れず: `ArrowAdventureUnit.tsx` の **`REGION_TINT` に 新ゾーンid を 追加**（`ACCENT` は 既存キー再利用可）。
     `adventure.test.ts` の `lakeQuests`(minCornersShortest>=3) は **lake限定**なので 新しい矢印ゾーンには
     かからない＝L字ズルを ふせぎたい矢印ゾーンを 作るなら 同テストを その zoneId にも 広げる。
+- [2026-06-13] としょかん/あまりんぼの たに(division-remainder)の `DivideVisual` を「1まわりずつ
+  くばる」見せ方に変更（割り算を習う前の子向け）。かごを満タンにする順だと分配が見えないので、
+  reveal の motion delay を `(ii * divisor + gi)` で「全かごに1こずつ→また1こずつ」のラウンド順にし、
+  配り終わりに「どの かごも おなじ N こ」、あまりは「もう 1こずつ くばれない → あまり N こ」と理由を明示。
+- [2026-06-13] かぞえる もり(estimate-pile)が `MathAdventureUnit.tsx` の `maxHeight:170,overflow:hidden`
+  で下が切れて全部数えられなかった → クリップ削除。最大78こ=8ブロックが wrap で縦に積まれると切れる。
+  **数えさせる山は overflow で隠さない**（数える対象を隠すのは本末転倒）。
+- [2026-06-13] パッとそろばんの「少し変化」版を2ゾーン追加（✂️パッとひきざん=ten-frame-sub／
+  🤝10の おともだち=ten-frame-complement）。どちらも **既存の `ten-frame-sum` visual を再利用**して
+  実装を増やさない: ひきざんは `TenFrameSum` に `taken?` を足し b の枠を✕で薄く（=とった）見せ、
+  補数は b=0 で aこだけ塗り「あと いくつで 10？」を問う。visual kind は増やさず adapter＋zone＋taken のみ。
+  ゾーンは末尾追加（直線アンロックなので途中挿入は次ゾーンを再ロックさせる）。
