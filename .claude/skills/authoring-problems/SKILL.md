@@ -284,3 +284,20 @@ npx vitest run                                          # 全部
   実装を増やさない: ひきざんは `TenFrameSum` に `taken?` を足し b の枠を✕で薄く（=とった）見せ、
   補数は b=0 で aこだけ塗り「あと いくつで 10？」を問う。visual kind は増やさず adapter＋zone＋taken のみ。
   ゾーンは末尾追加（直線アンロックなので途中挿入は次ゾーンを再ロックさせる）。
+- [2026-06-14] としょかんに「スーパーマーケットの くに」タングラム3ゾーン追加（🛒くみあわせ／
+  🥐たりないピース／🧀ぶんかい）。学んだこと:
+  ・**図形バトルは新 visual kind を作らず `shape-compose`（questionSvg＋choiceSvgs）に乗せる**と
+    UI改修ゼロ＝バグ最小。`MathAdventureUnit` の `ShapeChoiceGrid`/`ComposeSvg` がそのまま描く。
+    お題・選択肢は viewBox "0 0 200 120" で生成（ComposeSvg と そろえる）。
+  ・**選択肢ラベルは ぜったい 意味のある形名**にする（「ましかく」「さんかく と さんかく」等）。
+    `ShapeChoiceGrid` は不正解時「こたえは <ラベル> だよ」を出すので「ピース1」だと無意味になる
+    （これを守れば `これが こたえ！`分岐への手入れ不要）。テストで `/かたち\d|ピース\d/` を禁止。
+  ・**「たりないピース」は 穴(点線polygon)と 正解ピースを 同じ points で 合同にする**と ぴったり感が
+    確実。ダミーは形・サイズ・向きを変える。スクショ目視で「穴と正解が一致」を必ず確認。
+  ・**循環import の罠**: データ配列が トップレベルで SVGヘルパーを呼ぶ（`questionSvg: triUp(...)`）と、
+    ヘルパーを同ファイルから export しつつ そのファイルがデータを import すると
+    `Cannot access 'X' before initialization`。型・ヘルパー・色は別ファイル（`tangramShapes.ts`）に
+    切り出し、data も logic も そこに依存させて 循環を断つ。
+  ・**検証**: 固定データ＋構造テスト（4択／answerIndex範囲／SVG有／ラベル一意）。幾何的な正しさは
+    一時 vitest で 全問のSVGを HTMLに dump → `capture()` で スクショ目視（テーマ別にファイル分割すると
+    縦長でも 読める）。確認後 一時ファイル（test・dump・png・html）は消す。
