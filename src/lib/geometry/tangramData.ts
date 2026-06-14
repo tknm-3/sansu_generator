@@ -28,9 +28,9 @@ function circle(cx: number, cy: number, r: number, color: string): string {
 // ════════════════════════════════════════════════════════════════
 export const TANGRAM_COMPOSE: RawTangram[] = [
   {
-    // △ ＋ △ → ましかく（チーズ）
+    // △ ＋ △ → ましかく（チーズ）。直角三角2枚で 四角に なるのが 見えるよう 直角三角で見せる
     questionLabel: 'さんかく ＋ さんかく で なにが できる？',
-    questionSvg: `${triUp(20, 35, 65, 60, BLUE)}${triUp(115, 35, 65, 60, GREEN)}`,
+    questionSvg: `<polygon points="25,35 25,95 90,95" fill="${BLUE}" stroke="white" stroke-width="2"/><polygon points="180,35 180,95 115,95" fill="${GREEN}" stroke="white" stroke-width="2"/>`,
     choices: [
       { label: 'ましかく', svg: rect(60, 20, 80, 80, YELLOW) },
       { label: 'ながしかく', svg: rect(20, 45, 160, 45, ORANGE) },
