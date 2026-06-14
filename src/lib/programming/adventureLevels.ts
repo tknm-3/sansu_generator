@@ -489,6 +489,56 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'なぞの たからじまに とうちゃく！\nまんなかや すみっこに かくれた ほうせき💎を ぜんぶ ひろって、おうちへ もちかえろう！',
     wall: '🪨', tile: 'bg-amber-50', wallTile: 'bg-amber-200', board: 'bg-amber-100/80',
   },
+  {
+    id: 'detour',
+    name: 'まわりみちの とりで',
+    emoji: '🧱',
+    bg: 'from-slate-100 to-zinc-50',
+    accent: 'indigo',
+    tagline: 'まっすぐ いけない！ まわりみちを さがそう',
+    story: 'たかい かべの とりで。\nまっすぐ すすめない ところは、ぐるっと まわりみちを かんがえて おうちへ かえろう！',
+    wall: '🧱', tile: 'bg-slate-50', wallTile: 'bg-slate-300', board: 'bg-slate-200/70',
+  },
+  {
+    id: 'backtrack',
+    name: 'あともどりの どうくつ',
+    emoji: '🔦',
+    bg: 'from-violet-100 to-purple-50',
+    accent: 'violet',
+    tagline: 'ゴールと はんたいの たからも とりに いこう',
+    story: 'まっくらな どうくつ。\nゴールと はんたいがわに たからが ある！ いちど とおざかって、ひろってから もどろう。',
+    wall: '🪨', tile: 'bg-violet-50', wallTile: 'bg-violet-200', board: 'bg-violet-200/70',
+  },
+  {
+    id: 'vault',
+    name: 'とじこめられた たから',
+    emoji: '🔒',
+    bg: 'from-orange-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'へやに はいって たからを とって でよう',
+    story: 'かぎの かかった たからべや。\nせまい いりぐちから はいって、たから💎を とって、また でてくる みちを かんがえよう！',
+    wall: '🧱', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-200/70',
+  },
+  {
+    id: 'ghost',
+    name: 'おばけの まよいみち',
+    emoji: '👻',
+    bg: 'from-emerald-100 to-green-50',
+    accent: 'emerald',
+    tagline: 'おばけ🧟に ぶつからないよう よけて すすもう',
+    story: 'ひんやり おばけの まよいみち。\nおばけ🧟に ぶつからないように、ジグザグに よけながら おうちへ かえろう！',
+    wall: '🪦', tile: 'bg-emerald-50', wallTile: 'bg-emerald-200', board: 'bg-emerald-200/70',
+  },
+  {
+    id: 'spiral',
+    name: 'うずまきの とう',
+    emoji: '🌀',
+    bg: 'from-sky-100 to-cyan-50',
+    accent: 'sky',
+    tagline: 'ぐるぐる まいて おくの たからへ',
+    story: 'ふしぎな うずまきの とう。\nかべに そって ぐるぐる まわりながら、おくに ある たから💎を めざそう！',
+    wall: '🧱', tile: 'bg-sky-50', wallTile: 'bg-sky-300', board: 'bg-sky-200/70',
+  },
 ];
 
 const GEM = '🎁';
@@ -699,7 +749,7 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     id: 'adv-q30', zoneId: 'castle', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
     walls: [], gems: [r(0, 5), r(5, 0)], gemEmoji: GEM,
     zombies: [{ kind: 'fixed', pos: r(2, 2) }, { kind: 'fixed', pos: r(3, 3) }],
-    optimal: 20, maxSlots: 30, allowLoop: true, goalEmoji: HOME,
+    optimal: 20, maxSlots: 26, allowLoop: true, goalEmoji: HOME,
     prompt: '👑さいごの ぼうけん！ たからばこ2つを ぜんぶ とって おうちへ',
   },
 
@@ -2074,6 +2124,153 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     id: 'adv-q187', zoneId: 'island', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
     walls: [], gems: [r(2, 2), r(3, 3), r(0, 5), r(5, 0)], gemEmoji: CRYSTAL, optimal: 22, maxSlots: 26, goalEmoji: HOME,
     prompt: '🏝️たからじまの ボス！ まんなかと すみっこの たからを ぜんぶ あつめよう',
+  },
+
+  // ─── 🧱 まわりみちの とりで（adv-q188〜adv-q192）矢印ならべ・かべを ぐるっと まわる ───
+  {
+    id: 'adv-q188', zoneId: 'detour', rows: 4, cols: 4, start: r(0, 0), goal: r(0, 3),
+    walls: [r(0, 1), r(0, 2)], gems: [], optimal: 5, maxSlots: 11, goalEmoji: HOME,
+    prompt: 'まっすぐ いけない！ したを とおって おうちへ',
+  },
+  {
+    id: 'adv-q189', zoneId: 'detour', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 0),
+    walls: [r(1, 0), r(2, 0)], gems: [], optimal: 5, maxSlots: 11, goalEmoji: HOME,
+    prompt: 'かべを よけて、よこから まわりこもう',
+  },
+  {
+    id: 'adv-q190', zoneId: 'detour', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
+    walls: [r(0, 2), r(1, 2), r(2, 2), r(3, 2)], gems: [], optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'ながい かべ！ したの すきまから むこうがわへ',
+  },
+  {
+    id: 'adv-q191', zoneId: 'detour', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 1), r(1, 2), r(1, 3), r(1, 4), r(3, 0), r(3, 1), r(3, 2), r(3, 3)],
+    gems: [r(2, 2)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'くねくね みち！ すきまを さがして たからを ひろおう',
+  },
+  {
+    id: 'adv-q192', zoneId: 'detour', rows: 6, cols: 6, start: r(0, 0), goal: r(0, 5),
+    walls: [r(0, 3), r(1, 3), r(2, 3), r(3, 3), r(4, 3)], gems: [r(5, 1)], gemEmoji: CRYSTAL, optimal: 15, maxSlots: 22, goalEmoji: HOME,
+    prompt: '🧱とりでの ボス！ おおまわりして たからを もってかえろう',
+  },
+
+  // ─── 🔦 あともどりの どうくつ（adv-q193〜adv-q197）矢印ならべ・ゴールと逆の たからを とる ───
+  {
+    id: 'adv-q193', zoneId: 'backtrack', rows: 4, cols: 4, start: r(0, 3), goal: r(3, 3),
+    walls: [], gems: [r(0, 0)], gemEmoji: CRYSTAL, optimal: 9, maxSlots: 15, goalEmoji: HOME,
+    prompt: 'たから💎は はんたいがわ！ とってから おうちへ',
+  },
+  {
+    id: 'adv-q194', zoneId: 'backtrack', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [], gems: [r(3, 0), r(0, 3)], gemEmoji: CRYSTAL, optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'りょうがわの すみの たからを とりに いこう',
+  },
+  {
+    id: 'adv-q195', zoneId: 'backtrack', rows: 5, cols: 5, start: r(4, 0), goal: r(4, 4),
+    walls: [], gems: [r(0, 0)], gemEmoji: CRYSTAL, optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'うえに ある たからを とって、もどって ゴールへ',
+  },
+  {
+    id: 'adv-q196', zoneId: 'backtrack', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
+    walls: [], gems: [r(4, 0), r(4, 4)], gemEmoji: CRYSTAL, optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'したの すみ ふたつを まわってから もどろう',
+  },
+  {
+    id: 'adv-q197', zoneId: 'backtrack', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 0),
+    walls: [], gems: [r(0, 5), r(5, 5)], gemEmoji: CRYSTAL, optimal: 15, maxSlots: 21, goalEmoji: HOME,
+    prompt: '🔦どうくつの ボス！ むこうの すみを まわって もどってこよう',
+  },
+
+  // ─── 🔒 とじこめられた たから（adv-q198〜adv-q202）矢印ならべ・へやに 入って 出る ───
+  {
+    id: 'adv-q198', zoneId: 'vault', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [r(0, 2)], gems: [r(0, 3)], gemEmoji: CRYSTAL, optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'すみの たから💎へ、したから まわって とりに いこう',
+  },
+  {
+    id: 'adv-q199', zoneId: 'vault', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 0),
+    walls: [r(1, 3)], gems: [r(0, 3)], gemEmoji: CRYSTAL, optimal: 9, maxSlots: 15, goalEmoji: HOME,
+    prompt: 'たから💎を とったら、もどって ゴールへ',
+  },
+  {
+    id: 'adv-q200', zoneId: 'vault', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 0), r(3, 0)], gems: [r(2, 0)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'よこの いりぐちから へやに 入って、たからを とって 出よう',
+  },
+  {
+    id: 'adv-q201', zoneId: 'vault', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [r(1, 2), r(2, 1), r(2, 3)], gems: [r(2, 2)], gemEmoji: CRYSTAL, optimal: 10, maxSlots: 16, goalEmoji: HOME,
+    prompt: 'まんなかの へやは いりぐちが ひとつ！ 入って 出よう',
+  },
+  {
+    id: 'adv-q202', zoneId: 'vault', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(2, 2), r(3, 1), r(3, 3)], gems: [r(3, 2), r(0, 5)], gemEmoji: CRYSTAL, optimal: 18, maxSlots: 24, goalEmoji: HOME,
+    prompt: '🔒たからべやの ボス！ へやの たからと とおくの たから、ぜんぶ あつめよう',
+  },
+
+  // ─── 👻 おばけの まよいみち（adv-q203〜adv-q207）矢印ならべ・固定ゾンビを よける ───
+  {
+    id: 'adv-q203', zoneId: 'ghost', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3),
+    walls: [], zombies: [{ kind: 'fixed', pos: r(1, 1) }, { kind: 'fixed', pos: r(2, 2) }],
+    optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'おばけ🧟を よけて おうちへ いこう',
+  },
+  {
+    id: 'adv-q204', zoneId: 'ghost', rows: 4, cols: 4, start: r(0, 0), goal: r(0, 3),
+    walls: [], zombies: [{ kind: 'fixed', pos: r(0, 1) }, { kind: 'fixed', pos: r(0, 2) }],
+    gems: [], optimal: 5, maxSlots: 11, goalEmoji: HOME,
+    prompt: 'おばけが みちを ふさいでる！ したから まわろう',
+  },
+  {
+    id: 'adv-q205', zoneId: 'ghost', rows: 5, cols: 5, start: r(0, 0), goal: r(0, 4),
+    walls: [],
+    zombies: [{ kind: 'fixed', pos: r(0, 2) }, { kind: 'fixed', pos: r(1, 2) }, { kind: 'fixed', pos: r(2, 2) }, { kind: 'fixed', pos: r(3, 2) }],
+    gems: [r(4, 0)], gemEmoji: CRYSTAL, optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'おばけの かべ！ したを とおって むこうへ まわろう',
+  },
+  {
+    id: 'adv-q206', zoneId: 'ghost', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4),
+    walls: [],
+    zombies: [{ kind: 'fixed', pos: r(1, 0) }, { kind: 'fixed', pos: r(1, 1) }, { kind: 'fixed', pos: r(1, 2) }, { kind: 'fixed', pos: r(1, 3) }, { kind: 'fixed', pos: r(3, 1) }, { kind: 'fixed', pos: r(3, 2) }, { kind: 'fixed', pos: r(3, 3) }, { kind: 'fixed', pos: r(3, 4) }],
+    gems: [], optimal: 16, maxSlots: 22, goalEmoji: HOME,
+    prompt: 'おばけの れつを ヘビのように よけて すすもう',
+  },
+  {
+    id: 'adv-q207', zoneId: 'ghost', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [],
+    zombies: [{ kind: 'fixed', pos: r(1, 0) }, { kind: 'fixed', pos: r(1, 1) }, { kind: 'fixed', pos: r(1, 2) }, { kind: 'fixed', pos: r(1, 3) }, { kind: 'fixed', pos: r(1, 4) }, { kind: 'fixed', pos: r(3, 1) }, { kind: 'fixed', pos: r(3, 2) }, { kind: 'fixed', pos: r(3, 3) }, { kind: 'fixed', pos: r(3, 4) }, { kind: 'fixed', pos: r(3, 5) }],
+    gems: [r(2, 2)], gemEmoji: CRYSTAL, optimal: 20, maxSlots: 26, goalEmoji: HOME,
+    prompt: '👻まよいみちの ボス！ おばけの れつを よけて たからを とろう',
+  },
+
+  // ─── 🌀 うずまきの とう（adv-q208〜adv-q212）矢印ならべ・くねくね まいて すすむ ───
+  {
+    id: 'adv-q208', zoneId: 'spiral', rows: 3, cols: 3, start: r(0, 0), goal: r(0, 2),
+    walls: [r(0, 1), r(1, 1)], gems: [], optimal: 6, maxSlots: 12, goalEmoji: HOME,
+    prompt: 'ぐるっと まわって おうちへ',
+  },
+  {
+    id: 'adv-q209', zoneId: 'spiral', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 0),
+    walls: [r(1, 0), r(1, 1), r(1, 2)], gems: [], optimal: 9, maxSlots: 15, goalEmoji: HOME,
+    prompt: 'かべを まわりこんで くるっと すすもう',
+  },
+  {
+    id: 'adv-q210', zoneId: 'spiral', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 0),
+    walls: [r(1, 0), r(1, 1), r(1, 2), r(1, 3), r(3, 1), r(3, 2), r(3, 3), r(3, 4)],
+    gems: [], optimal: 12, maxSlots: 18, goalEmoji: HOME,
+    prompt: 'くねくね みちを ヘビのように すすもう',
+  },
+  {
+    id: 'adv-q211', zoneId: 'spiral', rows: 5, cols: 5, start: r(0, 0), goal: r(2, 2),
+    walls: [r(1, 1), r(1, 2), r(1, 3), r(2, 1), r(2, 3), r(3, 1), r(3, 3)],
+    gems: [], optimal: 8, maxSlots: 14, goalEmoji: HOME,
+    prompt: 'うずまきの まんなかへ ぐるっと はいろう',
+  },
+  {
+    id: 'adv-q212', zoneId: 'spiral', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5),
+    walls: [r(1, 0), r(1, 1), r(1, 2), r(1, 3), r(1, 4), r(3, 1), r(3, 2), r(3, 3), r(3, 4), r(3, 5)],
+    gems: [r(2, 2)], gemEmoji: CRYSTAL, optimal: 20, maxSlots: 26, goalEmoji: HOME,
+    prompt: '🌀とうの ボス！ くねくね まいて おくの たからを とろう',
   },
 ];
 
