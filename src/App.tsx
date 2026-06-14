@@ -43,6 +43,8 @@ import { BabyHomeScreen } from './screens/BabyHomeScreen';
 import { CountAnimalsUnit } from './screens/CountAnimalsUnit';
 import { PairPlaceUnit } from './screens/PairPlaceUnit';
 import { MatchSameUnit } from './screens/MatchSameUnit';
+import { CompareMoreUnit } from './screens/CompareMoreUnit';
+import { GiveNUnit } from './screens/GiveNUnit';
 import { setBgmTrack } from './features/sound/bgm';
 import { loadCharacter, getCharName, saveCharacterNameForId } from './features/character/character';
 import { CHARACTER_DEFS } from './features/character/characterDefs';
@@ -205,6 +207,10 @@ export default function App() {
           return <PairPlaceUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
         case 'match-same':
           return <MatchSameUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
+        case 'compare-more':
+          return <CompareMoreUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
+        case 'give-n':
+          return <GiveNUnit key={refresh} characterName={character.name} onExit={backToBabyHome} />;
         case 'dice-walk':
         default:
           return (
