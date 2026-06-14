@@ -223,6 +223,16 @@ const REGION_TINT: Record<string, string> = {
   rock:     'rgba(120,170,70,.28)',
   night:    'rgba(80,90,170,.30)',
   leaf:     'rgba(90,160,110,.28)',
+  rainbow:  'rgba(150,100,210,.28)',
+  mushroom: 'rgba(120,180,70,.28)',
+  island:   'rgba(220,160,70,.28)',
+  detour:    'rgba(100,110,150,.30)',
+  backtrack: 'rgba(140,100,200,.30)',
+  vault:     'rgba(220,150,70,.30)',
+  ghost:     'rgba(90,170,120,.28)',
+  spiral:    'rgba(70,160,210,.28)',
+  relisland:   'rgba(220,170,80,.28)',
+  reltreasure: 'rgba(220,140,70,.30)',
 };
 
 interface TownStop {
