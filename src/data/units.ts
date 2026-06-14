@@ -247,6 +247,22 @@ export const UNITS: UnitMeta[] = [
     curriculum: '論理の素地：見本と同じものを選ぶ（分類・属性のマッチング）',
     emoji: '🔷',
   },
+  {
+    id: 'compare-more',
+    category: 'baby',
+    title: 'どっちが おおい？',
+    grade: '2〜3さい',
+    curriculum: '数の素地：ふたつの集まりを数えずに直感で比べる（近似数システム ANS）。ひりつで難易度づけ',
+    emoji: '⚖️',
+  },
+  {
+    id: 'give-n',
+    category: 'baby',
+    title: '○こ ちょうだい',
+    grade: '2〜3さい',
+    curriculum: '数の素地：数詞を聞いてその数の集まりを作る（基数原理・Give-N課題）。見て数えるの逆',
+    emoji: '🍪',
+  },
   // ── ファミリー カテゴリ ──
   {
     id: 'bingo-sugoroku',
