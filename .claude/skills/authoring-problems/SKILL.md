@@ -301,3 +301,20 @@ npx vitest run                                          # 全部
   ・**検証**: 固定データ＋構造テスト（4択／answerIndex範囲／SVG有／ラベル一意）。幾何的な正しさは
     一時 vitest で 全問のSVGを HTMLに dump → `capture()` で スクショ目視（テーマ別にファイル分割すると
     縦長でも 読める）。確認後 一時ファイル（test・dump・png・html）は消す。
+- [2026-06-14] としょかんに「パッと出す系3＋かたち系3」=6ゾーン追加（🔢20までの10の枠/💰ねだん
+  パッと/✖️パッと かけ算/🪞かがみ線対称/🍰タングラムのつづき/📏おおきさくらべ）。学んだこと:
+  ・**新 visual kind は できるだけ 作らない**＝既存ビジュアルを 流用すると UI/バグが 最小。今回 6つの
+    うち 4つは流用で すんだ: 20までの10の枠＝`ten-frame-sum`(a=10・b=1..10で「10といくつ」)、
+    パッとかけ算＝`groups`(×2・×5中心)、かがみ＝`shape-rotation`(flip強制の `generateMirrorProblem`を
+    rotation.tsに追加。ダミーは「うらがえさない 回転」だけにして かがみ vs 回転を みわけさせる)、
+    タングラムのつづき＝`shape-compose`(tangramData.tsに `TANGRAM_ADVANCED`プール＋tangram.tsに
+    generator＋adapter)。新規コンポーネントは `coins`/`size-compare` の 2つだけ。
+  ・**coins(ねだん)**: こうかを しゅるいごと（100/50/10/5/1）に ならべる `CoinsVisual`。ベースは
+    10いじょうの こうか1しゅるい＋おまけ0〜2しゅるいにして 合計が ちいさくなりすぎない（≥10）ように。
+  ・**size-compare(おおきさくらべ)**: big/small は ましかくの 大きさ、long/short は よこ棒の ながさで
+    くらべる。サイズは `[0.5,0.65,0.8,1.0]` を シャッフルして 全部ちがう値＝いちばんが 1つに きまる
+    （テストで `new Set(sizes).size===4` と answerIndex=max/min を 固定）。選択肢は いろの なまえ（テキスト）
+    なので `BattleButtons` の デフォルト分岐で 描ける（図形の `ShapeChoiceGrid` 不要）。
+  ・忘れず: ①`types.ts` の `BattleVisual` に kind 追加 ②`MathAdventureUnit.tsx` の描画スイッチに分岐追加
+    ③`adapters.ts` の `ADAPTERS` 登録 ④`zones.ts` は **末尾に追加**（直線アンロック）。
+    新 adapter は `adapters.test.ts` の `ADAPTERS` 配列に足すと 4択/重複なし/answerIndex を 自動で守れる。
