@@ -539,6 +539,26 @@ export const ADVENTURE_ZONES: AdventureZone[] = [
     story: 'ふしぎな うずまきの とう。\nかべに そって ぐるぐる まわりながら、おくに ある たから💎を めざそう！',
     wall: '🧱', tile: 'bg-sky-50', wallTile: 'bg-sky-300', board: 'bg-sky-200/70',
   },
+  {
+    id: 'relisland',
+    name: 'たからじまの ちず',
+    emoji: '🧭',
+    bg: 'from-amber-100 to-yellow-50',
+    accent: 'amber',
+    tagline: 'むきを かえながら たからじまを たんけん',
+    story: 'たからじまの ちずを てに いれた！\nたんけんかが むいている ほうを きじゅんに、まえへ すすんだり むきを かえたりして、たから💎を あつめよう！',
+    wall: '🌴', tile: 'bg-amber-50', wallTile: 'bg-amber-200', board: 'bg-amber-100/80',
+  },
+  {
+    id: 'reltreasure',
+    name: 'たからじまの ひほう',
+    emoji: '🪙',
+    bg: 'from-orange-100 to-amber-50',
+    accent: 'orange',
+    tagline: 'むきを かえて まんなかや すみの ひほうへ',
+    story: 'しまの おくに ねむる ひほう。\nむきを かえながら、まんなかや すみっこの たから💎を ぜんぶ あつめて おうちへ かえろう！',
+    wall: '🪨', tile: 'bg-orange-50', wallTile: 'bg-orange-200', board: 'bg-orange-200/70',
+  },
 ];
 
 const GEM = '🎁';
@@ -2271,6 +2291,70 @@ export const ADVENTURE_QUEST: AdventureQuest[] = [
     walls: [r(1, 0), r(1, 1), r(1, 2), r(1, 3), r(1, 4), r(3, 1), r(3, 2), r(3, 3), r(3, 4), r(3, 5)],
     gems: [r(2, 2)], gemEmoji: CRYSTAL, optimal: 20, maxSlots: 26, goalEmoji: HOME,
     prompt: '🌀とうの ボス！ くねくね まいて おくの たからを とろう',
+  },
+
+  // ─── 🧭 たからじまの ちず（adv-q213〜adv-q217）そうたい方向・たからじまの たんけん ───
+  {
+    id: 'adv-q213', zoneId: 'relisland', rows: 4, cols: 4, start: r(0, 0), goal: r(3, 3), startFacing: 'right',
+    walls: [], gems: [r(1, 1), r(2, 2)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right', 'forward'], optimal: 9, maxSlots: 16,
+    prompt: 'まえと むきを かえて たから💎を ひろおう',
+  },
+  {
+    id: 'adv-q214', zoneId: 'relisland', rows: 4, cols: 4, start: r(3, 0), goal: r(0, 3), startFacing: 'up',
+    walls: [], gems: [r(2, 1), r(1, 2)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right', 'forward'], optimal: 9, maxSlots: 16,
+    prompt: 'むきを かえながら たからを あつめよう',
+  },
+  {
+    id: 'adv-q215', zoneId: 'relisland', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4), startFacing: 'right',
+    walls: [], gems: [r(1, 1), r(2, 2), r(3, 3)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward'], optimal: 12, maxSlots: 18,
+    prompt: 'たから💎が 3つ！ むきを かえて ひろおう',
+  },
+  {
+    id: 'adv-q216', zoneId: 'relisland', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(3, 1), r(2, 2), r(1, 3)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward'], optimal: 12, maxSlots: 18,
+    prompt: 'やしのき🌴の しまを むきを かえて すすもう',
+  },
+  {
+    id: 'adv-q217', zoneId: 'relisland', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4), startFacing: 'down',
+    walls: [], gems: [r(2, 2), r(4, 0)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'forward', 'forward', 'forward', 'turn_right', 'turn_right', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward'], optimal: 16, maxSlots: 20,
+    prompt: '🧭ちずの ボス！ まんなかと すみっこの たからを とろう',
+  },
+
+  // ─── 🪙 たからじまの ひほう（adv-q218〜adv-q222）そうたい方向・まんなか/すみの ひほう ───
+  {
+    id: 'adv-q218', zoneId: 'reltreasure', rows: 5, cols: 5, start: r(0, 0), goal: r(4, 4), startFacing: 'right',
+    walls: [], gems: [r(1, 3), r(2, 2), r(3, 1)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward'], optimal: 16, maxSlots: 20,
+    prompt: 'まんなかの ひほうを むきを かえて あつめよう',
+  },
+  {
+    id: 'adv-q219', zoneId: 'reltreasure', rows: 5, cols: 5, start: r(4, 0), goal: r(0, 4), startFacing: 'up',
+    walls: [], gems: [r(2, 2), r(4, 4)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_right', 'turn_right', 'forward', 'forward', 'forward', 'forward'], optimal: 16, maxSlots: 22,
+    prompt: 'まんなかと すみの ひほうを とりに いこう',
+  },
+  {
+    id: 'adv-q220', zoneId: 'reltreasure', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5), startFacing: 'right',
+    walls: [], gems: [r(2, 2), r(4, 4)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward', 'turn_right', 'forward'], optimal: 13, maxSlots: 22,
+    prompt: 'ひろい しまを むきを かえて すすもう',
+  },
+  {
+    id: 'adv-q221', zoneId: 'reltreasure', rows: 6, cols: 6, start: r(5, 0), goal: r(0, 5), startFacing: 'up',
+    walls: [], gems: [r(4, 1), r(2, 3), r(1, 4)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'turn_right', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'turn_left', 'forward'], optimal: 14, maxSlots: 24,
+    prompt: 'ひほうを じゅんばんに ひろって おくへ',
+  },
+  {
+    id: 'adv-q222', zoneId: 'reltreasure', rows: 6, cols: 6, start: r(0, 0), goal: r(5, 5), startFacing: 'down',
+    walls: [], gems: [r(2, 2), r(3, 3), r(5, 0)], gemEmoji: CRYSTAL, goalEmoji: HOME,
+    kind: 'relative', relSolution: ['forward', 'forward', 'forward', 'forward', 'forward', 'turn_right', 'turn_right', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'turn_right', 'forward', 'forward', 'forward', 'turn_left', 'forward', 'forward'], optimal: 21, maxSlots: 26,
+    prompt: '🪙ひほうの ボス！ まんなかと すみっこの ひほうを ぜんぶ あつめよう',
   },
 ];
 

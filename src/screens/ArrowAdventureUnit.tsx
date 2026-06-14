@@ -231,6 +231,8 @@ const REGION_TINT: Record<string, string> = {
   vault:     'rgba(220,150,70,.30)',
   ghost:     'rgba(90,170,120,.28)',
   spiral:    'rgba(70,160,210,.28)',
+  relisland:   'rgba(220,170,80,.28)',
+  reltreasure: 'rgba(220,140,70,.30)',
 };
 
 interface TownStop {
