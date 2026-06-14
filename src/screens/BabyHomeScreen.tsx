@@ -15,6 +15,8 @@ const UNIT_EMOJIS: Record<string, string> = {
   'dice-walk': '🎲',
   'pair-place': '🍪',
   'match-same': '🔷',
+  'compare-more': '⚖️',
+  'give-n': '🍪',
 };
 
 export function BabyHomeScreen({ characterName, characterId, onSelectUnit, onBack }: Props) {
