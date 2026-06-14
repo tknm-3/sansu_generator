@@ -13,9 +13,18 @@ import {
   shapeComposeToBattle,
   shapePatternToBattle,
   shapeSpatialToBattle,
+  tangramComposeToBattle,
+  tangramMissingToBattle,
+  tangramDecomposeToBattle,
+  tangramAdvancedToBattle,
   numberLineToBattle,
   estimateToBattle,
   tenFrameSumToBattle,
+  tenFrameTeenToBattle,
+  coinsToBattle,
+  mulFlashToBattle,
+  shapeMirrorToBattle,
+  sizeCompareToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -44,6 +53,11 @@ describe('battle adapters', () => {
     { name: 'numberLine', fn: numberLineToBattle },
     { name: 'estimate', fn: estimateToBattle },
     { name: 'tenFrameSum', fn: tenFrameSumToBattle },
+    { name: 'tenFrameTeen', fn: tenFrameTeenToBattle },
+    { name: 'coins', fn: coinsToBattle },
+    { name: 'mulFlash', fn: mulFlashToBattle },
+    { name: 'shapeMirror', fn: shapeMirrorToBattle },
+    { name: 'sizeCompare', fn: sizeCompareToBattle },
   ] as const;
 
   for (const { name, fn } of ADAPTERS) {
@@ -203,6 +217,83 @@ describe('パッとそろばん(tenFrameSum)', () => {
   });
 });
 
+describe('20までの10の枠(tenFrameTeen)', () => {
+  it('ten-frame-sum で a=10・b=1..10・正解は 10+b（11..20）', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = tenFrameTeenToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('ten-frame-sum');
+      if (q.visual?.kind !== 'ten-frame-sum') throw new Error('kind mismatch');
+      expect(q.visual.a).toBe(10);
+      expect(q.visual.b).toBeGreaterThanOrEqual(1);
+      expect(q.visual.b).toBeLessThanOrEqual(10);
+      expect(q.choices[q.answerIndex]).toBe(String(10 + q.visual.b));
+    }
+  });
+});
+
+describe('ねだん パッと(coins)', () => {
+  it('coins で 正解は こうかの ごうけい・選択肢4つ重複なし', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = coinsToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('coins');
+      if (q.visual?.kind !== 'coins') throw new Error('kind mismatch');
+      const total = q.visual.coins.reduce((s, c) => s + c.value * c.count, 0);
+      expect(q.choices[q.answerIndex]).toBe(String(total));
+      expect(new Set(q.choices).size).toBe(4);
+      expect(total).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('パッと かけ算(mulFlash)', () => {
+  it('groups で だんは 2か5・正解は perGroup×groups', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = mulFlashToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('groups');
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect([2, 5]).toContain(q.visual.groups);
+      expect(q.visual.perGroup).toBeGreaterThanOrEqual(2);
+      expect(q.visual.perGroup).toBeLessThanOrEqual(5);
+      expect(q.choices[q.answerIndex]).toBe(String(q.visual.perGroup * q.visual.groups));
+      expect(q.visual.equationText).toBe(`${q.visual.perGroup} × ${q.visual.groups}`);
+    }
+  });
+});
+
+describe('かがみ(shapeMirror)', () => {
+  it('shape-rotation で お題は うらがえし・正解の 変換は flipX', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = shapeMirrorToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('shape-rotation');
+      expect(q.choiceTransforms).toBeTruthy();
+      const correct = q.choiceTransforms![q.answerIndex];
+      expect(correct.flipX).toBe(true);
+      // ダミーは すべて うらがえさない（まわしただけ）＝かがみと みわけられる
+      q.choiceTransforms!.forEach((t, i) => {
+        if (i !== q.answerIndex) expect(t.flipX).toBe(false);
+      });
+    }
+  });
+});
+
+describe('おおきさくらべ(sizeCompare)', () => {
+  it('size-compare で 正解は いちばん 大きい/小さい もの', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const q = sizeCompareToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('size-compare');
+      if (q.visual?.kind !== 'size-compare') throw new Error('kind mismatch');
+      const { mode, items } = q.visual;
+      expect(items.length).toBe(4);
+      const sizes = items.map((it) => it.size);
+      const want = mode === 'big' || mode === 'long' ? Math.max(...sizes) : Math.min(...sizes);
+      expect(items[q.answerIndex].size).toBe(want);
+      // サイズは すべて ちがう（いちばんが 1つに きまる）
+      expect(new Set(sizes).size).toBe(4);
+      expect(new Set(q.choices).size).toBe(4);
+    }
+  });
+});
+
 // としょかんモードの図形問題は「テキスト代替(word)」ではなく
 // 図形をそのまま見せるビジュアルで出題する（視覚的にわかるように）。
 describe('図形バトルは視覚的なビジュアルで出す', () => {
@@ -280,6 +371,54 @@ describe('わり算バトルは わける まえの 山を 見せる（5の段�
       expect(q.visual.equationText).toMatch(new RegExp(`^${q.visual.count} ÷ \\d+$`));
     }
   });
+});
+
+// スーパーマーケットの くに（タングラム）: 図形で見せ、選択肢ラベルは 意味のある形名にする
+describe('スーパーマーケットの くに（タングラム）', () => {
+  const TANGRAM = [
+    { name: 'tangramCompose', fn: tangramComposeToBattle },
+    { name: 'tangramMissing', fn: tangramMissingToBattle },
+    { name: 'tangramDecompose', fn: tangramDecomposeToBattle },
+    { name: 'tangramAdvanced', fn: tangramAdvancedToBattle },
+  ] as const;
+
+  for (const { name, fn } of TANGRAM) {
+    describe(name, () => {
+      it('shape-compose ビジュアルで お題・選択肢の 両方が SVGコンテンツを持つ', () => {
+        for (let seed = 1; seed <= 30; seed++) {
+          const q = fn(seededRng(seed));
+          expect(q.visual?.kind).toBe('shape-compose');
+          if (q.visual?.kind !== 'shape-compose') throw new Error('kind mismatch');
+          expect(q.visual.questionSvg).toMatch(/<(polygon|rect|circle)/);
+          expect(q.visual.choiceSvgs).toHaveLength(q.choices.length);
+          for (const svg of q.visual.choiceSvgs) {
+            expect(svg).toMatch(/<(polygon|rect|circle)/);
+          }
+        }
+      });
+
+      it('4択で answerIndex が 正解を指す', () => {
+        for (let seed = 1; seed <= 30; seed++) {
+          const q = fn(seededRng(seed));
+          expect(q.choices).toHaveLength(4);
+          expect(q.answerIndex).toBeGreaterThanOrEqual(0);
+          expect(q.answerIndex).toBeLessThan(4);
+        }
+      });
+
+      it('選択肢ラベルは 重複しない＆意味のある形名（「こたえは ○ だよ」が なりたつ）', () => {
+        for (let seed = 1; seed <= 30; seed++) {
+          const q = fn(seededRng(seed));
+          expect(new Set(q.choices).size).toBe(4);
+          for (const label of q.choices) {
+            // ラベルは ひらがなの 形名（「ピース1」みたいな 無意味な ラベルにしない）
+            expect(label.length).toBeGreaterThan(0);
+            expect(label).not.toMatch(/かたち\d|ピース\d/);
+          }
+        }
+      });
+    });
+  }
 });
 
 describe('zone adapter coverage', () => {

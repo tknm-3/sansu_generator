@@ -88,6 +88,39 @@ const HARD_TRANSFORMS: RotationTransform[] = [
   { rotate: 90,  flipX: true  },
 ];
 
+/**
+ * かがみ（線対称）問題: お題は つねに「うらがえし（flipX）」。
+ * 選択肢は「正しい かがみ」＋「まわしただけ（flipX:false の回転）」のダミーで、
+ * まわすのと うらがえすのが ちがうことを みわける（キラルな形なので 必ず 区別できる）。
+ */
+export function generateMirrorProblem(hard = false): RotationProblem {
+  const shape = SHAPE_DEFS[Math.floor(Math.random() * SHAPE_DEFS.length)];
+  // お題＝かがみ。むずかしいときは まわしてから うらがえす。
+  const transform: RotationTransform = hard
+    ? { rotate: [90, 180, 270][Math.floor(Math.random() * 3)], flipX: true }
+    : { rotate: 0, flipX: true };
+  // ダミーは「うらがえさない 回転」だけ（まわしただけ）にして、かがみと みわけさせる
+  const distractorPool: RotationTransform[] = [
+    { rotate: 0, flipX: false },
+    { rotate: 90, flipX: false },
+    { rotate: 180, flipX: false },
+    { rotate: 270, flipX: false },
+  ];
+  const picked = shuffle(distractorPool).slice(0, 3);
+  const allChoices = shuffle([transform, ...picked]);
+  const answerIndex = allChoices.findIndex(
+    (t) => t.rotate === transform.rotate && t.flipX === transform.flipX,
+  );
+  return {
+    shapeId: shape.id,
+    label: shape.label,
+    transform,
+    rotationLabel: getRotationLabel(transform),
+    choices: allChoices,
+    answerIndex,
+  };
+}
+
 export function generateRotationProblem(hard = false): RotationProblem {
   const shape = SHAPE_DEFS[Math.floor(Math.random() * SHAPE_DEFS.length)];
 

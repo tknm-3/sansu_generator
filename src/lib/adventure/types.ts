@@ -18,7 +18,9 @@ export type BattleVisual =
   | { kind: 'number-line'; max: number; target: number; marker: string; placement?: boolean }
   | { kind: 'estimate-pile'; emoji: string; count: number }
   | { kind: 'divide'; emoji: string; dividend: number; divisor: number; quotient: number; remainder: number }
-  | { kind: 'ten-frame-sum'; a: number; b: number; emojiA: string; emojiB: string; taken?: boolean };
+  | { kind: 'ten-frame-sum'; a: number; b: number; emojiA: string; emojiB: string; taken?: boolean }
+  | { kind: 'coins'; coins: { value: number; count: number }[] }
+  | { kind: 'size-compare'; mode: 'big' | 'small' | 'long' | 'short'; items: { label: string; size: number; color: string }[] };
 
 export interface BattleQuestion {
   unitId: string;

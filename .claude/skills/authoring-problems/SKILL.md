@@ -284,6 +284,40 @@ npx vitest run                                          # 全部
   実装を増やさない: ひきざんは `TenFrameSum` に `taken?` を足し b の枠を✕で薄く（=とった）見せ、
   補数は b=0 で aこだけ塗り「あと いくつで 10？」を問う。visual kind は増やさず adapter＋zone＋taken のみ。
   ゾーンは末尾追加（直線アンロックなので途中挿入は次ゾーンを再ロックさせる）。
+- [2026-06-14] としょかんに「スーパーマーケットの くに」タングラム3ゾーン追加（🛒くみあわせ／
+  🥐たりないピース／🧀ぶんかい）。学んだこと:
+  ・**図形バトルは新 visual kind を作らず `shape-compose`（questionSvg＋choiceSvgs）に乗せる**と
+    UI改修ゼロ＝バグ最小。`MathAdventureUnit` の `ShapeChoiceGrid`/`ComposeSvg` がそのまま描く。
+    お題・選択肢は viewBox "0 0 200 120" で生成（ComposeSvg と そろえる）。
+  ・**選択肢ラベルは ぜったい 意味のある形名**にする（「ましかく」「さんかく と さんかく」等）。
+    `ShapeChoiceGrid` は不正解時「こたえは <ラベル> だよ」を出すので「ピース1」だと無意味になる
+    （これを守れば `これが こたえ！`分岐への手入れ不要）。テストで `/かたち\d|ピース\d/` を禁止。
+  ・**「たりないピース」は 穴(点線polygon)と 正解ピースを 同じ points で 合同にする**と ぴったり感が
+    確実。ダミーは形・サイズ・向きを変える。スクショ目視で「穴と正解が一致」を必ず確認。
+  ・**循環import の罠**: データ配列が トップレベルで SVGヘルパーを呼ぶ（`questionSvg: triUp(...)`）と、
+    ヘルパーを同ファイルから export しつつ そのファイルがデータを import すると
+    `Cannot access 'X' before initialization`。型・ヘルパー・色は別ファイル（`tangramShapes.ts`）に
+    切り出し、data も logic も そこに依存させて 循環を断つ。
+  ・**検証**: 固定データ＋構造テスト（4択／answerIndex範囲／SVG有／ラベル一意）。幾何的な正しさは
+    一時 vitest で 全問のSVGを HTMLに dump → `capture()` で スクショ目視（テーマ別にファイル分割すると
+    縦長でも 読める）。確認後 一時ファイル（test・dump・png・html）は消す。
+- [2026-06-14] としょかんに「パッと出す系3＋かたち系3」=6ゾーン追加（🔢20までの10の枠/💰ねだん
+  パッと/✖️パッと かけ算/🪞かがみ線対称/🍰タングラムのつづき/📏おおきさくらべ）。学んだこと:
+  ・**新 visual kind は できるだけ 作らない**＝既存ビジュアルを 流用すると UI/バグが 最小。今回 6つの
+    うち 4つは流用で すんだ: 20までの10の枠＝`ten-frame-sum`(a=10・b=1..10で「10といくつ」)、
+    パッとかけ算＝`groups`(×2・×5中心)、かがみ＝`shape-rotation`(flip強制の `generateMirrorProblem`を
+    rotation.tsに追加。ダミーは「うらがえさない 回転」だけにして かがみ vs 回転を みわけさせる)、
+    タングラムのつづき＝`shape-compose`(tangramData.tsに `TANGRAM_ADVANCED`プール＋tangram.tsに
+    generator＋adapter)。新規コンポーネントは `coins`/`size-compare` の 2つだけ。
+  ・**coins(ねだん)**: こうかを しゅるいごと（100/50/10/5/1）に ならべる `CoinsVisual`。ベースは
+    10いじょうの こうか1しゅるい＋おまけ0〜2しゅるいにして 合計が ちいさくなりすぎない（≥10）ように。
+  ・**size-compare(おおきさくらべ)**: big/small は ましかくの 大きさ、long/short は よこ棒の ながさで
+    くらべる。サイズは `[0.5,0.65,0.8,1.0]` を シャッフルして 全部ちがう値＝いちばんが 1つに きまる
+    （テストで `new Set(sizes).size===4` と answerIndex=max/min を 固定）。選択肢は いろの なまえ（テキスト）
+    なので `BattleButtons` の デフォルト分岐で 描ける（図形の `ShapeChoiceGrid` 不要）。
+  ・忘れず: ①`types.ts` の `BattleVisual` に kind 追加 ②`MathAdventureUnit.tsx` の描画スイッチに分岐追加
+    ③`adapters.ts` の `ADAPTERS` 登録 ④`zones.ts` は **末尾に追加**（直線アンロック）。
+    新 adapter は `adapters.test.ts` の `ADAPTERS` 配列に足すと 4択/重複なし/answerIndex を 自動で守れる。
 - [2026-06-13] 冒険/てじゅん(矢印ならべ)ゾーン3つ追加（🌈にじの おか・🍄きのこの もり・
   🏝️たからじま、各5問 adv-q173〜q187）。「だんだん難しく＋最後は複雑」の作り方の おさらい:
   ・**やさしい→むずかしいは「ジェムの置き方」で段階づける**。① 単調経路（start左上→goal右下の
