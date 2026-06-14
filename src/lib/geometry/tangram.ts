@@ -6,7 +6,12 @@
 // 既存の shape-compose ビジュアル（ComposeSvg / ShapeChoiceGrid）に そのまま乗せる。
 
 import type { RawTangram, TangramProblem } from './tangramShapes';
-import { TANGRAM_COMPOSE, TANGRAM_MISSING, TANGRAM_DECOMPOSE } from './tangramData';
+import {
+  TANGRAM_COMPOSE,
+  TANGRAM_MISSING,
+  TANGRAM_DECOMPOSE,
+  TANGRAM_ADVANCED,
+} from './tangramData';
 
 export type { TangramProblem, RawTangram };
 
@@ -42,6 +47,7 @@ function makePicker(pool: RawTangram[]) {
 const pickCompose = makePicker(TANGRAM_COMPOSE);
 const pickMissing = makePicker(TANGRAM_MISSING);
 const pickDecompose = makePicker(TANGRAM_DECOMPOSE);
+const pickAdvanced = makePicker(TANGRAM_ADVANCED);
 
 export function generateTangramCompose(rng: () => number = Math.random): TangramProblem {
   return pickCompose(rng);
@@ -51,4 +57,7 @@ export function generateTangramMissing(rng: () => number = Math.random): Tangram
 }
 export function generateTangramDecompose(rng: () => number = Math.random): TangramProblem {
   return pickDecompose(rng);
+}
+export function generateTangramAdvanced(rng: () => number = Math.random): TangramProblem {
+  return pickAdvanced(rng);
 }

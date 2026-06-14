@@ -207,3 +207,66 @@ export const TANGRAM_DECOMPOSE: RawTangram[] = [
     ],
   },
 ];
+
+// ════════════════════════════════════════════════════════════════
+// ゾーン4: つづき・おうよう（advanced）— ピースを 3〜4まい つかって もっと
+// むずかしい かたちを つくる。だいけい・ダイヤ・おおきい さんかく/ましかく など。
+// お題＝はなして（でも だいたいの ならびで）おいた ピース、選択肢＝できあがり。
+// ════════════════════════════════════════════════════════════════
+export const TANGRAM_ADVANCED: RawTangram[] = [
+  {
+    // さんかく ４つ → おおきい さんかく（おおきい ケーキ）
+    questionLabel: 'さんかく ４つで なにが できる？',
+    questionSvg: `${triUp(82, 12, 36, 34, RED)}${triUp(46, 60, 36, 34, BLUE)}${triDown(64, 60, 36, 34, GREEN)}${triUp(118, 60, 36, 34, ORANGE)}`,
+    choices: [
+      { label: 'おおきい さんかく', svg: triUp(40, 18, 120, 84, RED) },
+      { label: 'ましかく', svg: rect(60, 20, 80, 80, YELLOW) },
+      { label: 'ながしかく', svg: rect(20, 45, 160, 40, ORANGE) },
+      { label: 'ダイヤ', svg: diamond(100, 60, 55, 48, PURPLE) },
+    ],
+  },
+  {
+    // しかく ４つ → おおきい ましかく（チョコの はこ・2×2）
+    questionLabel: 'しかく ４つで なにが できる？',
+    questionSvg: `${rect(60, 18, 38, 38, BLUE)}${rect(102, 18, 38, 38, GREEN)}${rect(60, 60, 38, 38, ORANGE)}${rect(102, 60, 38, 38, PURPLE)}`,
+    choices: [
+      { label: 'おおきい ましかく', svg: rect(58, 16, 84, 84, YELLOW) },
+      { label: 'ながしかく', svg: rect(20, 45, 160, 40, ORANGE) },
+      { label: 'さんかく', svg: triUp(40, 20, 120, 80, RED) },
+      { label: 'だいけい', svg: `<polygon points="55,95 80,35 120,35 145,95" fill="${GREEN}" stroke="white" stroke-width="2"/>` },
+    ],
+  },
+  {
+    // さんかく ２つ ＋ しかく → だいけい（サンドイッチ）
+    questionLabel: 'さんかく ＋ しかく ＋ さんかく で なにが できる？',
+    questionSvg: `<polygon points="40,95 80,40 80,95" fill="${RED}" stroke="white" stroke-width="2"/>${rect(82, 40, 55, 55, BLUE)}<polygon points="139,95 139,40 179,95" fill="${GREEN}" stroke="white" stroke-width="2"/>`,
+    choices: [
+      { label: 'だいけい', svg: `<polygon points="45,95 80,35 120,35 155,95" fill="${PURPLE}" stroke="white" stroke-width="2"/>` },
+      { label: 'ながしかく', svg: rect(20, 45, 160, 40, ORANGE) },
+      { label: 'さんかく', svg: triUp(40, 20, 120, 80, RED) },
+      { label: 'ましかく', svg: rect(60, 20, 80, 80, YELLOW) },
+    ],
+  },
+  {
+    // さんかく ２つ → ダイヤ（あめ）
+    questionLabel: 'さんかく ２つで なにが できる？',
+    questionSvg: `${triUp(60, 22, 80, 40, BLUE)}${triDown(60, 66, 80, 40, GREEN)}`,
+    choices: [
+      { label: 'ダイヤ', svg: diamond(100, 60, 55, 48, PURPLE) },
+      { label: 'ましかく', svg: rect(60, 20, 80, 80, YELLOW) },
+      { label: 'ながしかく', svg: rect(20, 45, 160, 40, ORANGE) },
+      { label: 'おおきい さんかく', svg: triUp(40, 18, 120, 84, RED) },
+    ],
+  },
+  {
+    // しかく ＋ さんかく ２つ → おおきい いえ（やね＝さんかく２つ）
+    questionLabel: 'しかく ＋ さんかく ２つで なにが できる？',
+    questionSvg: `${rect(65, 60, 70, 45, BLUE)}<polygon points="65,56 100,18 100,56" fill="${ORANGE}" stroke="white" stroke-width="2"/><polygon points="100,18 135,56 100,56" fill="${RED}" stroke="white" stroke-width="2"/>`,
+    choices: [
+      { label: 'おおきい いえ', svg: `${rect(65, 55, 70, 50, BLUE)}${triUp(60, 15, 80, 42, ORANGE)}` },
+      { label: 'ましかく', svg: rect(60, 20, 80, 80, YELLOW) },
+      { label: 'ながしかく', svg: rect(20, 45, 160, 40, ORANGE) },
+      { label: 'だいけい', svg: `<polygon points="55,95 80,35 120,35 145,95" fill="${PURPLE}" stroke="white" stroke-width="2"/>` },
+    ],
+  },
+];

@@ -8,7 +8,7 @@ import { generateBigSubtraction, explainBigSubtraction } from '../math/bigSubtra
 import { generateMultiplication, explainMultiplication } from '../math/multiplication';
 import { generateDivision, explainDivision } from '../math/division';
 import { generateWordProblem, type WordVariant, type WordVerdict } from '../math/wordProblem';
-import { generateRotationProblem } from '../geometry/rotation';
+import { generateRotationProblem, generateMirrorProblem } from '../geometry/rotation';
 import { generateComposeProblem } from '../geometry/compose';
 import { generatePatternProblem } from '../geometry/pattern';
 import { generateSpatialProblem } from '../geometry/spatial';
@@ -16,6 +16,7 @@ import {
   generateTangramCompose,
   generateTangramMissing,
   generateTangramDecompose,
+  generateTangramAdvanced,
 } from '../geometry/tangram';
 
 /** 3択の数値配列に4つ目のダミー選択肢を追加してシャッフル。answerIndex を返す */
@@ -434,6 +435,144 @@ export function tenFrameComplementToBattle(rng: () => number = Math.random): Bat
   };
 }
 
+/** こたえの 近くで 重複なし 4択（0いじょう）を つくる */
+function nearFourChoices(answer: number, rng: () => number, steps: number[]): { choices: string[]; answerIndex: number } {
+  const set = new Set<number>([answer]);
+  for (const d of steps) {
+    if (set.size >= 4) break;
+    if (answer + d >= 0 && !set.has(answer + d)) set.add(answer + d);
+  }
+  let pad = 1;
+  while (set.size < 4) {
+    const cand = answer + pad;
+    if (cand >= 0 && !set.has(cand)) set.add(cand);
+    pad++;
+  }
+  const arr = [...set].sort(() => rng() - 0.5);
+  return { choices: arr.map(String), answerIndex: arr.indexOf(answer) };
+}
+
+/** 20までの10の枠: 10の かたまり（色1）＋のこり（色2）を 見せて「ぜんぶで いくつ?」（10といくつ・位取りの素地） */
+export function tenFrameTeenToBattle(rng: () => number = Math.random): BattleQuestion {
+  const b = 1 + Math.floor(rng() * 10); // 1..10
+  const answer = 10 + b; // 11..20
+  const { choices, answerIndex } = nearFourChoices(answer, rng, [-1, 1, -2, 2, -10, 10]);
+  return {
+    unitId: 'ten-frame-teen',
+    promptText: '⚡ 10と いくつ？ ぜんぶで パッと いくつ？',
+    visual: { kind: 'ten-frame-sum', a: 10, b, emojiA: '🟦', emojiB: '🟧' },
+    choices,
+    answerIndex,
+    explainSteps: [],
+  };
+}
+
+/** ねだん パッと: こうかを しゅるいごとに 見せて「ぜんぶで なんえん?」（位取り・暗算の自動化） */
+export function coinsToBattle(rng: () => number = Math.random): BattleQuestion {
+  // ベース（10いじょうの こうか）を 1しゅるい＋おまけ 1〜2しゅるい
+  const base = [10, 50, 100][Math.floor(rng() * 3)];
+  const baseCount = base === 100 ? 1 + Math.floor(rng() * 2) : 1 + Math.floor(rng() * 4);
+  const coins: { value: number; count: number }[] = [{ value: base, count: baseCount }];
+  const extras = [50, 10, 5, 1].filter((v) => v !== base);
+  const extraKinds = Math.floor(rng() * 3); // 0..2しゅるい
+  for (let i = 0; i < extraKinds && extras.length; i++) {
+    const v = extras.splice(Math.floor(rng() * extras.length), 1)[0];
+    coins.push({ value: v, count: 1 + Math.floor(rng() * 3) });
+  }
+  // おおきい じゅんに ならべる
+  coins.sort((a, b) => b.value - a.value);
+  const total = coins.reduce((s, c) => s + c.value * c.count, 0);
+  const { choices, answerIndex } = nearFourChoices(total, rng, [-10, 10, -5, 5, -1, 1, -20, 20]);
+  return {
+    unitId: 'coins',
+    promptText: '💰 ぜんぶで なんえん？',
+    visual: { kind: 'coins', coins },
+    choices,
+    answerIndex,
+    explainSteps: [],
+  };
+}
+
+/** パッと かけ算: ×2・×5 を ちゅうしんに かたまりで 見せて 素早く こたえる（やさしい段の自動化） */
+export function mulFlashToBattle(rng: () => number = Math.random): BattleQuestion {
+  const groups = [2, 5][Math.floor(rng() * 2)]; // 2か5の だん
+  const perGroup = 2 + Math.floor(rng() * 4); // 2..5
+  const answer = perGroup * groups;
+  const emoji = pickEmoji(rng);
+  const { choices, answerIndex } = nearFourChoices(answer, rng, [groups, -groups, perGroup, -perGroup, 1, -1]);
+  return {
+    unitId: 'mul-flash',
+    promptText: `${emoji} ${perGroup}こずつ ${groups}つ。パッと なんこ？`,
+    visual: { kind: 'groups', emoji, perGroup, groups, equationText: `${perGroup} × ${groups}` },
+    choices,
+    answerIndex,
+    explainSteps: [],
+  };
+}
+
+/** かがみ（線対称）: お題を「うらがえし」、まわしただけの ダミーと みわける（線対称 vs 回転） */
+export function shapeMirrorToBattle(_rng: () => number = Math.random): BattleQuestion {
+  const p = generateMirrorProblem(false);
+  return {
+    unitId: 'shape-mirror',
+    promptText: '🪞 かがみに うつすと どれ？',
+    visual: { kind: 'shape-rotation', shapeId: p.shapeId, rotationLabel: p.rotationLabel },
+    choices: p.choices.map((_, i) => `かたち${i + 1}`),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+    choiceTransforms: p.choices,
+  };
+}
+
+/** タングラム・つづき（おうよう）: 3〜4まいの ピースで もっと むずかしい かたちを つくる */
+export function tangramAdvancedToBattle(rng: () => number = Math.random): BattleQuestion {
+  const p = generateTangramAdvanced(rng);
+  return {
+    unitId: 'tangram-advanced',
+    promptText: p.questionLabel,
+    visual: { kind: 'shape-compose', questionSvg: p.questionSvg, choiceSvgs: p.choices.map((c) => c.svg) },
+    choices: p.choices.map((c) => c.label),
+    answerIndex: p.answerIndex,
+    explainSteps: [],
+  };
+}
+
+const SIZE_COLORS = [
+  { label: 'あか', color: '#ef4444' },
+  { label: 'あお', color: '#3b82f6' },
+  { label: 'きいろ', color: '#eab308' },
+  { label: 'みどり', color: '#22c55e' },
+  { label: 'むらさき', color: '#a855f7' },
+];
+const SIZE_FRACTIONS = [0.5, 0.65, 0.8, 1.0];
+
+/** おおきさくらべ: おおきさ／ながさの ちがう ものを 見て いちばんを えらぶ（大小・長短の比較） */
+export function sizeCompareToBattle(rng: () => number = Math.random): BattleQuestion {
+  const mode = (['big', 'small', 'long', 'short'] as const)[Math.floor(rng() * 4)];
+  const colors = [...SIZE_COLORS].sort(() => rng() - 0.5).slice(0, 4);
+  const fractions = [...SIZE_FRACTIONS].sort(() => rng() - 0.5);
+  const items = colors.map((c, i) => ({ label: c.label, color: c.color, size: fractions[i] }));
+  const wantMax = mode === 'big' || mode === 'long';
+  let winner = 0;
+  for (let i = 1; i < items.length; i++) {
+    if (wantMax ? items[i].size > items[winner].size : items[i].size < items[winner].size) winner = i;
+  }
+  const promptByMode: Record<typeof mode, string> = {
+    big: '📏 いちばん おおきいのは どれ？',
+    small: '📏 いちばん ちいさいのは どれ？',
+    long: '📏 いちばん ながいのは どれ？',
+    short: '📏 いちばん みじかいのは どれ？',
+  };
+  return {
+    unitId: 'size-compare',
+    promptText: promptByMode[mode],
+    visual: { kind: 'size-compare', mode, items },
+    choices: items.map((it) => it.label),
+    answerIndex: winner,
+    explainSteps: [],
+  };
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -473,6 +612,12 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'ten-frame-sum': tenFrameSumToBattle,
   'ten-frame-sub': tenFrameSubToBattle,
   'ten-frame-complement': tenFrameComplementToBattle,
+  'ten-frame-teen': tenFrameTeenToBattle,
+  'coins': coinsToBattle,
+  'mul-flash': mulFlashToBattle,
+  'shape-mirror': shapeMirrorToBattle,
+  'tangram-advanced': tangramAdvancedToBattle,
+  'size-compare': sizeCompareToBattle,
 };
 
 export function generateBattleQuestion(

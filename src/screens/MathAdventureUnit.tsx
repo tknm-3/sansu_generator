@@ -14,6 +14,8 @@ import { NumberLinePlacement } from '../components/NumberLinePlacement';
 import { TenFrameSum } from '../components/TenFrameSum';
 import { EstimatePile } from '../components/EstimatePile';
 import { DivideVisual } from '../components/DivideVisual';
+import { CoinsVisual } from '../components/CoinsVisual';
+import { SizeCompareVisual } from '../components/SizeCompareVisual';
 import { StepExplainer } from '../components/StepExplainer';
 import { MATH_ADVENTURE_ZONES, getZone } from '../lib/adventure/zones';
 import { generateMap, getNode } from '../lib/adventure/mapGen';
@@ -680,6 +682,16 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
                   answered={chosen !== null}
                   taken={question.visual.taken}
                 />
+              </div>
+            )}
+            {question.visual?.kind === 'coins' && (
+              <div className="mb-2 flex justify-center">
+                <CoinsVisual coins={question.visual.coins} />
+              </div>
+            )}
+            {question.visual?.kind === 'size-compare' && (
+              <div className="mb-2 flex justify-center">
+                <SizeCompareVisual mode={question.visual.mode} items={question.visual.items} />
               </div>
             )}
             {!question.visual && (
