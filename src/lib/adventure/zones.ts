@@ -425,7 +425,7 @@ export const MATH_ADVENTURE_ZONES: AdventureZoneDef[] = [
     tint: 'rgba(60,170,140,.22)',
   },
   {
-    id: 'zone-mul-flash',
+    id: 'zone-mul-flash-total',
     name: 'パッと まとめて',
     emoji: '⚡',
     bgFrom: 'from-yellow-100',
