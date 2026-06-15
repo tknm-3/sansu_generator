@@ -26,6 +26,12 @@ src/
     sound/sfx.ts                   # 効果音
   lib/
     math/makeTen.ts                # さくらんぼ計算ロジック
+    kotoba/                        # ことば単元「もじギア・ファクトリー」
+      types.ts                     #   LineId/WordItem/WorldDef/MojiQuestion
+      words.ts                     #   語辞書（mora列・category・special）
+      worlds.ts                    #   13世界（1〜10=教材, 11〜13=腕試し）
+      generate.ts                  #   10メカニクスの問題生成＋ディスパッチャ
+      progress.ts                  #   直線アンロック（kotoba-adventure:）
     programming/                   # プログラミング単元
       engine.ts                    # 矢印実行エンジン・BFSソルバー・前向きヒント生成
       branch.ts                    # 分岐インタプリタ（もし〜なら/くりかえし）・分岐用ヒント
@@ -37,7 +43,10 @@ src/
 ```
 
 ## カテゴリ
-- `sansu`（さんすう）/ `katachi`（かたち）/ `programming`（プログラミング）
+- `sansu`（さんすう）/ `katachi`（かたち）/ `programming`（プログラミング）/ `kotoba`（ことば）
+- `kotoba`（ことば）は「もじギア・ファクトリー」(`MojiGearUnit`)。5〜7歳向け 音韻認識×文字知識×実行機能。
+  13世界＝既存メカニクスの組み合わせ（`lib/kotoba/worlds.ts`）で拡張可。設計は `design/moji-gear-factory.md`
+  ／世界観は `design/moji-gear-philosophy.md`。出題ロジックは `lib/kotoba/generate.ts`（テストで検証）。
 - プログラミングは 4単元: 矢印ならべ(arrow-sequence)・デバッグ(arrow-debug)・分岐(arrow-branch)・自分で作る(arrow-maker)
 - 分岐(arrow-branch)は「もし <むき> が かべ なら…」のセンサー条件＋くりかえし箱で、かべの形が変わっても同じプログラムで解ける体験を狙う（`lib/programming/branch.ts`）
 - 難易度は 単元×難易度ごとに クリア回数を記録し、規定回数で 次の難易度を解放（`lib/programming/progress.ts`）

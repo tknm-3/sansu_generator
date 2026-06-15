@@ -25,6 +25,7 @@ import { ArrowSequenceUnit } from './screens/ArrowSequenceUnit';
 import { ArrowDebugUnit } from './screens/ArrowDebugUnit';
 import { ArrowAdventureUnit } from './screens/ArrowAdventureUnit';
 import { MathAdventureUnit } from './screens/MathAdventureUnit';
+import { MojiGearUnit } from './screens/MojiGearUnit';
 import { ArrowBranchUnit } from './screens/ArrowBranchUnit';
 import { ArrowMakerUnit } from './screens/ArrowMakerUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
@@ -64,6 +65,7 @@ type Screen =
   | { kind: 'katachiHome' }
   | { kind: 'programmingHome' }
   | { kind: 'bingoSugoroku' }
+  | { kind: 'mojiGear' }
   | { kind: 'babyHome' }
   | { kind: 'babyUnit'; unitId: string }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
@@ -145,6 +147,7 @@ export default function App() {
     if (cat === 'katachi') setScreen({ kind: 'katachiHome' });
     else if (cat === 'programming') setScreen({ kind: 'programmingHome' });
     else if (cat === 'family') setScreen({ kind: 'bingoSugoroku' });
+    else if (cat === 'kotoba') setScreen({ kind: 'mojiGear' });
     else if (cat === 'baby') setScreen({ kind: 'babyHome' });
     else setScreen({ kind: 'home' });
   }
@@ -184,6 +187,17 @@ export default function App() {
 
     if (screen.kind === 'bingoSugoroku') {
       return <BingoSugorokuUnit key={refresh} onExit={() => setScreen({ kind: 'categorySelect' })} />;
+    }
+
+    if (screen.kind === 'mojiGear') {
+      return (
+        <MojiGearUnit
+          key={refresh}
+          characterName={character.name}
+          characterId={character.id}
+          onExit={() => setScreen({ kind: 'categorySelect' })}
+        />
+      );
     }
 
     if (screen.kind === 'babyHome') {
