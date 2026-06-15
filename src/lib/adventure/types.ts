@@ -9,7 +9,7 @@ export type ShapeTransform = { rotate: number; flipX: boolean };
 export type BattleVisual =
   | { kind: 'equation'; text: string }
   | { kind: 'objects'; emoji: string; count: number; addCount?: number; equationText?: string }
-  | { kind: 'groups'; emoji: string; perGroup: number; groups: number; equationText?: string }
+  | { kind: 'groups'; emoji: string; perGroup: number; groups: number; equationText?: string; groupLabel?: string; flash?: boolean }
   | { kind: 'word'; text: string; emoji: string }
   | { kind: 'shape-rotation'; shapeId: string; rotationLabel: string }
   | { kind: 'shape-compose'; questionSvg: string; choiceSvgs: string[] }
