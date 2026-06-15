@@ -23,6 +23,7 @@ export interface GenOpts {
   minMora?: number;
   maxMora?: number;
   special?: boolean; // true なら特殊音節の語だけ
+  choiceCount?: number; // 文字/数 選択肢の数（既定 4）
 }
 
 function poolWords(opts?: GenOpts): WordItem[] {
@@ -61,14 +62,14 @@ function genCount(rng?: Rng, opts?: GenOpts): MojiQuestion {
 // ── 2. 語頭音 ──
 function genFirst(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const w = pick(poolWords(opts), rng);
-  const { choices, answer } = letterChoices(w.mora[0], 4, rng);
+  const { choices, answer } = letterChoices(w.mora[0], opts?.choiceCount ?? 4, rng);
   return { lineId: 'first-mora', mode: 'choose', prompt: 'さいしょの おとは？', speak: w.reading, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 3. 語尾音 ──
 function genLast(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const w = pick(poolWords(opts), rng);
-  const { choices, answer } = letterChoices(w.mora[w.mora.length - 1], 4, rng);
+  const { choices, answer } = letterChoices(w.mora[w.mora.length - 1], opts?.choiceCount ?? 4, rng);
   return { lineId: 'last-mora', mode: 'choose', prompt: 'おしりの おとは？', speak: w.reading, pictureEmoji: w.display, choices, answer };
 }
 
@@ -113,7 +114,7 @@ function genRule(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const w = pick(ws.length ? ws : poolWords(opts), rng);
   const useFirst = w.category === 'food';
   const correct = useFirst ? w.mora[0] : w.mora[w.mora.length - 1];
-  const { choices, answer } = letterChoices(correct, 4, rng);
+  const { choices, answer } = letterChoices(correct, opts?.choiceCount ?? 4, rng);
   const rule = useFirst ? 'たべものは さいしょの おと！' : 'いきものは おしりの おと！';
   return { lineId: 'rule-card', mode: 'choose', prompt: rule, speak: w.reading, pictureEmoji: w.display, choices, answer };
 }

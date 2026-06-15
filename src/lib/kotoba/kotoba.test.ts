@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { WORDS, KANA_POOL } from './words';
 import { WORLDS } from './worlds';
 import { generateQuestion } from './generate';
+import { makeAdaptive, optsForLevel } from './adaptive';
 import type { LineId } from './types';
 
 // 決定的に回すための seeded RNG（mulberry32）
@@ -134,5 +135,33 @@ describe('問題生成（全10メカニクス）', () => {
 describe('文字プール', () => {
   it('KANA_POOL は ユニーク', () => {
     expect(new Set(KANA_POOL).size).toBe(KANA_POOL.length);
+  });
+});
+
+describe('適応難易度', () => {
+  it('2連続せいかいで レベルが あがる（最大3）', () => {
+    const a = makeAdaptive(1);
+    expect(a.level).toBe(1);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(2);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(3);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(3); // 上限
+  });
+  it('つまずきで レベルが さがる（最小1）', () => {
+    const a = makeAdaptive(3);
+    a.record(false);
+    expect(a.level).toBe(2);
+    a.record(false); a.record(false);
+    expect(a.level).toBe(1); // 下限
+  });
+  it('レベルごとに モーラ数の レンジが ひろがる', () => {
+    expect(optsForLevel(1).maxMora).toBe(2);
+    expect(optsForLevel(3).maxMora).toBe(4);
+  });
+  it('choiceCount を 渡すと その数の 選択肢に なる（first-mora）', () => {
+    const q = generateQuestion('first-mora', undefined, { choiceCount: 3 });
+    expect(q.choices.length).toBe(3);
   });
 });
