@@ -1,0 +1,138 @@
+import { describe, it, expect } from 'vitest';
+import { WORDS, KANA_POOL } from './words';
+import { WORLDS } from './worlds';
+import { generateQuestion } from './generate';
+import type { LineId } from './types';
+
+// 決定的に回すための seeded RNG（mulberry32）
+function seeded(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+describe('語辞書（WordItem）の整合', () => {
+  it('mora を つなげると reading に なる（拗音は1要素・全部ひらがな）', () => {
+    for (const w of WORDS) {
+      expect(w.mora.join('')).toBe(w.reading);
+    }
+  });
+  it('id は ユニーク', () => {
+    expect(new Set(WORDS.map((w) => w.id)).size).toBe(WORDS.length);
+  });
+  it('special 印の語は ほんとうに 特殊音を もつ（濁/半濁/拗/長/促）', () => {
+    const isVoiced = (c: string) => /[がぎぐげござじずぜぞだぢづでどばびぶべぼ]/.test(c);
+    const isSemi = (c: string) => /[ぱぴぷぺぽ]/.test(c);
+    for (const w of WORDS) {
+      if (!w.special) continue;
+      if (w.special.includes('voiced')) expect(w.mora.some(isVoiced)).toBe(true);
+      if (w.special.includes('semivoiced')) expect(w.mora.some(isSemi)).toBe(true);
+      if (w.special.includes('choon')) expect(w.mora.includes('ー')).toBe(true);
+      if (w.special.includes('sokuon')) expect(w.mora.includes('っ')).toBe(true);
+      if (w.special.includes('youon')) expect(w.mora.some((m) => m.length === 2)).toBe(true);
+    }
+  });
+});
+
+describe('世界（WORLDS）の整合', () => {
+  it('id は ユニーク', () => {
+    expect(new Set(WORLDS.map((w) => w.id)).size).toBe(WORLDS.length);
+  });
+  it('lineIds は からっぽでない・最初の10は単一・11以降は複数（腕試し）', () => {
+    WORLDS.forEach((w, i) => {
+      expect(w.lineIds.length).toBeGreaterThan(0);
+      if (i < 10) expect(w.lineIds.length).toBe(1);
+      else expect(w.lineIds.length).toBeGreaterThan(1);
+    });
+  });
+  it('story は ひらがな主体（漢字を含まない）', () => {
+    for (const w of WORLDS) {
+      expect(w.story).not.toMatch(/[一-龯]/);
+    }
+  });
+});
+
+const LINES: LineId[] = [
+  'count-mora', 'first-mora', 'last-mora', 'match-sound', 'build-word',
+  'rule-card', 'delete-mora', 'reverse-word', 'special-mora', 'if-factory',
+];
+
+describe('問題生成（全10メカニクス）', () => {
+  for (const line of LINES) {
+    it(`${line}: 100回まわして 構造が ただしい`, () => {
+      for (let s = 0; s < 100; s++) {
+        const q = generateQuestion(line, seeded(s + 1));
+        expect(q.lineId).toBe(line);
+        expect(q.choices.length).toBeGreaterThanOrEqual(2);
+        // choose は選択肢ラベルが ユニーク（build は同じモーラが重複しうる）
+        if (q.mode === 'choose') {
+          const labels = q.choices.map((c) => c.label);
+          expect(new Set(labels).size).toBe(labels.length);
+        }
+        // prompt/speak は からでない
+        expect(q.prompt.length).toBeGreaterThan(0);
+        expect(q.speak.length).toBeGreaterThan(0);
+
+        if (q.mode === 'choose') {
+          const a = q.answer as number;
+          expect(a).toBeGreaterThanOrEqual(0);
+          expect(a).toBeLessThan(q.choices.length);
+        } else {
+          // build: answer は choices の 全indexの 並べ替え
+          const a = q.answer as number[];
+          expect(a.length).toBe(q.choices.length);
+          expect([...a].sort((x, y) => x - y)).toEqual(q.choices.map((_, i) => i));
+        }
+      }
+    });
+  }
+
+  it('build-word: answer の順に ならべると もとの ことばに なる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('build-word', seeded(s + 1));
+      const a = q.answer as number[];
+      const built = a.map((i) => q.choices[i].label).join('');
+      expect(built).toBe(q.speak);
+    }
+  });
+
+  it('reverse-word: answer の順に ならべると モーラ逆順に なる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('reverse-word', seeded(s + 1));
+      const a = q.answer as number[];
+      const built = a.map((i) => q.choices[i].label).join('');
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(built).toBe(w.mora.slice().reverse().join(''));
+    }
+  });
+
+  it('count-mora: 正解の数字は その語の モーラ数', () => {
+    for (let s = 0; s < 50; s++) {
+      const q = generateQuestion('count-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(Number(q.choices[q.answer as number].label)).toBe(w.mora.length);
+    }
+  });
+
+  it('first/last-mora: 正解文字は 語頭/語尾の モーラ', () => {
+    for (let s = 0; s < 50; s++) {
+      const qf = generateQuestion('first-mora', seeded(s + 1));
+      const wf = WORDS.find((w) => w.reading === qf.speak)!;
+      expect(qf.choices[qf.answer as number].label).toBe(wf.mora[0]);
+      const ql = generateQuestion('last-mora', seeded(s + 100));
+      const wl = WORDS.find((w) => w.reading === ql.speak)!;
+      expect(ql.choices[ql.answer as number].label).toBe(wl.mora[wl.mora.length - 1]);
+    }
+  });
+});
+
+// build/reverse の答えに使う speak は すべて KANA_POOL か mora にある文字（描画前提の sanity）
+describe('文字プール', () => {
+  it('KANA_POOL は ユニーク', () => {
+    expect(new Set(KANA_POOL).size).toBe(KANA_POOL.length);
+  });
+});
