@@ -25,6 +25,12 @@ import {
   mulFlashToBattle,
   shapeMirrorToBattle,
   sizeCompareToBattle,
+  mulLookTotalToBattle,
+  mulCountGroupsToBattle,
+  mulFlashTotalToBattle,
+  divLookTotalToBattle,
+  divCountPeopleToBattle,
+  divFlashTotalToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -419,6 +425,54 @@ describe('スーパーマーケットの くに（タングラム）', () => {
       });
     });
   }
+});
+
+// まとめて／わけて かぞえる くに（としょかんの 初歩 かけ算・わり算）:
+// groups ビジュアルを 見て「ぜんぶで なんこ」/「いくつ(なん人)で わけた」を あてる。
+describe('まとめて／わけて かぞえる くに', () => {
+  const LOOK = [
+    { name: 'mulLookTotal', fn: mulLookTotalToBattle, ask: 'total' as const, flash: false },
+    { name: 'mulCountGroups', fn: mulCountGroupsToBattle, ask: 'groups' as const, flash: false },
+    { name: 'mulFlashTotal', fn: mulFlashTotalToBattle, ask: 'total' as const, flash: true },
+    { name: 'divLookTotal', fn: divLookTotalToBattle, ask: 'total' as const, flash: false },
+    { name: 'divCountPeople', fn: divCountPeopleToBattle, ask: 'groups' as const, flash: false },
+    { name: 'divFlashTotal', fn: divFlashTotalToBattle, ask: 'total' as const, flash: true },
+  ];
+
+  for (const t of LOOK) {
+    describe(t.name, () => {
+      it('groups ビジュアル・4択重複なし・正解は 問われた かず', () => {
+        for (let seed = 1; seed <= 30; seed++) {
+          const q = t.fn(seededRng(seed));
+          expect(q.visual?.kind).toBe('groups');
+          if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+          expect(q.choices).toHaveLength(4);
+          expect(new Set(q.choices).size).toBe(4);
+          const { perGroup, groups } = q.visual;
+          expect(perGroup).toBeGreaterThanOrEqual(2);
+          expect(groups).toBeGreaterThanOrEqual(2);
+          const expected = t.ask === 'total' ? perGroup * groups : groups;
+          expect(q.choices[q.answerIndex]).toBe(String(expected));
+        }
+      });
+
+      it(`flash フラグが ${t.flash} で つく（ぱっとみ）`, () => {
+        for (let seed = 1; seed <= 10; seed++) {
+          const q = t.fn(seededRng(seed));
+          if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+          expect(Boolean(q.visual.flash)).toBe(t.flash);
+        }
+      });
+    });
+  }
+
+  it('わり算の くに（おさら／人）には groupLabel が つく', () => {
+    for (const fn of [divLookTotalToBattle, divCountPeopleToBattle, divFlashTotalToBattle]) {
+      const q = fn(seededRng(7));
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect(q.visual.groupLabel).toBeTruthy();
+    }
+  });
 });
 
 describe('zone adapter coverage', () => {
