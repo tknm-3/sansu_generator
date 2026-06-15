@@ -50,6 +50,46 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined' && 'speechS
 }
 
 /**
+ * 語を読み上げてから、モーラを1拍ずつ ゆっくり読む（音韻認識の足場）。
+ * 例: 「すいか」→「す」→「い」→「か」。光の粒の演出と同期させる用。
+ * onMora(i) を渡すと 各モーラの 読み始めに 呼ぶ（粒を光らせる等）。
+ */
+export function speakMoraBreakdown(
+  reading: string,
+  mora: string[],
+  onMora?: (index: number) => void,
+): void {
+  if (!isSpeechSupported()) {
+    // 非対応でも 粒の演出だけは すすめる
+    mora.forEach((_, i) => setTimeout(() => onMora?.(i), 500 + i * 450));
+    return;
+  }
+  try {
+    window.speechSynthesis.cancel();
+    const items: { text: string; rate: number; moraIndex: number }[] = [
+      { text: reading, rate: 0.9, moraIndex: -1 },
+      ...mora.map((m, i) => ({ text: m, rate: 0.7, moraIndex: i })),
+    ];
+    let idx = 0;
+    const speakNext = () => {
+      if (idx >= items.length) return;
+      const it = items[idx];
+      if (it.moraIndex >= 0) onMora?.(it.moraIndex);
+      const u = new SpeechSynthesisUtterance(it.text);
+      u.lang = 'ja-JP';
+      u.rate = it.rate;
+      const advance = () => { idx++; setTimeout(speakNext, idx <= 1 ? 280 : 200); };
+      u.onend = advance;
+      u.onerror = advance;
+      window.speechSynthesis.speak(u);
+    };
+    speakNext();
+  } catch {
+    // 失敗しても アプリは継続
+  }
+}
+
+/**
  * 日本語で読み上げ。非対応なら何もしない（優雅な劣化）。
  * onEnd を渡すと読み上げ終了（またはエラー・非対応）後に必ず一度だけ呼ぶ。
  * 「言い切ってから次の演出へ」進めたいとき（例: すごろくの煽りセリフ→サイコロ）に使う。

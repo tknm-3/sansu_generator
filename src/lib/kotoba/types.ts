@@ -62,6 +62,7 @@ export interface MojiQuestion {
   mode: 'choose' | 'build';
   prompt: string; // ひらがなの ひとことガイド（音声でも読む）
   speak: string; // TTS で読む語（reading）
+  mora: string[]; // お題の語の モーラ列（1拍ずつ読み・光の粒の演出用）
   pictureEmoji?: string; // お題の絵
   choices: MojiChoice[];
   answer: number | number[];
