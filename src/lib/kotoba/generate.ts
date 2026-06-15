@@ -53,6 +53,7 @@ function genCount(rng?: Rng, opts?: GenOpts): MojiQuestion {
     mode: 'choose',
     prompt: 'いくつの おと かな？',
     speak: w.reading,
+    mora: w.mora,
     pictureEmoji: w.display,
     choices: shuffled.map((x) => ({ label: String(x) })),
     answer: shuffled.indexOf(n),
@@ -63,14 +64,14 @@ function genCount(rng?: Rng, opts?: GenOpts): MojiQuestion {
 function genFirst(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const w = pick(poolWords(opts), rng);
   const { choices, answer } = letterChoices(w.mora[0], opts?.choiceCount ?? 4, rng);
-  return { lineId: 'first-mora', mode: 'choose', prompt: 'さいしょの おとは？', speak: w.reading, pictureEmoji: w.display, choices, answer };
+  return { lineId: 'first-mora', mode: 'choose', prompt: 'さいしょの おとは？', speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 3. 語尾音 ──
 function genLast(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const w = pick(poolWords(opts), rng);
   const { choices, answer } = letterChoices(w.mora[w.mora.length - 1], opts?.choiceCount ?? 4, rng);
-  return { lineId: 'last-mora', mode: 'choose', prompt: 'おしりの おとは？', speak: w.reading, pictureEmoji: w.display, choices, answer };
+  return { lineId: 'last-mora', mode: 'choose', prompt: 'おしりの おとは？', speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 4. 音の同定（さいしょが おなじ なかま）──
@@ -92,6 +93,7 @@ function genMatch(rng?: Rng, opts?: GenOpts): MojiQuestion {
     mode: 'choose',
     prompt: 'さいしょが おなじ なかま どれ？',
     speak: sample.reading,
+    mora: sample.mora,
     pictureEmoji: sample.display,
     choices: opts3.map((w) => ({ label: w.reading, emoji: w.display })),
     answer: opts3.indexOf(correct),
@@ -105,7 +107,7 @@ function genBuild(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const choices = order.map((i) => ({ label: w.mora[i] }));
   // answer: 正しい語順になる choice index 列
   const answer = w.mora.map((_, target) => order.indexOf(target));
-  return { lineId: 'build-word', mode: 'build', prompt: 'もじを ならべて！', speak: w.reading, pictureEmoji: w.display, choices, answer };
+  return { lineId: 'build-word', mode: 'build', prompt: 'もじを ならべて！', speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 6. IF-THEN 切替（たべもの→さいしょ／いきもの→おしり）──
@@ -116,7 +118,7 @@ function genRule(rng?: Rng, opts?: GenOpts): MojiQuestion {
   const correct = useFirst ? w.mora[0] : w.mora[w.mora.length - 1];
   const { choices, answer } = letterChoices(correct, opts?.choiceCount ?? 4, rng);
   const rule = useFirst ? 'たべものは さいしょの おと！' : 'いきものは おしりの おと！';
-  return { lineId: 'rule-card', mode: 'choose', prompt: rule, speak: w.reading, pictureEmoji: w.display, choices, answer };
+  return { lineId: 'rule-card', mode: 'choose', prompt: rule, speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 7. 音の削除（さいしょの おとを ぬくと？）──
@@ -135,6 +137,7 @@ function genDelete(rng?: Rng, opts?: GenOpts): MojiQuestion {
     mode: 'choose',
     prompt: 'さいしょの おとを ぬくと？',
     speak: w.reading,
+    mora: w.mora,
     pictureEmoji: w.display,
     choices: shuffled.map((l) => ({ label: l })),
     answer: shuffled.indexOf(correct),
@@ -149,7 +152,7 @@ function genReverse(rng?: Rng, opts?: GenOpts): MojiQuestion {
   // 正解は さかさま（mora を 逆順に）
   const reversed = w.mora.map((_, i) => w.mora.length - 1 - i);
   const answer = reversed.map((target) => order.indexOf(target));
-  return { lineId: 'reverse-word', mode: 'build', prompt: 'さかさまに ならべて！', speak: w.reading, pictureEmoji: w.display, choices, answer };
+  return { lineId: 'reverse-word', mode: 'build', prompt: 'さかさまに ならべて！', speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
 }
 
 // ── 9. 特殊音節（とくべつな おと）──

@@ -74,9 +74,10 @@ describe('問題生成（全10メカニクス）', () => {
           const labels = q.choices.map((c) => c.label);
           expect(new Set(labels).size).toBe(labels.length);
         }
-        // prompt/speak は からでない
+        // prompt/speak は からでない・mora をつなぐと speak に なる
         expect(q.prompt.length).toBeGreaterThan(0);
         expect(q.speak.length).toBeGreaterThan(0);
+        expect(q.mora.join('')).toBe(q.speak);
 
         if (q.mode === 'choose') {
           const a = q.answer as number;
