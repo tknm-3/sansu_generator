@@ -78,7 +78,7 @@ npx vitest run src/lib/adventure/adapters.test.ts
 |---|---|---|
 | `equation` | 計算式（`3 ＋ 5`） | `text: string` |
 | `objects` | 絵文字を並べる（`🟡×6`／わり算の わける まえの 山）| `emoji`, `count`, `addCount?` |
-| `groups` | おなじ かずの かたまりを わくで囲って並べる（かけ算「○こずつ△つ」）| `emoji`, `perGroup`, `groups` |
+| `groups` | おなじ かずの かたまりを わくで囲って並べる（かけ算「○こずつ△つ」）| `emoji`, `perGroup`, `groups`（任意: `groupLabel`＝はこ/人の上ラベル🙂🍽️、`flash`＝ぱっとみで一瞬だけ見せて隠す）|
 | `word` | 文章問題（さんすう専用。図形では使わない）| `text`, `emoji` |
 | `shape-rotation` | 図形の回転 | `shapeId`, `rotationLabel`（＋`choiceTransforms`）|
 | `shape-compose` | かたちをあわせる | `questionSvg`, `choiceSvgs`（生SVG）|
@@ -121,3 +121,13 @@ npx vitest run src/lib/adventure/adapters.test.ts
 | `shape-compose` | `shapeComposeToBattle` | `word` |
 | `shape-pattern` | `shapePatternToBattle` | `word` |
 | `shape-spatial` | `shapeSpatialToBattle` | `word` |
+| `mul-look-total` | `mulLookTotalToBattle` | `groups`（○こずつ△つ→ぜんぶで なんこ）|
+| `mul-count-groups` | `mulCountGroupsToBattle` | `groups`（かたまりは いくつ＝わける数を読む）|
+| `mul-flash-total` | `mulFlashTotalToBattle` | `groups`＋`flash`（ぱっとみで ぜんぶで なんこ）|
+| `div-look-total` | `divLookTotalToBattle` | `groups`＋`groupLabel:🍽️`（おさらに わけて ぜんぶで なんこ）|
+| `div-count-people` | `divCountPeopleToBattle` | `groups`＋`groupLabel:🙂`（なん人で わけた＝わる数を読む）|
+| `div-flash-total` | `divFlashTotalToBattle` | `groups`＋`groupLabel:🍽️`＋`flash`（ぱっとみ）|
+
+> 「まとめて／わけて かぞえる くに」（としょかんの 初歩 かけ算・わり算 6ゾーン）の
+> 共通ロジックは `lookCountToBattle`。`ask:'total'`=ぜんぶで なんこ／`ask:'groups'`=いくつ(なん人)で
+> わけた、を 同じ groups ビジュアル（四角でかこう）で 出し分ける。`flash:true` で ぱっとみ化。

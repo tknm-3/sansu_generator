@@ -594,7 +594,7 @@ function BattleScreen({ question, run, node, zone, onCorrect, onWrong, onBack }:
               const v = question.visual;
               return (
                 <div className="mb-2 flex flex-col items-center gap-2">
-                  <GroupsVisual emoji={v.emoji} perGroup={v.perGroup} groups={v.groups} />
+                  <GroupsVisual emoji={v.emoji} perGroup={v.perGroup} groups={v.groups} groupLabel={v.groupLabel} flash={v.flash} reveal={chosen !== null} />
                   {v.equationText && (
                     <div className="text-3xl font-bold" style={{ color: SEPIA }}>{v.equationText}</div>
                   )}
