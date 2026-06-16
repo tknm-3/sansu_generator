@@ -167,6 +167,39 @@ function genFactory(rng?: Rng): MojiQuestion {
   return { ...q, lineId: 'if-factory' };
 }
 
+// ── まんなかの音（語中音）。3モーラ語に限定＝まんなかが 1つに きまる ──
+function genMiddle(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const w = pick(poolWords({ minMora: 3, maxMora: 3, special: opts?.special }), rng);
+  const mid = w.mora[1];
+  const { choices, answer } = letterChoices(mid, opts?.choiceCount ?? 4, rng);
+  return { lineId: 'middle-mora', mode: 'choose', prompt: 'まんなかの おとは？', speak: w.reading, mora: w.mora, pictureEmoji: w.display, choices, answer };
+}
+
+// ── おしりが おなじ なかま（押韻マッチ）──
+function genRhyme(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const ws = poolWords(opts);
+  const last = (w: WordItem) => w.mora[w.mora.length - 1];
+  let sample: WordItem | undefined, matches: WordItem[] = [];
+  for (const s of shuffle(ws, rng)) {
+    const m = ws.filter((w) => w.id !== s.id && last(w) === last(s));
+    if (m.length) { sample = s; matches = m; break; }
+  }
+  sample = sample ?? ws[0];
+  const correct = pick(matches.length ? matches : ws.filter((w) => w.id !== sample!.id), rng);
+  const distractors = shuffle(ws.filter((w) => last(w) !== last(sample!) && w.id !== correct.id), rng).slice(0, 2);
+  const opts3 = shuffle([correct, ...distractors], rng);
+  return {
+    lineId: 'rhyme-match',
+    mode: 'choose',
+    prompt: 'おしりが おなじ なかま どれ？',
+    speak: sample.reading,
+    mora: sample.mora,
+    pictureEmoji: sample.display,
+    choices: opts3.map((w) => ({ label: w.reading, emoji: w.display })),
+    answer: opts3.indexOf(correct),
+  };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -180,5 +213,7 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'reverse-word': return genReverse(rng, opts);
     case 'special-mora': return genSpecial(rng);
     case 'if-factory': return genFactory(rng);
+    case 'middle-mora': return genMiddle(rng, opts);
+    case 'rhyme-match': return genRhyme(rng, opts);
   }
 }

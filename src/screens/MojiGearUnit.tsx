@@ -44,7 +44,7 @@ export function MojiGearUnit({ onExit }: Props) {
 
   function beginPlay() {
     if (!world) return;
-    const a = makeAdaptive();
+    const a = makeAdaptive(world.startLevel ?? 1);
     setAdaptive(a);
     setQuestion(nextQuestion(world, a));
     setQi(0);

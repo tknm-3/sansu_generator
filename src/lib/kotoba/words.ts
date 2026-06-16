@@ -65,6 +65,40 @@ export const WORDS: WordItem[] = [
   { id: 'tsumiki', display: '🧱', reading: 'つみき', mora: ['つ', 'み', 'き'], category: 'thing', difficulty: 2 },
   { id: 'boushi', display: '🎩', reading: 'ぼうし', mora: ['ぼ', 'う', 'し'], category: 'thing', difficulty: 2, special: ['voiced'] },
   { id: 'kagi', display: '🔑', reading: 'かぎ', mora: ['か', 'ぎ'], category: 'thing', difficulty: 1, special: ['voiced'] },
+
+  // ── ふやした語（3〜4モーラ・特殊音 多め。般化と難易度のため）──
+  { id: 'ushi', display: '🐮', reading: 'うし', mora: ['う', 'し'], category: 'animal', difficulty: 1 },
+  { id: 'buta', display: '🐷', reading: 'ぶた', mora: ['ぶ', 'た'], category: 'animal', difficulty: 1, special: ['voiced'] },
+  { id: 'kame', display: '🐢', reading: 'かめ', mora: ['か', 'め'], category: 'animal', difficulty: 1 },
+  { id: 'hebi', display: '🐍', reading: 'へび', mora: ['へ', 'び'], category: 'animal', difficulty: 1, special: ['voiced'] },
+  { id: 'wani', display: '🐊', reading: 'わに', mora: ['わ', 'に'], category: 'animal', difficulty: 1 },
+  { id: 'kirin', display: '🦒', reading: 'きりん', mora: ['き', 'り', 'ん'], category: 'animal', difficulty: 2 },
+  { id: 'shimauma', display: '🦓', reading: 'しまうま', mora: ['し', 'ま', 'う', 'ま'], category: 'animal', difficulty: 3 },
+  { id: 'niwatori', display: '🐔', reading: 'にわとり', mora: ['に', 'わ', 'と', 'り'], category: 'animal', difficulty: 3 },
+  { id: 'pengin', display: '🐧', reading: 'ぺんぎん', mora: ['ぺ', 'ん', 'ぎ', 'ん'], category: 'animal', difficulty: 3, special: ['semivoiced', 'voiced'] },
+
+  { id: 'momo', display: '🍑', reading: 'もも', mora: ['も', 'も'], category: 'food', difficulty: 1 },
+  { id: 'nashi', display: '🍐', reading: 'なし', mora: ['な', 'し'], category: 'food', difficulty: 1 },
+  { id: 'imo', display: '🍠', reading: 'いも', mora: ['い', 'も'], category: 'food', difficulty: 1 },
+  { id: 'meron', display: '🍈', reading: 'めろん', mora: ['め', 'ろ', 'ん'], category: 'food', difficulty: 2 },
+  { id: 'choko', display: '🍫', reading: 'ちょこ', mora: ['ちょ', 'こ'], category: 'food', difficulty: 1, special: ['youon'] },
+  { id: 'ocha', display: '🍵', reading: 'おちゃ', mora: ['お', 'ちゃ'], category: 'food', difficulty: 1, special: ['youon'] },
+  { id: 'tamanegi', display: '🧅', reading: 'たまねぎ', mora: ['た', 'ま', 'ね', 'ぎ'], category: 'food', difficulty: 3, special: ['voiced'] },
+
+  { id: 'baiku', display: '🏍️', reading: 'ばいく', mora: ['ば', 'い', 'く'], category: 'vehicle', difficulty: 2, special: ['voiced'] },
+  { id: 'patokaa', display: '🚓', reading: 'ぱとかー', mora: ['ぱ', 'と', 'か', 'ー'], category: 'vehicle', difficulty: 3, special: ['semivoiced', 'choon'] },
+
+  { id: 'yuki', display: '❄️', reading: 'ゆき', mora: ['ゆ', 'き'], category: 'nature', difficulty: 1 },
+  { id: 'kinoko', display: '🍄', reading: 'きのこ', mora: ['き', 'の', 'こ'], category: 'nature', difficulty: 2 },
+  { id: 'himawari', display: '🌻', reading: 'ひまわり', mora: ['ひ', 'ま', 'わ', 'り'], category: 'nature', difficulty: 3 },
+  { id: 'kaminari', display: '⚡', reading: 'かみなり', mora: ['か', 'み', 'な', 'り'], category: 'nature', difficulty: 3 },
+  { id: 'tulip', display: '🌷', reading: 'ちゅーりっぷ', mora: ['ちゅ', 'ー', 'り', 'っ', 'ぷ'], category: 'nature', difficulty: 3, special: ['youon', 'choon', 'sokuon', 'semivoiced'] },
+
+  { id: 'koma', display: '🪀', reading: 'こま', mora: ['こ', 'ま'], category: 'thing', difficulty: 1 },
+  { id: 'taiko', display: '🥁', reading: 'たいこ', mora: ['た', 'い', 'こ'], category: 'thing', difficulty: 2 },
+  { id: 'megane', display: '👓', reading: 'めがね', mora: ['め', 'が', 'ね'], category: 'thing', difficulty: 2, special: ['voiced'] },
+  { id: 'gitaa', display: '🎸', reading: 'ぎたー', mora: ['ぎ', 'た', 'ー'], category: 'thing', difficulty: 2, special: ['voiced', 'choon'] },
+  { id: 'kutsushita', display: '🧦', reading: 'くつした', mora: ['く', 'つ', 'し', 'た'], category: 'thing', difficulty: 3 },
 ];
 
 /** id で引く */
