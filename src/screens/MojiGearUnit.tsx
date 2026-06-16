@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { WORLDS } from '../lib/kotoba/worlds';
 import { generateQuestion } from '../lib/kotoba/generate';
 import type { MojiQuestion, WorldDef } from '../lib/kotoba/types';
-import { isWorldUnlocked, isWorldCleared, worldSparkles, recordWorldClear, loadKotobaHistory } from '../lib/kotoba/progress';
+import { worldStatus, worldSparkles, recordWorldClear, loadKotobaHistory } from '../lib/kotoba/progress';
 import { makeAdaptive, recordAttempt, type Adaptive } from '../lib/kotoba/adaptive';
 import { speakJa, speakMoraBreakdown } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
@@ -44,7 +44,7 @@ export function MojiGearUnit({ onExit }: Props) {
 
   function beginPlay() {
     if (!world) return;
-    const a = makeAdaptive();
+    const a = makeAdaptive(world.startLevel ?? 1);
     setAdaptive(a);
     setQuestion(nextQuestion(world, a));
     setQi(0);
@@ -102,31 +102,48 @@ export function MojiGearUnit({ onExit }: Props) {
           <div className="rounded-full bg-white/90 px-3 py-1 text-sm font-bold text-amber-600 shadow">✨ {total}</div>
         </div>
 
-        <div className="mb-3 flex flex-col items-center">
+        <div className="mb-2 flex flex-col items-center">
           <IfKun mood="idle" size={84} />
           <h1 className="mt-1 text-2xl font-black text-amber-900 drop-shadow-sm">もじギア・ファクトリー</h1>
-          <p className="text-sm font-bold text-amber-700">IF-くんと いろんな せかいへ！</p>
+          <p className="text-sm font-bold text-amber-700">すきな せかいを えらんでね！</p>
+        </div>
+
+        {/* じょうたいの みかた（はんれい） */}
+        <div className="mb-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] font-bold text-stone-500">
+          <span>✅ クリア</span>
+          <span>📍 いまここ</span>
+          <span>▶ あそべる</span>
+          <span>🔒 まだ</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           {WORLDS.map((w, i) => {
-            const unlocked = isWorldUnlocked(i);
-            const cleared = isWorldCleared(w.id);
+            const status = worldStatus(i);
+            const locked = status === 'locked';
+            const cleared = status === 'cleared';
+            const current = status === 'current';
             return (
               <motion.button
                 key={w.id}
                 type="button"
-                disabled={!unlocked}
-                onClick={() => unlocked && openWorld(w)}
-                whileTap={unlocked ? { scale: 0.95 } : undefined}
-                whileHover={unlocked ? { y: -3 } : undefined}
-                className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${w.tint} p-4 text-center shadow-lg ${unlocked ? '' : 'opacity-50 grayscale'}`}
+                disabled={locked}
+                onClick={() => !locked && openWorld(w)}
+                whileTap={locked ? undefined : { scale: 0.95 }}
+                whileHover={locked ? undefined : { y: -3 }}
+                animate={current ? { scale: [1, 1.04, 1] } : {}}
+                transition={current ? { duration: 1.6, repeat: Infinity } : {}}
+                className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${w.tint} p-4 text-center shadow-lg ${locked ? 'opacity-50 grayscale' : ''} ${current ? 'ring-4 ring-amber-400' : ''}`}
                 style={{ boxShadow: '0 5px 0 rgba(120,90,50,0.25)' }}
               >
-                {i >= 10 && unlocked && <div className="absolute right-1 top-1 rounded-full bg-white/70 px-2 text-[10px] font-bold text-violet-600">⭐じょうきゅう</div>}
-                <div className="text-5xl drop-shadow">{unlocked ? w.emoji : '🔒'}</div>
+                {/* じょうたいバッジ（みぎうえ） */}
+                {cleared && <div className="absolute right-1 top-1 text-lg">✅</div>}
+                {current && <div className="absolute right-1 top-1 rounded-full bg-amber-400 px-2 text-[10px] font-black text-white">📍いまここ</div>}
+                {status === 'new' && <div className="absolute right-1 top-1 rounded-full bg-white/80 px-2 text-[10px] font-bold text-emerald-600">▶</div>}
+                {i >= 10 && !locked && <div className="absolute left-1 top-1 rounded-full bg-white/70 px-1.5 text-[10px] font-bold text-violet-600">⭐</div>}
+
+                <div className="text-5xl drop-shadow">{locked ? '🔒' : w.emoji}</div>
                 <div className="mt-1 text-sm font-black text-stone-700">{w.name}</div>
-                <div className="text-[11px] font-bold text-stone-500">{unlocked ? w.friend : 'まだ ひらかない'}</div>
+                <div className="text-[11px] font-bold text-stone-500">{locked ? 'まだ ひらかない' : w.friend}</div>
                 <div className="mt-1 h-4 text-sm">{cleared ? sparkleStr(worldSparkles(w.id)) : ''}</div>
               </motion.button>
             );

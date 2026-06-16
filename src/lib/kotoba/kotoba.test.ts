@@ -43,12 +43,14 @@ describe('世界（WORLDS）の整合', () => {
   it('id は ユニーク', () => {
     expect(new Set(WORLDS.map((w) => w.id)).size).toBe(WORLDS.length);
   });
-  it('lineIds は からっぽでない・最初の10は単一・11以降は複数（腕試し）', () => {
+  it('lineIds は からっぽでない・最初の10は単一（教材の順）', () => {
     WORLDS.forEach((w, i) => {
       expect(w.lineIds.length).toBeGreaterThan(0);
       if (i < 10) expect(w.lineIds.length).toBe(1);
-      else expect(w.lineIds.length).toBeGreaterThan(1);
     });
+  });
+  it('11以降は 腕試しか 新メカの ゾーン（教材10より あと）', () => {
+    expect(WORLDS.length).toBeGreaterThanOrEqual(13);
   });
   it('story は ひらがな主体（漢字を含まない）', () => {
     for (const w of WORLDS) {
@@ -60,6 +62,7 @@ describe('世界（WORLDS）の整合', () => {
 const LINES: LineId[] = [
   'count-mora', 'first-mora', 'last-mora', 'match-sound', 'build-word',
   'rule-card', 'delete-mora', 'reverse-word', 'special-mora', 'if-factory',
+  'middle-mora', 'rhyme-match',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -120,6 +123,26 @@ describe('問題生成（全10メカニクス）', () => {
     }
   });
 
+  it('middle-mora: 正解文字は まんなか（3モーラ語の mora[1]）', () => {
+    for (let s = 0; s < 50; s++) {
+      const q = generateQuestion('middle-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(w.mora.length).toBe(3);
+      expect(q.choices[q.answer as number].label).toBe(w.mora[1]);
+    }
+  });
+
+  it('rhyme-match: 正解は サンプルと おしりの おとが おなじ', () => {
+    for (let s = 0; s < 50; s++) {
+      const q = generateQuestion('rhyme-match', seeded(s + 1));
+      const sample = WORDS.find((w) => w.reading === q.speak)!;
+      const ans = q.choices[q.answer as number];
+      const correctWord = WORDS.find((w) => w.reading === ans.label)!;
+      const lastOf = (w: typeof sample) => w.mora[w.mora.length - 1];
+      expect(lastOf(correctWord)).toBe(lastOf(sample));
+    }
+  });
+
   it('first/last-mora: 正解文字は 語頭/語尾の モーラ', () => {
     for (let s = 0; s < 50; s++) {
       const qf = generateQuestion('first-mora', seeded(s + 1));
@@ -140,7 +163,7 @@ describe('文字プール', () => {
 });
 
 describe('適応難易度', () => {
-  it('2連続せいかいで レベルが あがる（最大3）', () => {
+  it('2連続せいかいで レベルが あがる（最大4）', () => {
     const a = makeAdaptive(1);
     expect(a.level).toBe(1);
     a.record(true); a.record(true);
@@ -148,7 +171,9 @@ describe('適応難易度', () => {
     a.record(true); a.record(true);
     expect(a.level).toBe(3);
     a.record(true); a.record(true);
-    expect(a.level).toBe(3); // 上限
+    expect(a.level).toBe(4);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(4); // 上限
   });
   it('つまずきで レベルが さがる（最小1）', () => {
     const a = makeAdaptive(3);
@@ -157,9 +182,18 @@ describe('適応難易度', () => {
     a.record(false); a.record(false);
     expect(a.level).toBe(1); // 下限
   });
-  it('レベルごとに モーラ数の レンジが ひろがる', () => {
+  it('レベルごとに モーラ数の レンジが ひろがる（床は保ち上だけ）', () => {
     expect(optsForLevel(1).maxMora).toBe(2);
     expect(optsForLevel(3).maxMora).toBe(4);
+    expect(optsForLevel(4).maxMora).toBe(5); // 天井を のばした
+    expect(optsForLevel(1).minMora).toBe(2); // 床は すえおき
+  });
+  it('レベルは 4 まで あがる', () => {
+    const a = makeAdaptive(3);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(4);
+    a.record(true); a.record(true);
+    expect(a.level).toBe(4);
   });
   it('choiceCount を 渡すと その数の 選択肢に なる（first-mora）', () => {
     const q = generateQuestion('first-mora', undefined, { choiceCount: 3 });

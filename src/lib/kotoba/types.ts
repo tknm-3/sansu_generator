@@ -12,7 +12,9 @@ export type LineId =
   | 'delete-mora' // 7 音の削除
   | 'reverse-word' // 8 逆唱
   | 'special-mora' // 9 特殊音節
-  | 'if-factory'; // 10 合体ボス
+  | 'if-factory' // 10 合体ボス
+  | 'middle-mora' // まんなかの音（語中音・発達的に最難の抽出）
+  | 'rhyme-match'; // おしりが おなじ（押韻マッチ）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 
@@ -38,6 +40,7 @@ export interface WorldDef {
   story: string; // 入口の2〜3行
   tint: string; // 背景色（tailwind の from 色など）
   lineIds: LineId[]; // 既存メカニクスのプール
+  startLevel?: number; // 適応難易度の 開始レベル（上級ゾーンは 2〜3 から）
   difficulty?: {
     minMora?: number;
     maxMora?: number;

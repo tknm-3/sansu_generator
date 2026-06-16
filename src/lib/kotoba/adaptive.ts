@@ -26,11 +26,15 @@ export function recordAttempt(lineId: LineId, correct: boolean): void {
   saveJson(STATS_KEY, s);
 }
 
-/** レベル(1〜3)→ 出題オプション */
+/** 適応レベルの 上限（4＝天井を のばした 上級） */
+export const MAX_LEVEL = 4;
+
+/** レベル(1〜4)→ 出題オプション。床は保ち、上だけ のばす（§エビデンス） */
 export function optsForLevel(level: number): GenOpts {
   if (level <= 1) return { minMora: 2, maxMora: 2, choiceCount: 3 };
   if (level === 2) return { minMora: 2, maxMora: 3, choiceCount: 4 };
-  return { minMora: 3, maxMora: 4, choiceCount: 4 };
+  if (level === 3) return { minMora: 3, maxMora: 4, choiceCount: 4 };
+  return { minMora: 3, maxMora: 5, choiceCount: 5 }; // レベル4: 4〜5モーラ・5択
 }
 
 export interface Adaptive {
@@ -45,7 +49,7 @@ export interface Adaptive {
  * - 1つでも つまずき → レベル-1（最小1）、連続カウントを リセット
  */
 export function makeAdaptive(startLevel = 1): Adaptive {
-  let level = Math.min(3, Math.max(1, startLevel));
+  let level = Math.min(MAX_LEVEL, Math.max(1, startLevel));
   let streak = 0;
   return {
     get level() { return level; },
@@ -53,7 +57,7 @@ export function makeAdaptive(startLevel = 1): Adaptive {
     record(correct: boolean) {
       if (correct) {
         streak++;
-        if (streak >= 2 && level < 3) { level++; streak = 0; }
+        if (streak >= 2 && level < MAX_LEVEL) { level++; streak = 0; }
       } else {
         streak = 0;
         if (level > 1) level--;
