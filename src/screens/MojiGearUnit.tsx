@@ -34,7 +34,9 @@ export function MojiGearUnit({ onExit }: Props) {
 
   function nextQuestion(w: WorldDef, a: Adaptive): MojiQuestion {
     const line = w.lineIds[Math.floor(Math.random() * w.lineIds.length)];
-    return generateQuestion(line, undefined, { ...(w.difficulty ?? {}), ...a.opts() });
+    // 世界の difficulty は §8の適応ノブを「上書き」する（design §13）。
+    // ＝「ながい ことば」ゾーン等は difficulty.minMora/maxMora を a.opts() より あとに 置く。
+    return generateQuestion(line, undefined, { ...a.opts(), ...(w.difficulty ?? {}) });
   }
 
   function openWorld(w: WorldDef) {
@@ -314,10 +316,15 @@ function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayP
       {/* お題の絵＝ソケット ＋ 光の粒 */}
       <button type="button" onClick={readWord} className="relative z-10 mt-3 flex flex-col items-center rounded-3xl border-4 border-amber-300 bg-white/90 px-10 py-4 shadow-lg">
         {question.pictureEmoji && <span className="text-7xl drop-shadow">{question.pictureEmoji}</span>}
-        <div className="mt-2 flex gap-1.5">
+        <div className="mt-2 flex items-end gap-1.5">
           {question.mora.map((_, i) => (
-            <motion.span key={i} animate={lit === i ? { scale: [1, 1.8, 1], backgroundColor: '#f59e0b' } : {}} transition={{ duration: 0.4 }}
-              className="inline-block h-3 w-3 rounded-full bg-amber-200" />
+            <div key={i} className="flex flex-col items-center gap-0.5">
+              <motion.span animate={lit === i ? { scale: [1, 1.8, 1], backgroundColor: '#f59e0b' } : {}} transition={{ duration: 0.4 }}
+                className={`inline-block h-3 w-3 rounded-full bg-amber-200 ${question.highlightIndex === i ? 'ring-4 ring-amber-500 ring-offset-1' : ''}`} />
+              {question.highlightIndex != null && (
+                <span className={`text-[10px] font-black ${question.highlightIndex === i ? 'text-amber-600' : 'text-stone-300'}`}>{i + 1}</span>
+              )}
+            </div>
           ))}
         </div>
         <span className="mt-1 text-xs font-bold text-stone-400">🔊 もういちど きく</span>

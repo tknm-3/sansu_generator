@@ -14,7 +14,8 @@ export type LineId =
   | 'special-mora' // 9 特殊音節
   | 'if-factory' // 10 合体ボス
   | 'middle-mora' // まんなかの音（語中音・発達的に最難の抽出）
-  | 'rhyme-match'; // おしりが おなじ（押韻マッチ）
+  | 'rhyme-match' // おしりが おなじ（押韻マッチ）
+  | 'nth-mora'; // ○ばんめの音（位置を指定して抽出・first/last/middle の一般化）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 
@@ -67,6 +68,7 @@ export interface MojiQuestion {
   speak: string; // TTS で読む語（reading）
   mora: string[]; // お題の語の モーラ列（1拍ずつ読み・光の粒の演出用）
   pictureEmoji?: string; // お題の絵
+  highlightIndex?: number; // 注目させる モーラの位置（nth-mora の「○ばんめ」を 光の粒で 示す）
   choices: MojiChoice[];
   answer: number | number[];
 }
