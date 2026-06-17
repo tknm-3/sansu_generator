@@ -200,6 +200,26 @@ function genRhyme(rng?: Rng, opts?: GenOpts): MojiQuestion {
   };
 }
 
+// ── ○ばんめの音（位置を指定して抽出）。first/last/middle の一般化 ──
+// 3モーラ以上の語で「○ばんめ」を問う。位置は highlightIndex で 光の粒に 示す。
+function genNth(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const w = pick(poolWords({ minMora: Math.max(3, opts?.minMora ?? 3), maxMora: opts?.maxMora ?? 6 }), rng);
+  const pos = 1 + Math.floor(R(rng) * w.mora.length); // 1..len（端も ふくむ＝ばんめの 学び）
+  const correct = w.mora[pos - 1];
+  const { choices, answer } = letterChoices(correct, opts?.choiceCount ?? 4, rng);
+  return {
+    lineId: 'nth-mora',
+    mode: 'choose',
+    prompt: `${pos} ばんめの おとは？`,
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    highlightIndex: pos - 1,
+    choices,
+    answer,
+  };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -215,5 +235,6 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'if-factory': return genFactory(rng);
     case 'middle-mora': return genMiddle(rng, opts);
     case 'rhyme-match': return genRhyme(rng, opts);
+    case 'nth-mora': return genNth(rng, opts);
   }
 }

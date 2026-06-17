@@ -99,6 +99,33 @@ export const WORDS: WordItem[] = [
   { id: 'megane', display: '👓', reading: 'めがね', mora: ['め', 'が', 'ね'], category: 'thing', difficulty: 2, special: ['voiced'] },
   { id: 'gitaa', display: '🎸', reading: 'ぎたー', mora: ['ぎ', 'た', 'ー'], category: 'thing', difficulty: 2, special: ['voiced', 'choon'] },
   { id: 'kutsushita', display: '🧦', reading: 'くつした', mora: ['く', 'つ', 'し', 'た'], category: 'thing', difficulty: 3 },
+
+  // ── ながい ことば（5〜6モーラ）。文字数の多い お題のバリエーション・般化のため ──
+  // いきもの
+  { id: 'kyouryuu', display: '🦕', reading: 'きょうりゅう', mora: ['きょ', 'う', 'りゅ', 'う'], category: 'animal', difficulty: 3, special: ['youon'] },
+  { id: 'harinezumi', display: '🦔', reading: 'はりねずみ', mora: ['は', 'り', 'ね', 'ず', 'み'], category: 'animal', difficulty: 3, special: ['voiced'] },
+  { id: 'kangaroo', display: '🦘', reading: 'かんがるー', mora: ['か', 'ん', 'が', 'る', 'ー'], category: 'animal', difficulty: 3, special: ['voiced', 'choon'] },
+  { id: 'flamingo', display: '🦩', reading: 'ふらみんご', mora: ['ふ', 'ら', 'み', 'ん', 'ご'], category: 'animal', difficulty: 3, special: ['voiced'] },
+  { id: 'namakemono', display: '🦥', reading: 'なまけもの', mora: ['な', 'ま', 'け', 'も', 'の'], category: 'animal', difficulty: 3 },
+  { id: 'hamster', display: '🐹', reading: 'はむすたー', mora: ['は', 'む', 'す', 'た', 'ー'], category: 'animal', difficulty: 3, special: ['choon'] },
+  { id: 'katatsumuri', display: '🐌', reading: 'かたつむり', mora: ['か', 'た', 'つ', 'む', 'り'], category: 'animal', difficulty: 3 },
+  { id: 'tentoumushi', display: '🐞', reading: 'てんとうむし', mora: ['て', 'ん', 'と', 'う', 'む', 'し'], category: 'animal', difficulty: 3 },
+  // たべもの
+  { id: 'pineapple', display: '🍍', reading: 'ぱいなっぷる', mora: ['ぱ', 'い', 'な', 'っ', 'ぷ', 'る'], category: 'food', difficulty: 3, special: ['semivoiced', 'sokuon'] },
+  { id: 'broccoli', display: '🥦', reading: 'ぶろっこりー', mora: ['ぶ', 'ろ', 'っ', 'こ', 'り', 'ー'], category: 'food', difficulty: 3, special: ['voiced', 'sokuon', 'choon'] },
+  { id: 'corn', display: '🌽', reading: 'とうもろこし', mora: ['と', 'う', 'も', 'ろ', 'こ', 'し'], category: 'food', difficulty: 3 },
+  { id: 'hamburger', display: '🍔', reading: 'はんばーがー', mora: ['は', 'ん', 'ば', 'ー', 'が', 'ー'], category: 'food', difficulty: 3, special: ['voiced', 'choon'] },
+  { id: 'cupcake', display: '🧁', reading: 'かっぷけーき', mora: ['か', 'っ', 'ぷ', 'け', 'ー', 'き'], category: 'food', difficulty: 3, special: ['sokuon', 'semivoiced', 'choon'] },
+  { id: 'sandwich', display: '🥪', reading: 'さんどいっち', mora: ['さ', 'ん', 'ど', 'い', 'っ', 'ち'], category: 'food', difficulty: 3, special: ['voiced', 'sokuon'] },
+  { id: 'popcorn', display: '🍿', reading: 'ぽっぷこーん', mora: ['ぽ', 'っ', 'ぷ', 'こ', 'ー', 'ん'], category: 'food', difficulty: 3, special: ['semivoiced', 'sokuon', 'choon'] },
+  // のりもの
+  { id: 'ambulance', display: '🚑', reading: 'きゅうきゅうしゃ', mora: ['きゅ', 'う', 'きゅ', 'う', 'しゃ'], category: 'vehicle', difficulty: 3, special: ['youon'] },
+  { id: 'helicopter', display: '🚁', reading: 'へりこぷたー', mora: ['へ', 'り', 'こ', 'ぷ', 'た', 'ー'], category: 'vehicle', difficulty: 3, special: ['semivoiced', 'choon'] },
+  { id: 'tractor', display: '🚜', reading: 'とらくたー', mora: ['と', 'ら', 'く', 'た', 'ー'], category: 'vehicle', difficulty: 3, special: ['choon'] },
+  // もの
+  { id: 'trumpet', display: '🎺', reading: 'とらんぺっと', mora: ['と', 'ら', 'ん', 'ぺ', 'っ', 'と'], category: 'thing', difficulty: 3, special: ['semivoiced', 'sokuon'] },
+  { id: 'violin', display: '🎻', reading: 'ばいおりん', mora: ['ば', 'い', 'お', 'り', 'ん'], category: 'thing', difficulty: 3, special: ['voiced'] },
+  { id: 'ferriswheel', display: '🎡', reading: 'かんらんしゃ', mora: ['か', 'ん', 'ら', 'ん', 'しゃ'], category: 'thing', difficulty: 3, special: ['youon'] },
 ];
 
 /** id で引く */

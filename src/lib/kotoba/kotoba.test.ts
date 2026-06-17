@@ -39,6 +39,23 @@ describe('語辞書（WordItem）の整合', () => {
   });
 });
 
+describe('ながい ことば（文字数の多い お題）', () => {
+  it('5モーラ以上の語が じゅうぶん ある（般化の燃料）', () => {
+    const long = WORDS.filter((w) => w.mora.length >= 5);
+    expect(long.length).toBeGreaterThanOrEqual(15);
+  });
+  it('6モーラの語も ある', () => {
+    expect(WORDS.some((w) => w.mora.length === 6)).toBe(true);
+  });
+  it('minMora/maxMora を 5〜6 にすると ながい語だけ 出る（プール枯渇で 短語に 落ちない）', () => {
+    for (let s = 0; s < 60; s++) {
+      const q = generateQuestion('count-mora', seeded(s + 1), { minMora: 5, maxMora: 6 });
+      expect(q.mora.length).toBeGreaterThanOrEqual(5);
+      expect(q.mora.length).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
 describe('世界（WORLDS）の整合', () => {
   it('id は ユニーク', () => {
     expect(new Set(WORLDS.map((w) => w.id)).size).toBe(WORLDS.length);
@@ -62,7 +79,7 @@ describe('世界（WORLDS）の整合', () => {
 const LINES: LineId[] = [
   'count-mora', 'first-mora', 'last-mora', 'match-sound', 'build-word',
   'rule-card', 'delete-mora', 'reverse-word', 'special-mora', 'if-factory',
-  'middle-mora', 'rhyme-match',
+  'middle-mora', 'rhyme-match', 'nth-mora',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -140,6 +157,19 @@ describe('問題生成（全10メカニクス）', () => {
       const correctWord = WORDS.find((w) => w.reading === ans.label)!;
       const lastOf = (w: typeof sample) => w.mora[w.mora.length - 1];
       expect(lastOf(correctWord)).toBe(lastOf(sample));
+    }
+  });
+
+  it('nth-mora: 正解文字は highlightIndex の モーラ・prompt は その ばんめ', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('nth-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(q.highlightIndex).not.toBeUndefined();
+      const idx = q.highlightIndex as number;
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(w.mora.length);
+      expect(q.choices[q.answer as number].label).toBe(w.mora[idx]);
+      expect(q.prompt).toContain(`${idx + 1} ばんめ`);
     }
   });
 

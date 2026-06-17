@@ -351,3 +351,21 @@ npx vitest run                                          # 全部
     `console.log`(`--disable-console-intercept`)→ 出力列を relSolution に写し optimal=列長。
     **隅ジェムは 回転が増えて optimal が 巨大化**するので、宝は 経路寄りに置き 隅は ボスで1つだけに
     抑える(6×6+隅2つで 25手超は 長すぎ)。検証は relativeQuests テストが steps===optimal を守る。
+- [2026-06-17] ことば/もじギア「ながい語＋○ばんめ＋6ゾーン」: お題の語が短語(くり・とら)に偏る／
+  位置抽出が first・last だけ、を解消。学んだこと:
+  ・**長語ゾーンを足すだけでは長語が出ない罠**: `MojiGearUnit.nextQuestion` が
+    `{...w.difficulty, ...a.opts()}` で **adaptive が world.difficulty.minMora/maxMora を上書き**して
+    いた（design §13 は「difficulty が §8ノブを上書き」と謳うのに逆向き）。`{...a.opts(), ...w.difficulty}`
+    に直す。既存ゾーンは difficulty に mora 範囲を持たず special のみ＝無影響。回帰は
+    「minMora/maxMora を 5〜6 にすると ながい語だけ 出る」テストで **プール枯渇フォールバックも**守る
+    （`poolWords` は filter が空だと全語に落ちる＝短語が混ざる事故）。
+  ・**長語を出すなら辞書に十分な数を入れる**（5〜6モーラを ~20語）。1語だけだと毎回同じで学びが痩せる。
+    回帰テスト「5モーラ以上の語が じゅうぶん ある(>=15)」「6モーラの語も ある」で枯渇を検知。
+  ・**新メカ `nth-mora`(○ばんめ)は first/last/middle の一般化**。位置は `MojiQuestion.highlightIndex`
+    で光の粒に「番号＋リング」で示す。**答えバレ防止の原則**: 見せるのは「問い＝どの位置か」だけで
+    「答え＝どの音か」は伏せる（位置の番号表示はOK）。テストで highlightIndex の音＝正解／prompt が
+    その ばんめ を含むことを固定。
+  ・ゾーンは **WORLDS 末尾に追加**（直線アンロック。途中挿入は次ゾーンを再ロック）。新メカは
+    types.LineId・generate のディスパッチャ・kotoba.test の LINES 配列の3か所に足す（漏れると未検証/未到達）。
+  ・スクショ罠: もじギアの「▶ スタート」はパルスアニメで `click()` が "element is not stable" で落ちる
+    → `click({ force: true })`。新ゾーン解放は `kotoba-adventure:history` に前ゾーンを cleared でシード。
