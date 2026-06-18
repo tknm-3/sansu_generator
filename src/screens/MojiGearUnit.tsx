@@ -30,6 +30,7 @@ export function MojiGearUnit({ onExit }: Props) {
   const [question, setQuestion] = useState<MojiQuestion | null>(null);
   const [qi, setQi] = useState(0);
   const [mistakes, setMistakes] = useState(0);
+  const [combo, setCombo] = useState(0); // れんぞく せいかい（即時・前向き強化）
   const total = loadKotobaHistory().totalSparkles;
 
   function nextQuestion(w: WorldDef, a: Adaptive): MojiQuestion {
@@ -51,6 +52,7 @@ export function MojiGearUnit({ onExit }: Props) {
     setQuestion(nextQuestion(world, a));
     setQi(0);
     setMistakes(0);
+    setCombo(0);
     setPhase('play');
   }
 
@@ -60,8 +62,10 @@ export function MojiGearUnit({ onExit }: Props) {
     adaptive.record(correct);
     if (!correct) {
       setMistakes((m) => m + 1);
+      setCombo(0);
       return;
     }
+    setCombo((c) => c + 1);
     if (qi + 1 >= Q_PER_WORLD) {
       const sparkles = Math.max(1, 3 - mistakes);
       recordWorldClear(world.id, sparkles);
@@ -84,6 +88,7 @@ export function MojiGearUnit({ onExit }: Props) {
         question={question}
         index={qi}
         total={Q_PER_WORLD}
+        combo={combo}
         onAnswered={onAnswered}
         onQuit={() => setPhase('hub')}
       />
@@ -194,9 +199,10 @@ function IntroScreen({ world, onStart, onBack }: { world: WorldDef; onStart: () 
 // ── 結果（クリアの お祝い）──
 function ResultScreen({ world, mistakes, onAgain, onHub }: { world: WorldDef; mistakes: number; onAgain: () => void; onHub: () => void }) {
   const sparkles = Math.max(1, 3 - mistakes);
+  const perfect = mistakes === 0;
   useEffect(() => {
     playSfx('fanfare');
-    speakJa(`クリア！ ${world.friend} が よろこんでいるよ`);
+    speakJa(perfect ? `パーフェクト！ ${world.friend} が だいよろこび！` : `クリア！ ${world.friend} が よろこんでいるよ`);
     confetti({ particleCount: 90, spread: 75, origin: { y: 0.6 } });
     const t = setTimeout(() => confetti({ particleCount: 60, spread: 100, origin: { y: 0.5 } }), 400);
     return () => clearTimeout(t);
@@ -206,7 +212,12 @@ function ResultScreen({ world, mistakes, onAgain, onHub }: { world: WorldDef; mi
       <GearBackground opacity={0.12} />
       <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 0.8, repeat: Infinity }} className="text-8xl drop-shadow-lg">{world.emoji}</motion.div>
       <IfKun mood="happy" size={120} />
-      <h2 className="text-4xl font-black text-amber-900 drop-shadow">クリア！</h2>
+      <h2 className="text-4xl font-black text-amber-900 drop-shadow">{perfect ? 'パーフェクト！' : 'クリア！'}</h2>
+      {perfect && (
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="rounded-full bg-orange-100 px-5 py-1 text-lg font-black text-orange-600 shadow">
+          🌟 ノーミス れんぞく！
+        </motion.div>
+      )}
       <div className="text-xl font-bold text-stone-700">{world.friend} が よろこんでいる！</div>
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: 'spring' }} className="text-5xl">{sparkleStr(sparkles)}</motion.div>
       <div className="mt-2 flex gap-4">
@@ -223,11 +234,21 @@ interface PlayProps {
   question: MojiQuestion;
   index: number;
   total: number;
+  combo: number;
   onAnswered: (correct: boolean) => void;
   onQuit: () => void;
 }
 
-function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayProps) {
+// れんぞく数で もりあがる ことば＋絵（即時・前向きな ごほうび）
+function comboBanner(n: number): { emoji: string; text: string } | null {
+  if (n < 2) return null;
+  if (n === 2) return { emoji: '🔥', text: '2れんぞく！' };
+  if (n === 3) return { emoji: '🔥', text: '3れんぞく！すごい！' };
+  if (n === 4) return { emoji: '⚡', text: '4れんぞく！てんさい！' };
+  return { emoji: '🌟', text: `${n}れんぞく！パーフェクト！` };
+}
+
+function PlayScreen({ world, question, index, total, combo, onAnswered, onQuit }: PlayProps) {
   const [wrong, setWrong] = useState<number | null>(null);
   const [placed, setPlaced] = useState<number[]>([]);
   const [hint, setHint] = useState('');
@@ -246,9 +267,17 @@ function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayP
     setTimeout(() => setLit(-1), 500 + question.mora.length * 600);
   }
 
-  // 入室時に お題を 1拍ずつ よみあげる
+  // しじ（prompt）→ お題の語、の順で よみあげる。
+  // 置換/添加/位置 などは prompt に たいせつな じょうほう（かえる音・たす音・さがす音）が
+  // あるので、まだ 字が よめない子にも 音で つたわるように 先に prompt を 読む。
+  function readAll() {
+    const inst = question.prompt.replace(/[「」『』]/g, ' ');
+    speakJa(inst, () => readWord());
+  }
+
+  // 入室時に しじ→お題を よみあげる
   useEffect(() => {
-    const t = setTimeout(readWord, 350);
+    const t = setTimeout(readAll, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question]);
@@ -300,6 +329,15 @@ function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayP
       <GearBackground opacity={0.1} />
       <div className="relative z-10 mb-1 flex w-full max-w-md items-center justify-between">
         <button type="button" onClick={onQuit} className="rounded-full bg-white/80 px-3 py-1 text-sm font-bold text-stone-600">やめる</button>
+        {combo >= 2 && (
+          <motion.div
+            key={combo}
+            initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300 }}
+            className="rounded-full bg-orange-100 px-3 py-1 text-sm font-black text-orange-600 shadow"
+          >
+            🔥 {combo} れんぞく
+          </motion.div>
+        )}
         <div className="flex gap-1">
           {Array.from({ length: total }).map((_, i) => (
             <div key={i} className={`h-2 w-6 rounded-full ${i < index ? 'bg-amber-500' : i === index ? 'bg-amber-300' : 'bg-white/60'}`} />
@@ -314,7 +352,7 @@ function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayP
       </div>
 
       {/* お題の絵＝ソケット ＋ 光の粒 */}
-      <button type="button" onClick={readWord} className="relative z-10 mt-3 flex flex-col items-center rounded-3xl border-4 border-amber-300 bg-white/90 px-10 py-4 shadow-lg">
+      <button type="button" onClick={readAll} className="relative z-10 mt-3 flex flex-col items-center rounded-3xl border-4 border-amber-300 bg-white/90 px-10 py-4 shadow-lg">
         {question.pictureEmoji && <span className="text-7xl drop-shadow">{question.pictureEmoji}</span>}
         <div className="mt-2 flex items-end gap-1.5">
           {question.mora.map((_, i) => (
@@ -379,7 +417,17 @@ function PlayScreen({ world, question, index, total, onAnswered, onQuit }: PlayP
           <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 mt-5 text-base font-bold text-rose-500">{hint}</motion.p>
         )}
         {done && (
-          <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative z-10 mt-5 text-3xl font-black text-emerald-600 drop-shadow">カチッ！ せいかい！</motion.p>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative z-10 mt-5 flex flex-col items-center gap-1">
+            <p className="text-3xl font-black text-emerald-600 drop-shadow">カチッ！ せいかい！</p>
+            {(() => {
+              const b = comboBanner(combo + 1);
+              return b ? (
+                <motion.p animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.5 }} className="text-2xl font-black text-orange-500 drop-shadow">
+                  {b.emoji} {b.text}
+                </motion.p>
+              ) : null;
+            })()}
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
