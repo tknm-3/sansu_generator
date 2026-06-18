@@ -1,4 +1,4 @@
-import { WORDS, KANA_POOL } from './words';
+import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, getWord } from './words';
 import type { LineId, MojiQuestion, WordItem, MojiChoice } from './types';
 
 // もじギア・ファクトリーの問題生成（§7）。
@@ -220,6 +220,139 @@ function genNth(rng?: Rng, opts?: GenOpts): MojiQuestion {
   };
 }
 
+function posLabel(pos: number, len: number): string {
+  if (pos === 0) return 'あたま';
+  if (pos === len - 1) return 'おしり';
+  return 'まんなか';
+}
+
+// ── まんなかの音を ぬく（語中削除）。3モーラ語＝まんなかが 1つに きまる ──
+// 既存の delete-mora（語頭/語尾）より難しい操作（位置特定＋保持）。
+function genDeleteMedial(rng?: Rng): MojiQuestion {
+  const w = pick(poolWords({ minMora: 3, maxMora: 3 }), rng);
+  const correct = w.mora[0] + w.mora[2];
+  const cand = new Set<string>([correct]);
+  cand.add(w.reading); // そのまま
+  cand.add(w.mora.slice(1).join('')); // あたまを ぬいた
+  cand.add(w.mora.slice(0, -1).join('')); // おしりを ぬいた
+  cand.add(w.mora.slice().reverse().join('')); // さかさま
+  const labels = shuffle(Array.from(cand), rng).slice(0, 4);
+  if (!labels.includes(correct)) labels[0] = correct;
+  const shuffled = shuffle(labels, rng);
+  return {
+    lineId: 'delete-medial',
+    mode: 'choose',
+    prompt: 'まんなかの おとを ぬくと？',
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    choices: shuffled.map((l) => ({ label: l })),
+    answer: shuffled.indexOf(correct),
+  };
+}
+
+// ── 音を たす（添加）。ベース語に 1音 たすと 別の ことばに なる ──
+// 答えは「たす おと（文字）」。削除と対を なす 操作系。
+function genAdd(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const p = pick(ADD_PAIRS, rng);
+  const base = getWord(p.baseId)!;
+  const { choices, answer } = letterChoices(p.mora, opts?.choiceCount ?? 4, rng);
+  const where = p.pos === 'head' ? 'あたま' : 'おしり';
+  return {
+    lineId: 'add-mora',
+    mode: 'choose',
+    prompt: `${where}に なにを たすと「${p.reading}」？`,
+    speak: base.reading,
+    mora: base.mora,
+    pictureEmoji: base.display,
+    choices,
+    answer,
+  };
+}
+
+// ── 音を おきかえる（置換）。指定の おとに かえると どの ことばに なる？──
+// 削除より 上位の 音韻操作（文字-音対応＋WM＋抑制）。
+function genSubstitute(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  let pairs = SUBSTITUTE_PAIRS;
+  if (opts?.special) {
+    const sp = pairs.filter((p) => p.special);
+    if (sp.length) pairs = sp;
+  }
+  const p = pick(pairs, rng);
+  const base = getWord(p.baseId)!;
+  const target = getWord(p.targetId)!;
+  const newMora = target.mora[p.pos];
+  // ダミーは base/target いがいの語（読みが かぶらないように）
+  const used = new Set<string>([base.reading, target.reading]);
+  const distractors: WordItem[] = [];
+  for (const d of shuffle(WORDS, rng)) {
+    if (used.has(d.reading)) continue;
+    used.add(d.reading);
+    distractors.push(d);
+    if (distractors.length >= (opts?.choiceCount ?? 4) - 1) break;
+  }
+  const opt = shuffle([target, ...distractors], rng);
+  return {
+    lineId: 'substitute-mora',
+    mode: 'choose',
+    prompt: `${posLabel(p.pos, base.mora.length)}を「${newMora}」に かえると？`,
+    speak: base.reading,
+    mora: base.mora,
+    pictureEmoji: base.display,
+    choices: opt.map((w) => ({ label: w.reading, emoji: w.display })),
+    answer: opt.indexOf(target),
+  };
+}
+
+// ── その音は ○ばんめ？（位置同定）。nth-mora の 逆操作（音→位置）──
+function genFindPosition(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  // 1度だけ でてくる モーラを もつ語に しぼる（位置が 1つに きまる）
+  const min = Math.max(3, opts?.minMora ?? 3);
+  const cands = poolWords({ minMora: min, maxMora: opts?.maxMora ?? 6 }).filter((w) =>
+    w.mora.some((m) => w.mora.filter((x) => x === m).length === 1),
+  );
+  const w = pick(cands.length ? cands : poolWords({ minMora: 3, maxMora: 4 }), rng);
+  const uniques = w.mora.map((m, i) => ({ m, i })).filter(({ m }) => w.mora.filter((x) => x === m).length === 1);
+  const target = pick(uniques.length ? uniques : w.mora.map((m, i) => ({ m, i })), rng);
+  const ansPos = target.i + 1;
+  // 選択肢＝位置の すうじ（正解を ふくむ ばんめ群）
+  const allPos = w.mora.map((_, i) => i + 1);
+  const others = shuffle(allPos.filter((p) => p !== ansPos), rng).slice(0, (opts?.choiceCount ?? 4) - 1);
+  const positions = shuffle([ansPos, ...others], rng);
+  return {
+    lineId: 'find-position',
+    mode: 'choose',
+    prompt: `「${target.m}」は なんばんめ？`,
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    choices: positions.map((p) => ({ label: String(p) })),
+    answer: positions.indexOf(ansPos),
+  };
+}
+
+// ── さいしょと おしりを いれかえる（転置・spoonerism）。WM最大級 ──
+function genSwap(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const w = pick(poolWords({ minMora: Math.max(3, opts?.minMora ?? 3), maxMora: opts?.maxMora ?? 4 }), rng);
+  const order = shuffle(w.mora.map((_, i) => i), rng);
+  const choices = order.map((i) => ({ label: w.mora[i] }));
+  // さいしょ(0)と おしり(len-1)を いれかえた 原index列
+  const swapped = w.mora.map((_, i) => i);
+  const last = swapped.length - 1;
+  [swapped[0], swapped[last]] = [swapped[last], swapped[0]];
+  const answer = swapped.map((origIdx) => order.indexOf(origIdx));
+  return {
+    lineId: 'swap-mora',
+    mode: 'build',
+    prompt: 'さいしょと おしりを いれかえて！',
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    choices,
+    answer,
+  };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -236,5 +369,10 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'middle-mora': return genMiddle(rng, opts);
     case 'rhyme-match': return genRhyme(rng, opts);
     case 'nth-mora': return genNth(rng, opts);
+    case 'delete-medial': return genDeleteMedial(rng);
+    case 'add-mora': return genAdd(rng, opts);
+    case 'substitute-mora': return genSubstitute(rng, opts);
+    case 'find-position': return genFindPosition(rng, opts);
+    case 'swap-mora': return genSwap(rng, opts);
   }
 }

@@ -126,6 +126,59 @@ export const WORDS: WordItem[] = [
   { id: 'trumpet', display: '🎺', reading: 'とらんぺっと', mora: ['と', 'ら', 'ん', 'ぺ', 'っ', 'と'], category: 'thing', difficulty: 3, special: ['semivoiced', 'sokuon'] },
   { id: 'violin', display: '🎻', reading: 'ばいおりん', mora: ['ば', 'い', 'お', 'り', 'ん'], category: 'thing', difficulty: 3, special: ['voiced'] },
   { id: 'ferriswheel', display: '🎡', reading: 'かんらんしゃ', mora: ['か', 'ん', 'ら', 'ん', 'しゃ'], category: 'thing', difficulty: 3, special: ['youon'] },
+
+  // ── 添加(add-mora)用の みじかい ベース語（あたま/おしりに 1音 たすと 別語に なる）──
+  { id: 'ika', display: '🦑', reading: 'いか', mora: ['い', 'か'], category: 'animal', difficulty: 1 },
+  { id: 'tai', display: '🐠', reading: 'たい', mora: ['た', 'い'], category: 'animal', difficulty: 1 },
+  { id: 'ebi', display: '🦐', reading: 'えび', mora: ['え', 'び'], category: 'animal', difficulty: 1, special: ['voiced'] },
+];
+
+// ── 置き換え(substitute-mora)ペア ──
+// base の pos番目(0始まり)の 1音を かえると target に なる。両方とも 実在語＝絵で 出せる。
+// pos以外の モーラは 同じ・長さも 同じ（テストで保証）。special は 濁音/拗音など とくべつ音の ペア。
+export interface SubPair {
+  baseId: string;
+  targetId: string;
+  pos: number;
+  special?: boolean;
+}
+export const SUBSTITUTE_PAIRS: SubPair[] = [
+  // あたま(0)を かえる
+  { baseId: 'neko', targetId: 'tako', pos: 0 }, // ねこ→たこ
+  { baseId: 'kani', targetId: 'wani', pos: 0 }, // かに→わに
+  { baseId: 'kame', targetId: 'ame', pos: 0 }, // かめ→あめ
+  { baseId: 'hoshi', targetId: 'ushi', pos: 0 }, // ほし→うし
+  { baseId: 'nashi', targetId: 'ushi', pos: 0 }, // なし→うし
+  // おしり(1)を かえる
+  { baseId: 'kani', targetId: 'kame', pos: 1 }, // かに→かめ
+  { baseId: 'kani', targetId: 'kasa', pos: 1 }, // かに→かさ
+  { baseId: 'umi', targetId: 'ushi', pos: 1 }, // うみ→うし
+  { baseId: 'imo', targetId: 'inu', pos: 1 }, // いも→いぬ
+  { baseId: 'kuri', targetId: 'kumo', pos: 1 }, // くり→くも
+  // とくべつ音(濁音)に かえる
+  { baseId: 'kani', targetId: 'kagi', pos: 1, special: true }, // かに→かぎ
+  { baseId: 'kasa', targetId: 'kagi', pos: 1, special: true }, // かさ→かぎ
+  { baseId: 'hebi', targetId: 'ebi', pos: 0, special: true }, // へび→えび
+];
+
+// ── 添加(add-mora)ペア ──
+// base に mora を pos('head'|'tail')に たすと reading(実在語)に なる。
+// base は 絵で 出せる みじかい語。reading(target)は 音声で 読む。
+export interface AddPair {
+  baseId: string;
+  mora: string;
+  pos: 'head' | 'tail';
+  reading: string;
+}
+export const ADD_PAIRS: AddPair[] = [
+  { baseId: 'ika', mora: 'す', pos: 'head', reading: 'すいか' }, // いか→すいか
+  { baseId: 'tai', mora: 'こ', pos: 'tail', reading: 'たいこ' }, // たい→たいこ
+  { baseId: 'ushi', mora: 'ろ', pos: 'tail', reading: 'うしろ' }, // うし→うしろ
+  { baseId: 'neko', mora: 'こ', pos: 'head', reading: 'こねこ' }, // ねこ→こねこ
+  { baseId: 'inu', mora: 'こ', pos: 'head', reading: 'こいぬ' }, // いぬ→こいぬ
+  { baseId: 'ushi', mora: 'こ', pos: 'head', reading: 'こうし' }, // うし→こうし
+  { baseId: 'hana', mora: 'び', pos: 'tail', reading: 'はなび' }, // はな→はなび
+  { baseId: 'tsuki', mora: 'み', pos: 'tail', reading: 'つきみ' }, // つき→つきみ
 ];
 
 /** id で引く */
