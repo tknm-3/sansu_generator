@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WORDS, KANA_POOL } from './words';
+import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, getWord } from './words';
 import { WORLDS } from './worlds';
 import { generateQuestion } from './generate';
 import { makeAdaptive, optsForLevel } from './adaptive';
@@ -56,6 +56,36 @@ describe('ながい ことば（文字数の多い お題）', () => {
   });
 });
 
+describe('置き換え・添加ペア（新メカの 燃料）の整合', () => {
+  it('SUBSTITUTE_PAIRS: base/target は 実在語・同じ長さ・pos だけ ちがう', () => {
+    for (const p of SUBSTITUTE_PAIRS) {
+      const b = getWord(p.baseId)!;
+      const t = getWord(p.targetId)!;
+      expect(b).toBeTruthy();
+      expect(t).toBeTruthy();
+      expect(b.mora.length).toBe(t.mora.length);
+      expect(p.pos).toBeGreaterThanOrEqual(0);
+      expect(p.pos).toBeLessThan(b.mora.length);
+      // pos の モーラだけ ちがう（ほかは いっち）
+      b.mora.forEach((m, i) => {
+        if (i === p.pos) expect(m).not.toBe(t.mora[i]);
+        else expect(m).toBe(t.mora[i]);
+      });
+    }
+  });
+  it('SUBSTITUTE_PAIRS: special印は 濁/半濁/拗を ふくむ ペア', () => {
+    expect(SUBSTITUTE_PAIRS.some((p) => p.special)).toBe(true);
+  });
+  it('ADD_PAIRS: base は 実在語・mora を pos に たすと reading に なる', () => {
+    for (const p of ADD_PAIRS) {
+      const b = getWord(p.baseId)!;
+      expect(b).toBeTruthy();
+      const built = p.pos === 'head' ? p.mora + b.reading : b.reading + p.mora;
+      expect(built).toBe(p.reading);
+    }
+  });
+});
+
 describe('世界（WORLDS）の整合', () => {
   it('id は ユニーク', () => {
     expect(new Set(WORLDS.map((w) => w.id)).size).toBe(WORLDS.length);
@@ -80,6 +110,7 @@ const LINES: LineId[] = [
   'count-mora', 'first-mora', 'last-mora', 'match-sound', 'build-word',
   'rule-card', 'delete-mora', 'reverse-word', 'special-mora', 'if-factory',
   'middle-mora', 'rhyme-match', 'nth-mora',
+  'delete-medial', 'add-mora', 'substitute-mora', 'find-position', 'swap-mora',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -170,6 +201,62 @@ describe('問題生成（全10メカニクス）', () => {
       expect(idx).toBeLessThan(w.mora.length);
       expect(q.choices[q.answer as number].label).toBe(w.mora[idx]);
       expect(q.prompt).toContain(`${idx + 1} ばんめ`);
+    }
+  });
+
+  it('delete-medial: 正解は まんなかを ぬいた 文字れつ（3モーラ語）', () => {
+    for (let s = 0; s < 80; s++) {
+      const q = generateQuestion('delete-medial', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(w.mora.length).toBe(3);
+      expect(q.choices[q.answer as number].label).toBe(w.mora[0] + w.mora[2]);
+    }
+  });
+
+  it('add-mora: 正解文字は たす おと（あたま/おしり）', () => {
+    for (let s = 0; s < 80; s++) {
+      const q = generateQuestion('add-mora', seeded(s + 1));
+      const base = WORDS.find((w) => w.reading === q.speak)!;
+      const pair = ADD_PAIRS.find((p) => p.baseId === base.id && q.prompt.includes(p.reading))!;
+      expect(pair).toBeTruthy();
+      expect(q.choices[q.answer as number].label).toBe(pair.mora);
+    }
+  });
+
+  it('substitute-mora: 正解は ペアの target・base とは ちがう絵', () => {
+    for (let s = 0; s < 80; s++) {
+      const q = generateQuestion('substitute-mora', seeded(s + 1));
+      const ans = q.choices[q.answer as number];
+      const target = WORDS.find((w) => w.reading === ans.label)!;
+      const base = WORDS.find((w) => w.reading === q.speak)!;
+      // base→target は 1音だけ ちがう（置換の 関係）
+      expect(target.mora.length).toBe(base.mora.length);
+      const diff = base.mora.filter((m, i) => m !== target.mora[i]).length;
+      expect(diff).toBe(1);
+    }
+  });
+
+  it('find-position: 正解の すうじは その音の ばんめ・その音は 1度だけ', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('find-position', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      const m = q.prompt.match(/「(.+?)」/)![1];
+      const occur = w.mora.filter((x) => x === m);
+      expect(occur.length).toBe(1); // 一意に きまる
+      const pos = w.mora.indexOf(m) + 1;
+      expect(Number(q.choices[q.answer as number].label)).toBe(pos);
+    }
+  });
+
+  it('swap-mora: answer の順に ならべると さいしょと おしりが いれかわる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('swap-mora', seeded(s + 1));
+      const a = q.answer as number[];
+      const built = a.map((i) => q.choices[i].label).join('');
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      const sw = w.mora.slice();
+      [sw[0], sw[sw.length - 1]] = [sw[sw.length - 1], sw[0]];
+      expect(built).toBe(sw.join(''));
     }
   });
 

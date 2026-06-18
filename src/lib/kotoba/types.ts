@@ -15,7 +15,12 @@ export type LineId =
   | 'if-factory' // 10 合体ボス
   | 'middle-mora' // まんなかの音（語中音・発達的に最難の抽出）
   | 'rhyme-match' // おしりが おなじ（押韻マッチ）
-  | 'nth-mora'; // ○ばんめの音（位置を指定して抽出・first/last/middle の一般化）
+  | 'nth-mora' // ○ばんめの音（位置を指定して抽出・first/last/middle の一般化）
+  | 'delete-medial' // まんなかの音を ぬく（語中削除・語頭/語尾削除より難しい）
+  | 'add-mora' // 音を たす（添加。削除と対の操作系）
+  | 'substitute-mora' // 音を おきかえる（置換。削除より上位の操作）
+  | 'find-position' // その音は ○ばんめ？（位置同定・nth の逆）
+  | 'swap-mora'; // さいしょと おしりを いれかえる（転置・spoonerism。WM最大級）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 
