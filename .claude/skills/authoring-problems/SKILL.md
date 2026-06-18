@@ -369,3 +369,26 @@ npx vitest run                                          # 全部
     types.LineId・generate のディスパッチャ・kotoba.test の LINES 配列の3か所に足す（漏れると未検証/未到達）。
   ・スクショ罠: もじギアの「▶ スタート」はパルスアニメで `click()` が "element is not stable" で落ちる
     → `click({ force: true })`。新ゾーン解放は `kotoba-adventure:history` に前ゾーンを cleared でシード。
+- [2026-06-18] ことば/もじギア「操作系（置換・添加・転置）の上級8ゾーン」: 削除・逆唱の上にある
+  PA階層の最上位を足した（混成<分解<削除<置換<操作の順で難化＝エビデンスのある難易度の伸ばし方）。
+  新メカ: `delete-medial`(語中削除)・`add-mora`(添加)・`substitute-mora`(置換)・`find-position`(位置同定)
+  ・`swap-mora`(転置)。学んだコツ:
+  ・**置換/添加は「絵で出せる実在ミニマルペア」が日本語＋絵文字だと とても少ない**。素朴に
+    「base語→target語」を両方ピクチャーで出そうとすると数語で枯れる。対策で方式を分けた:
+    - **置換(substitute)**: ペアの target を絵の選択肢に出す。prompt で「○○を『×』に かえると？」と
+      **かえる位置と新しい音を明示**＝答えが一意。base/target は SUBSTITUTE_PAIRS（同長・1音だけ違い）。
+    - **添加(add)**: 絵両立が無理なので **答えを「たす音（文字）」にする**（letterChoices）。base だけ絵で
+      出し、target は prompt と音声で示す（ADD_PAIRS。例 いか→すいか）。target は必ず実在語に。
+  ・**辞書追加時の絵文字重複に注意**: たい を 🐟 にすると既存 さかな🐟 と同じ絵になり match/rhyme で
+    紛れる。新語は 🐠 等ユニークな絵文字にし、tts.ts の EMOJI_READINGS にも読みを足す。
+  ・**prompt に答えの手がかりがある新メカは prompt を読み上げる**: 置換(かえる音)・添加(たす音)・
+    位置(さがす音)は prompt に肝心の音がある。字が読めない子のため PlayScreen の入室/再生を
+    `speakJa(prompt, () => readWord())` で **prompt→語の順**にし、「」『』は読み上げ前に除去。
+  ・**位置同定 `find-position` は「その音が1度だけ出る語」に限定**しないと答えが一意にならない
+    （ばなな の な は2か所）。生成で unique なモーラを持つ語に絞り、テストで occurrence===1 を固定。
+  ・**転置 `swap-mora` は build モードで「さいしょ↔おしりを入れ替えた index 列」が正解**。逆唱と同じく
+    原indexを order.indexOf で引く（重複モーラでも壊れない）。2モーラだと逆唱と同義になるので
+    ゾーンは `difficulty.minMora:3` で 3モーラ以上に寄せる。
+  ・**子の意欲＝即時・前向き強化**: コンボ(れんぞくせいかい)とノーミスのパーフェクト演出を足した
+    （時間で罰しない原則は維持）。combo は親 state に持ち、PlayScreen には `combo` を渡して
+    正解時に `combo+1` を表示（PlayScreen は key={qi} で問題ごとに remount するため）。
