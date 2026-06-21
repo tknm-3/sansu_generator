@@ -29,7 +29,8 @@ const CHAPTERS: { label: string; start: number; end: number }[] = [
   { label: 'おうよう', start: 10, end: 18 }, // 11〜18 腕試し
   { label: 'ながい・ばんめ', start: 18, end: 24 }, // 19〜24 長語・位置
   { label: 'たつじん', start: 24, end: 32 }, // 25〜32 操作系（置換・転置…）
-  { label: 'でんせつ', start: 32, end: WORLDS.length }, // 33〜 濁点/半濁点・なかまはずれ・長語混合（最上級）
+  { label: 'でんせつ', start: 32, end: 40 }, // 33〜40 濁点/半濁点・なかまはずれ・長語混合
+  { label: 'おうごん', start: 40, end: WORLDS.length }, // 41〜 新メカ(数える/しりとり/ばらばら)＋難混合（最上級）
 ];
 
 function chapterOf(index: number): number {
@@ -418,20 +419,27 @@ function PlayScreen({ world, question, index, total, combo, onAnswered, onQuit }
       ) : (
         <div className="relative z-10 mt-4 w-full max-w-md">
           <div className="mb-4 flex justify-center gap-2">
-            {question.choices.map((_, slot) => (
-              <div key={slot} className="flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-dashed border-amber-300 bg-white/60 text-3xl font-black text-stone-800">
-                {placed[slot] != null ? question.choices[placed[slot]].label : ''}
-              </div>
-            ))}
+            {question.choices.map((_, slot) => {
+              const c = placed[slot] != null ? question.choices[placed[slot]] : null;
+              return (
+                <div key={slot} className="flex h-16 w-16 flex-col items-center justify-center rounded-2xl border-4 border-dashed border-amber-300 bg-white/60 text-center font-black text-stone-800">
+                  {c && (c.emoji
+                    ? <><span className="text-3xl leading-none">{c.emoji}</span><span className="text-[9px] leading-tight">{c.label}</span></>
+                    : <span className="text-3xl">{c.label}</span>)}
+                </div>
+              );
+            })}
           </div>
           <div className="flex flex-wrap justify-center gap-3">
             {question.choices.map((c, i) => (
               <motion.button
                 key={i} type="button" disabled={placed.includes(i)} onClick={() => handlePlace(i)}
                 whileTap={{ scale: 0.9 }}
-                className={`flex h-16 w-16 items-center justify-center rounded-full border-b-4 text-3xl font-black shadow-lg ${placed.includes(i) ? 'border-stone-300 bg-stone-200 text-stone-300' : 'border-amber-600 bg-gradient-to-b from-amber-300 to-amber-400 text-white'}`}
+                className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border-b-4 font-black shadow-lg ${placed.includes(i) ? 'border-stone-300 bg-stone-200 text-stone-300' : 'border-amber-600 bg-gradient-to-b from-amber-300 to-amber-400 text-white'}`}
               >
-                {c.label}
+                {c.emoji
+                  ? <><span className="text-3xl leading-none">{c.emoji}</span><span className="text-[9px] leading-tight">{c.label}</span></>
+                  : <span className="text-3xl">{c.label}</span>}
               </motion.button>
             ))}
           </div>

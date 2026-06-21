@@ -23,7 +23,10 @@ export type LineId =
   | 'swap-mora' // さいしょと おしりを いれかえる（転置・spoonerism。WM最大級）
   | 'voice-mora' // てんてん(濁点)を つけると？（清音→濁音の操作・特殊音知識）
   | 'semivoice-mora' // まる(半濁点)を つけると？（は行→ぱ行・かな最難の半濁音）
-  | 'odd-one-out'; // さいしょ/おしりの おとが ちがう なかまはずれ（音のオドリティ）
+  | 'odd-one-out' // さいしょ/おしりの おとが ちがう なかまはずれ（音のオドリティ）
+  | 'count-target-mora' // その おとは いくつ？（特定音の計数・音韻分析＋計数の合体）
+  | 'shiritori-chain' // しりとりに ならべる（語尾→語頭の連鎖・WM最大級）
+  | 'anagram'; // ばらばらの もじを ならべて 絵の語を 作る（build-word の上位・足場なし）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 

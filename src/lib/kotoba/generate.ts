@@ -1,4 +1,4 @@
-import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, getWord } from './words';
+import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, SHIRITORI_CHAINS, getWord } from './words';
 import type { LineId, MojiQuestion, WordItem, MojiChoice } from './types';
 
 // もじギア・ファクトリーの問題生成（§7）。
@@ -422,6 +422,65 @@ function genOddOneOut(rng?: Rng, opts?: GenOpts): MojiQuestion {
   };
 }
 
+// ── その音は いくつ？（特定音の計数）。同じ音が 2回以上 でる語を 優先して えらぶ ──
+// 答え＝お題の語に その音が 何回 でるか。音韻分析（どこに あるか）＋計数の 合体。
+function genCountTarget(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const ws = poolWords({ minMora: opts?.minMora ?? 3, maxMora: opts?.maxMora ?? 5 });
+  const hasRepeat = (w: WordItem) => w.mora.some((m, i) => w.mora.indexOf(m) !== i);
+  const repeats = ws.filter(hasRepeat);
+  const w = pick(repeats.length ? repeats : ws, rng);
+  // 出現回数を かぞえ、なるべく 2回以上の音を ターゲットに する（1だけだと かんたんすぎ）
+  const counts = new Map<string, number>();
+  for (const m of w.mora) counts.set(m, (counts.get(m) ?? 0) + 1);
+  const multi = [...counts.keys()].filter((k) => counts.get(k)! >= 2);
+  const target = multi.length ? pick(multi, rng) : pick(w.mora, rng);
+  const n = counts.get(target)!;
+  const cc = opts?.choiceCount ?? 4;
+  // 正解 n を ふくむ 近い すうじの 選択肢（重複なし・0以上）
+  const set = new Set<number>([n]);
+  for (let d = 1; set.size < cc; d++) {
+    if (n - d >= 1) set.add(n - d);
+    if (set.size < cc) set.add(n + d);
+  }
+  const nums = shuffle([...set], rng);
+  return {
+    lineId: 'count-target-mora',
+    mode: 'choose',
+    prompt: `「${target}」は いくつ？`,
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    choices: nums.map((x) => ({ label: String(x) })),
+    answer: nums.indexOf(n),
+  };
+}
+
+// ── しりとりに ならべる（語尾→語頭の連鎖）。3つの絵を 正しい じゅんに ならべる ──
+// チェーンは 手で確定（words.ts の SHIRITORI_CHAINS）。唯一解＝配列の とおり。
+function genShiritoriChain(rng?: Rng): MojiQuestion {
+  const chain = pick(SHIRITORI_CHAINS, rng).map((id) => getWord(id)!);
+  // choices を シャッフルして 出す（answer は ただしい しりとり順に なる index 列）
+  const order = shuffle(chain.map((_, i) => i), rng); // choices に置く 語の順
+  const choices = order.map((i) => ({ label: chain[i].reading, emoji: chain[i].display }));
+  const answer = chain.map((_, target) => order.indexOf(target));
+  return {
+    lineId: 'shiritori-chain',
+    mode: 'build',
+    prompt: 'しりとりに ならべて！',
+    speak: chain.map((w) => w.reading).join('、'),
+    mora: [], // 1語では ないので 光の粒は 出さない
+    choices,
+    answer,
+  };
+}
+
+// ── ばらばらの もじを ならべて 絵の語を 作る（アナグラム）──
+// build-word と 同じ 仕組みだが 下書き枠なし・長めの語で 出す（足場フェード済みの 上級）。
+function genAnagram(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const q = genBuild(rng, { minMora: opts?.minMora ?? 3, maxMora: opts?.maxMora ?? 4, choiceCount: opts?.choiceCount });
+  return { ...q, lineId: 'anagram', prompt: 'ばらばらの もじを ならべて！' };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -446,5 +505,8 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'voice-mora': return genVoice(rng, opts);
     case 'semivoice-mora': return genSemivoice(rng, opts);
     case 'odd-one-out': return genOddOneOut(rng, opts);
+    case 'count-target-mora': return genCountTarget(rng, opts);
+    case 'shiritori-chain': return genShiritoriChain(rng);
+    case 'anagram': return genAnagram(rng, opts);
   }
 }

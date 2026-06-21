@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, getWord } from './words';
+import { WORDS, KANA_POOL, SUBSTITUTE_PAIRS, ADD_PAIRS, SHIRITORI_CHAINS, getWord } from './words';
 import { WORLDS } from './worlds';
 import { generateQuestion } from './generate';
 import { makeAdaptive, optsForLevel } from './adaptive';
@@ -24,6 +24,9 @@ describe('語辞書（WordItem）の整合', () => {
   });
   it('id は ユニーク', () => {
     expect(new Set(WORDS.map((w) => w.id)).size).toBe(WORDS.length);
+  });
+  it('reading は ユニーク（reading で 語を 引く テストが 多いため）', () => {
+    expect(new Set(WORDS.map((w) => w.reading)).size).toBe(WORDS.length);
   });
   it('special 印の語は ほんとうに 特殊音を もつ（濁/半濁/拗/長/促）', () => {
     const isVoiced = (c: string) => /[がぎぐげござじずぜぞだぢづでどばびぶべぼ]/.test(c);
@@ -84,6 +87,19 @@ describe('置き換え・添加ペア（新メカの 燃料）の整合', () => 
       expect(built).toBe(p.reading);
     }
   });
+  it('SHIRITORI_CHAINS: すべて 実在語・語尾→語頭が つながる・2語いじょう', () => {
+    expect(SHIRITORI_CHAINS.length).toBeGreaterThan(0);
+    for (const chain of SHIRITORI_CHAINS) {
+      expect(chain.length).toBeGreaterThanOrEqual(2);
+      const ws = chain.map((id) => getWord(id)!);
+      ws.forEach((w) => expect(w).toBeTruthy());
+      for (let i = 0; i < ws.length - 1; i++) {
+        const tail = ws[i].mora[ws[i].mora.length - 1];
+        const head = ws[i + 1].mora[0];
+        expect(tail).toBe(head); // しりとりが つながる
+      }
+    }
+  });
 });
 
 describe('世界（WORLDS）の整合', () => {
@@ -112,6 +128,7 @@ const LINES: LineId[] = [
   'middle-mora', 'rhyme-match', 'nth-mora',
   'delete-medial', 'add-mora', 'substitute-mora', 'find-position', 'swap-mora',
   'voice-mora', 'semivoice-mora', 'odd-one-out',
+  'count-target-mora', 'anagram',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -303,6 +320,53 @@ describe('問題生成（全10メカニクス）', () => {
       const ql = generateQuestion('last-mora', seeded(s + 100));
       const wl = WORDS.find((w) => w.reading === ql.speak)!;
       expect(ql.choices[ql.answer as number].label).toBe(wl.mora[wl.mora.length - 1]);
+    }
+  });
+
+  it('count-target-mora: 正解の すうじは その音が お題に でる かいすう', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('count-target-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      const target = q.prompt.match(/「(.+?)」/)![1];
+      const occur = w.mora.filter((m) => m === target).length;
+      expect(occur).toBeGreaterThanOrEqual(1);
+      expect(Number(q.choices[q.answer as number].label)).toBe(occur);
+    }
+  });
+
+  it('anagram: build で answer の順に ならべると もとの ことばに なる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('anagram', seeded(s + 1));
+      expect(q.lineId).toBe('anagram');
+      expect(q.mode).toBe('build');
+      const a = q.answer as number[];
+      const built = a.map((i) => q.choices[i].label).join('');
+      expect(built).toBe(q.speak);
+    }
+  });
+
+  it('shiritori-chain: build・絵つき・answer順に ならべると しりとりチェーンに なる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('shiritori-chain', seeded(s + 1));
+      expect(q.lineId).toBe('shiritori-chain');
+      expect(q.mode).toBe('build');
+      const a = q.answer as number[];
+      // answer は choices 全indexの 並べ替え
+      expect([...a].sort((x, y) => x - y)).toEqual(q.choices.map((_, i) => i));
+      // すべての 選択肢に 絵が ある（絵で ならべる）
+      q.choices.forEach((c) => expect(c.emoji).toBeTruthy());
+      // answer順に ならべた 語れつが SHIRITORI_CHAINS の どれかと いっち
+      const ordered = a.map((i) => q.choices[i].label);
+      const match = SHIRITORI_CHAINS.some((chain) =>
+        chain.map((id) => getWord(id)!.reading).join('|') === ordered.join('|'),
+      );
+      expect(match).toBe(true);
+      // しりとりが つながる
+      for (let i = 0; i < ordered.length - 1; i++) {
+        const cur = WORDS.find((w) => w.reading === ordered[i])!;
+        const nxt = WORDS.find((w) => w.reading === ordered[i + 1])!;
+        expect(cur.mora[cur.mora.length - 1]).toBe(nxt.mora[0]);
+      }
     }
   });
 });
