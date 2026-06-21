@@ -38,24 +38,24 @@ describe('ことば 進捗・解放（としょかんモードと同じ）', () 
     expect(worldStatus(0)).toBe('cleared'); // やった
     expect(worldStatus(1)).toBe('current'); // いまここ
     expect(worldStatus(2)).toBe('new'); // さきどり（あそべる）
-    expect(worldStatus(WORLDS.length - 1)).toBe('locked'); // まだ
+    // きほん（1〜10）の おくのほうは まだ ロック（順番に ひらく）
+    expect(worldStatus(BOSS_INDEX)).toBe('locked'); // ライン10（きほん末尾）はまだ
   });
 
-  it('ボス（ライン10）クリアまでは 上級（11以降）は ロックのまま', () => {
+  it('上級（11以降）は 実績なしでも いつでも あそべる', () => {
+    // ボス未クリア・実績ゼロでも 上級グループは ぜんぶ あそべる（むずかしいのを すぐ）
     expect(isBossCleared()).toBe(false);
-    expect(isWorldUnlocked(ADVANCED_START)).toBe(false); // 11
-    expect(isWorldUnlocked(WORLDS.length - 1)).toBe(false); // たつじん末尾
-  });
-
-  it('ボスを クリアすると 上級（11以降）が ぜんぶ あそべる（案C）', () => {
-    recordWorldClear(WORLDS[BOSS_INDEX].id, 3);
-    expect(isBossCleared()).toBe(true);
-    // 11以降は フロンティアを とびこえて 全部 解放
     for (let i = ADVANCED_START; i < WORLDS.length; i++) {
       expect(isWorldUnlocked(i)).toBe(true);
     }
     // 末尾の たつじんゾーンも あそべる（cleared でなく new 表示）
     expect(worldStatus(WORLDS.length - 1)).toBe('new');
+  });
+
+  it('きほん（1〜10）は 順番に ひらく（上級開放の えいきょうを うけない）', () => {
+    // 実績なしでは さきどりぶん より さきの きほんは ロック
+    expect(isWorldUnlocked(WORLD_LOOKAHEAD + 1)).toBe(false);
+    expect(isWorldUnlocked(BOSS_INDEX)).toBe(false); // ライン10はまだ
   });
 
   it('ベストな きらきらは リプレイで さがらない', () => {
