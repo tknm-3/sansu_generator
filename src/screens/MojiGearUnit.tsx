@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { WORLDS } from '../lib/kotoba/worlds';
 import { generateQuestion } from '../lib/kotoba/generate';
 import type { MojiQuestion, WorldDef } from '../lib/kotoba/types';
-import { worldStatus, worldSparkles, recordWorldClear, loadKotobaHistory } from '../lib/kotoba/progress';
+import { worldStatus, worldSparkles, recordWorldClear, loadKotobaHistory, worldFrontier } from '../lib/kotoba/progress';
 import { makeAdaptive, recordAttempt, type Adaptive } from '../lib/kotoba/adaptive';
 import { speakJa, speakMoraBreakdown } from '../features/speech/tts';
 import { playSfx } from '../features/sound/sfx';
@@ -23,6 +23,19 @@ function sparkleStr(n: number): string {
   return n > 0 ? '✨'.repeat(n) : '・・・';
 }
 
+// ハブの 章（毎回 下まで スクロールせず、上級へ 一発で とべるように）。範囲は WORLDS の index。
+const CHAPTERS: { label: string; start: number; end: number }[] = [
+  { label: 'きほん', start: 0, end: 10 }, // 1〜10 教材
+  { label: 'おうよう', start: 10, end: 18 }, // 11〜18 腕試し
+  { label: 'ながい・ばんめ', start: 18, end: 24 }, // 19〜24 長語・位置
+  { label: 'たつじん', start: 24, end: WORLDS.length }, // 25〜 操作系・上級
+];
+
+function chapterOf(index: number): number {
+  const ci = CHAPTERS.findIndex((c) => index >= c.start && index < c.end);
+  return ci < 0 ? CHAPTERS.length - 1 : ci;
+}
+
 export function MojiGearUnit({ onExit }: Props) {
   const [phase, setPhase] = useState<'hub' | 'intro' | 'play' | 'result'>('hub');
   const [world, setWorld] = useState<WorldDef | null>(null);
@@ -31,6 +44,8 @@ export function MojiGearUnit({ onExit }: Props) {
   const [qi, setQi] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [combo, setCombo] = useState(0); // れんぞく せいかい（即時・前向き強化）
+  // ハブを 開いたら 「いまここ」の章を ひらく（毎回 スクロールしない）
+  const [chapter, setChapter] = useState(() => chapterOf(Math.min(worldFrontier(), WORLDS.length - 1)));
   const total = loadKotobaHistory().totalSparkles;
 
   function nextQuestion(w: WorldDef, a: Adaptive): MojiQuestion {
@@ -115,6 +130,20 @@ export function MojiGearUnit({ onExit }: Props) {
           <p className="text-sm font-bold text-amber-700">すきな せかいを えらんでね！</p>
         </div>
 
+        {/* 章タブ（ここで 行き先を きりかえ＝スクロールを へらす） */}
+        <div className="mb-3 flex flex-wrap justify-center gap-1.5">
+          {CHAPTERS.map((c, ci) => (
+            <button
+              key={c.label}
+              type="button"
+              onClick={() => setChapter(ci)}
+              className={`rounded-full px-3 py-1 text-xs font-black shadow transition ${ci === chapter ? 'bg-amber-500 text-white' : 'bg-white/90 text-amber-700'}`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
         {/* じょうたいの みかた（はんれい） */}
         <div className="mb-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] font-bold text-stone-500">
           <span>✅ クリア</span>
@@ -124,7 +153,8 @@ export function MojiGearUnit({ onExit }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {WORLDS.map((w, i) => {
+          {Array.from({ length: CHAPTERS[chapter].end - CHAPTERS[chapter].start }, (_, k) => CHAPTERS[chapter].start + k).map((i) => {
+            const w = WORLDS[i];
             const status = worldStatus(i);
             const locked = status === 'locked';
             const cleared = status === 'cleared';
