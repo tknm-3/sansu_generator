@@ -111,6 +111,7 @@ const LINES: LineId[] = [
   'rule-card', 'delete-mora', 'reverse-word', 'special-mora', 'if-factory',
   'middle-mora', 'rhyme-match', 'nth-mora',
   'delete-medial', 'add-mora', 'substitute-mora', 'find-position', 'swap-mora',
+  'voice-mora', 'semivoice-mora', 'odd-one-out',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -257,6 +258,40 @@ describe('問題生成（全10メカニクス）', () => {
       const sw = w.mora.slice();
       [sw[0], sw[sw.length - 1]] = [sw[sw.length - 1], sw[0]];
       expect(built).toBe(sw.join(''));
+    }
+  });
+
+  it('voice-mora: 正解は さいしょの音の 濁音（てんてん）', () => {
+    const VOICE: Record<string, string> = { か: 'が', き: 'ぎ', く: 'ぐ', け: 'げ', こ: 'ご', さ: 'ざ', し: 'じ', す: 'ず', せ: 'ぜ', そ: 'ぞ', た: 'だ', ち: 'ぢ', つ: 'づ', て: 'で', と: 'ど' };
+    for (let s = 0; s < 80; s++) {
+      const q = generateQuestion('voice-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(VOICE[w.mora[0]]).toBeTruthy(); // 清音始まりに しぼれている
+      expect(q.choices[q.answer as number].label).toBe(VOICE[w.mora[0]]);
+    }
+  });
+
+  it('semivoice-mora: 正解は さいしょの音の 半濁音（まる・は行→ぱ行）', () => {
+    const SEMI: Record<string, string> = { は: 'ぱ', ひ: 'ぴ', ふ: 'ぷ', へ: 'ぺ', ほ: 'ぽ' };
+    for (let s = 0; s < 80; s++) {
+      const q = generateQuestion('semivoice-mora', seeded(s + 1));
+      const w = WORDS.find((w) => w.reading === q.speak)!;
+      expect(SEMI[w.mora[0]]).toBeTruthy();
+      expect(q.choices[q.answer as number].label).toBe(SEMI[w.mora[0]]);
+    }
+  });
+
+  it('odd-one-out: 正解だけ さいしょ/おしりの音が ちがい・ほかは そろう', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('odd-one-out', seeded(s + 1));
+      const words = q.choices.map((c) => WORDS.find((w) => w.reading === c.label)!);
+      const useLast = q.prompt.includes('おしり');
+      const keyOf = (w: typeof words[number]) => (useLast ? w.mora[w.mora.length - 1] : w.mora[0]);
+      const oddKey = keyOf(words[q.answer as number]);
+      const others = words.filter((_, i) => i !== (q.answer as number));
+      // ほかの3つは ぜんぶ おなじ key・odd だけ ちがう
+      expect(new Set(others.map(keyOf)).size).toBe(1);
+      expect(oddKey).not.toBe(keyOf(others[0]));
     }
   });
 
