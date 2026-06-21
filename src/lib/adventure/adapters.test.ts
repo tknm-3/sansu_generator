@@ -31,6 +31,14 @@ import {
   divLookTotalToBattle,
   divCountPeopleToBattle,
   divFlashTotalToBattle,
+  mulRepeatedToBattle,
+  mulArrayToBattle,
+  mulDoubleToBattle,
+  divPackToBattle,
+  divFairToBattle,
+  bigAdd1ToBattle,
+  bigAddNoCarryToBattle,
+  bigAddCarryToBattle,
   generateBattleQuestion,
 } from './adapters';
 import { generateMap } from './mapGen';
@@ -471,6 +479,98 @@ describe('まとめて／わけて かぞえる くに', () => {
       const q = fn(seededRng(7));
       if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
       expect(q.visual.groupLabel).toBeTruthy();
+    }
+  });
+});
+
+// もっと かけ算（同数累加・アレイ・○ばい）: groups で 見せ、正解は ぜんぶの かず＝perGroup×groups
+describe('もっと かけ算（同数累加・アレイ・○ばい）', () => {
+  const MUL = [
+    { name: 'mulRepeated', fn: mulRepeatedToBattle },
+    { name: 'mulArray', fn: mulArrayToBattle },
+    { name: 'mulDouble', fn: mulDoubleToBattle },
+  ];
+  for (const { name, fn } of MUL) {
+    it(`${name}: groups・4択重複なし・正解は perGroup×groups・式つき`, () => {
+      for (let seed = 1; seed <= 30; seed++) {
+        const q = fn(seededRng(seed));
+        expect(q.visual?.kind).toBe('groups');
+        if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+        expect(q.choices).toHaveLength(4);
+        expect(new Set(q.choices).size).toBe(4);
+        const { perGroup, groups } = q.visual;
+        expect(q.choices[q.answerIndex]).toBe(String(perGroup * groups));
+        // 絵の下に そえる しきが ついている（かけ算の 導入）
+        expect(q.visual.equationText).toBeTruthy();
+      }
+    });
+  }
+});
+
+// もっと わり算: 包含除(なんふくろ＝groups)・等分除(ひとりなんこ＝perGroup)
+describe('もっと わり算（包含除・等分除）', () => {
+  it('div-pack: なんふくろ＝groups が 正解・groupLabel つき', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = divPackToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('groups');
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect(q.choices[q.answerIndex]).toBe(String(q.visual.groups));
+      expect(new Set(q.choices).size).toBe(4);
+      expect(q.visual.groupLabel).toBeTruthy();
+    }
+  });
+  it('div-fair: ひとり なんこ＝perGroup が 正解・groupLabel つき', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = divFairToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('groups');
+      if (q.visual?.kind !== 'groups') throw new Error('kind mismatch');
+      expect(q.choices[q.answerIndex]).toBe(String(q.visual.perGroup));
+      expect(new Set(q.choices).size).toBe(4);
+      expect(q.visual.groupLabel).toBeTruthy();
+    }
+  });
+});
+
+// かんたんめな 2けたの たしざん: 桁数・くりあがりの 条件を まもる
+describe('かんたんめな 2けたの たしざん', () => {
+  const re = /^(\d+) ＋ (\d+)/;
+  it('big-add-1: 2けた＋1けた・くりあがりなし・正解は a+b・4択重複なし', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = bigAdd1ToBattle(seededRng(seed));
+      expect(q.visual?.kind).toBe('equation');
+      const m = q.promptText.match(re);
+      expect(m).toBeTruthy();
+      const a = Number(m![1]);
+      const b = Number(m![2]);
+      expect(a).toBeGreaterThanOrEqual(10); // 2けた
+      expect(b).toBeGreaterThanOrEqual(1);
+      expect(b).toBeLessThanOrEqual(9); // 1けた
+      expect((a % 10) + (b % 10)).toBeLessThan(10); // くりあがりなし
+      expect(q.choices[q.answerIndex]).toBe(String(a + b));
+      expect(q.choices).toHaveLength(4);
+      expect(new Set(q.choices).size).toBe(4);
+    }
+  });
+  it('big-add-nc: 2けた＋2けた・くりあがりなし', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = bigAddNoCarryToBattle(seededRng(seed));
+      const m = q.promptText.match(re);
+      const a = Number(m![1]);
+      const b = Number(m![2]);
+      expect(a).toBeGreaterThanOrEqual(10);
+      expect(b).toBeGreaterThanOrEqual(10); // 2けた
+      expect((a % 10) + (b % 10)).toBeLessThan(10);
+      expect(q.choices[q.answerIndex]).toBe(String(a + b));
+    }
+  });
+  it('big-add-carry: いちの くらいで くりあがる', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const q = bigAddCarryToBattle(seededRng(seed));
+      const m = q.promptText.match(re);
+      const a = Number(m![1]);
+      const b = Number(m![2]);
+      expect((a % 10) + (b % 10)).toBeGreaterThanOrEqual(10);
+      expect(q.choices[q.answerIndex]).toBe(String(a + b));
     }
   });
 });

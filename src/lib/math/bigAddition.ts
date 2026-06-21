@@ -12,14 +12,27 @@ export interface BigAdditionProblem {
 
 export function generateBigAddition(
   rng: () => number = Math.random,
-  opts: { mixed?: boolean } = {},
+  opts: { mixed?: boolean; oneDigitB?: boolean; carry?: boolean } = {},
 ): BigAdditionProblem {
-  // mixed: 片方2けた(10-49)、もう片方1けた(1-9)
-  const [a, b] = opts.mixed
-    ? rng() < 0.5
-      ? [Math.floor(rng() * 40) + 10, Math.floor(rng() * 9) + 1]
-      : [Math.floor(rng() * 9) + 1, Math.floor(rng() * 40) + 10]
-    : [Math.floor(rng() * 40) + 10, Math.floor(rng() * 40) + 10];
+  // どんな くみあわせの ふたつの かずを つくるか
+  const pick = (): [number, number] => {
+    // oneDigitB: 2けた(10-49) ＋ 1けた(1-9)
+    if (opts.oneDigitB) return [Math.floor(rng() * 40) + 10, Math.floor(rng() * 9) + 1];
+    // mixed: 片方2けた(10-49)、もう片方1けた(1-9)
+    if (opts.mixed)
+      return rng() < 0.5
+        ? [Math.floor(rng() * 40) + 10, Math.floor(rng() * 9) + 1]
+        : [Math.floor(rng() * 9) + 1, Math.floor(rng() * 40) + 10];
+    // きほん: 2けた(10-49) ＋ 2けた(10-49)
+    return [Math.floor(rng() * 40) + 10, Math.floor(rng() * 40) + 10];
+  };
+  let [a, b] = pick();
+  // carry が してい されたら「いちの くらいで くりあがる/くりあがらない」を そろえる
+  if (opts.carry !== undefined) {
+    for (let i = 0; i < 40 && (a % 10) + (b % 10) >= 10 !== opts.carry; i++) {
+      [a, b] = pick();
+    }
+  }
   const answer = a + b;
   const onesA = a % 10;
   const tensA = Math.floor(a / 10);
