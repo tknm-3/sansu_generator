@@ -46,6 +46,16 @@ export function worldSparkles(worldId: string): number {
 /** さきどりできる 世界数（フロンティアより先に チャレンジできる ぶん。算数版とおなじ） */
 export const WORLD_LOOKAHEAD = 2;
 
+/** 教材の ボス＝ライン10「IF-くん だいこうじょう」の index（最初の10は教材・順番固定） */
+export const BOSS_INDEX = 9;
+/** 11以降＝ボスの あとに ひらく 上級の たび（design §13） */
+export const ADVANCED_START = 10;
+
+/** ボス（ライン10）を クリアずみか＝上級の たびが ひらいたか */
+export function isBossCleared(): boolean {
+  return isWorldCleared(WORLDS[BOSS_INDEX].id);
+}
+
 /** クリア済みの 世界の インデックス一覧（配列順） */
 function clearedIndices(): number[] {
   const h = loadKotobaHistory();
@@ -65,10 +75,14 @@ export function worldFrontier(): number {
  * - さいしょの 世界は つねに 可
  * - クリア済みは つねに 可（やりなおし）
  * - 実績のある子は フロンティア＋さきどりぶん まで チャレンジできる
+ * - ボス（ライン10）を クリアしたら 上級（11以降）は ぜんぶ あそべる
+ *   ＝「むずかしいのを すぐ」を かなえる（design §13・算数版の 上級まきと同じ）
  */
 export function isWorldUnlocked(index: number): boolean {
   if (index <= 0) return true;
   if (isWorldCleared(WORLDS[index].id)) return true;
+  // ボスを クリアしたら 上級グループは 直線アンロックを とびこえて 常時開放
+  if (index >= ADVANCED_START && isBossCleared()) return true;
   const cleared = clearedIndices();
   if (cleared.length === 0) return index <= WORLD_LOOKAHEAD; // 実績なしでも さいしょの 数個は えらべる
   return index <= Math.max(...cleared) + 1 + WORLD_LOOKAHEAD;
