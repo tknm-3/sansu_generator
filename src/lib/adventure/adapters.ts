@@ -598,18 +598,21 @@ function smallCountChoices(
   return { choices: arr.map(String), answerIndex: arr.indexOf(answer) };
 }
 
-type CountAsk = 'total' | 'groups';
+type CountAsk = 'total' | 'groups' | 'perGroup';
+type CountNums = { perGroup: number; groups: number; total: number; emoji: string };
 
-/** groups ビジュアルを 見て「全部で なんこ」/「いくつ(なん人)で わけた」を あてる 共通ロジック */
+/** groups ビジュアルを 見て「全部で なんこ」/「いくつ(なん人)で わけた」/「ひとり なんこ」を あてる 共通ロジック */
 function lookCountToBattle(opts: {
   unitId: string;
   ask: CountAsk;
-  prompt: (n: { perGroup: number; groups: number; total: number; emoji: string }) => string;
+  prompt: (n: CountNums) => string;
   rng: () => number;
   groupLabel?: string;
   flash?: boolean;
   maxPer?: number;
   maxGroups?: number;
+  /** 絵の下に そえる しき（例「2＋2＋2」「3 × 4」）。かけ算の 導入で つかう */
+  equationText?: (n: CountNums) => string;
 }): BattleQuestion {
   const { rng, ask } = opts;
   const maxPer = opts.maxPer ?? 5;
@@ -618,15 +621,24 @@ function lookCountToBattle(opts: {
   const groups = 2 + Math.floor(rng() * (maxGroups - 1)); // 2..maxGroups
   const total = perGroup * groups;
   const emoji = pickEmoji(rng);
-  const answer = ask === 'total' ? total : groups;
+  const nums: CountNums = { perGroup, groups, total, emoji };
+  const answer = ask === 'total' ? total : ask === 'groups' ? groups : perGroup;
   const { choices, answerIndex } =
     ask === 'total'
       ? nearFourChoices(answer, rng, [perGroup, -perGroup, groups, -groups, 1, -1, 2, -2])
       : smallCountChoices(answer, rng, 1, Math.max(maxPer, maxGroups) + 1);
   return {
     unitId: opts.unitId,
-    promptText: opts.prompt({ perGroup, groups, total, emoji }),
-    visual: { kind: 'groups', emoji, perGroup, groups, groupLabel: opts.groupLabel, flash: opts.flash },
+    promptText: opts.prompt(nums),
+    visual: {
+      kind: 'groups',
+      emoji,
+      perGroup,
+      groups,
+      groupLabel: opts.groupLabel,
+      flash: opts.flash,
+      equationText: opts.equationText?.(nums),
+    },
     choices,
     answerIndex,
     explainSteps: [],
@@ -706,6 +718,104 @@ export function divFlashTotalToBattle(rng: () => number = Math.random): BattleQu
   });
 }
 
+// ── かけ算 もっと（としょかんモード 追加ゾーン）──
+
+/** たして かぞえる: ○こずつ △つを「2＋2＋2」の たしざんで まとめて（同数累加→かけ算の はしわたし） */
+export function mulRepeatedToBattle(rng: () => number = Math.random): BattleQuestion {
+  return lookCountToBattle({
+    unitId: 'mul-repeated',
+    ask: 'total',
+    rng,
+    maxPer: 5,
+    maxGroups: 4,
+    prompt: ({ perGroup, groups, emoji }) => `${emoji} ${perGroup}こずつ ${groups}つ。ぜんぶ たすと なんこ？`,
+    equationText: ({ perGroup, groups }) => Array(groups).fill(perGroup).join(' ＋ '),
+  });
+}
+
+/** ならんだ タイル: たて△・よこ○の アレイを 見て「ぜんぶで なんこ?」（かけ算の ならびの 見かた） */
+export function mulArrayToBattle(rng: () => number = Math.random): BattleQuestion {
+  return lookCountToBattle({
+    unitId: 'mul-array',
+    ask: 'total',
+    rng,
+    prompt: ({ perGroup, groups, emoji }) =>
+      `${emoji} たてに ${groups}、よこに ${perGroup} ならんでる。ぜんぶで なんこ？`,
+    equationText: ({ perGroup, groups }) => `${perGroup} × ${groups}`,
+  });
+}
+
+/** ○ばいの まほう: もとの かずの △ばいを 見て「ぜんぶで なんこ?」（〜ばい＝かけ算） */
+export function mulDoubleToBattle(rng: () => number = Math.random): BattleQuestion {
+  return lookCountToBattle({
+    unitId: 'mul-double',
+    ask: 'total',
+    rng,
+    prompt: ({ perGroup, groups, emoji }) => `${emoji} ${perGroup}この ${groups}ばい。ぜんぶで なんこ？`,
+    equationText: ({ perGroup, groups }) => `${perGroup} × ${groups}`,
+  });
+}
+
+// ── わり算 もっと（としょかんモード 追加ゾーン）──
+
+/** ○こずつ ふくろづめ: ぜんぶを ○こずつ ふくろに 入れると「なんふくろ?」（包含除＝いくつ分） */
+export function divPackToBattle(rng: () => number = Math.random): BattleQuestion {
+  return lookCountToBattle({
+    unitId: 'div-pack',
+    ask: 'groups',
+    groupLabel: '🛍️',
+    rng,
+    prompt: ({ perGroup, total, emoji }) =>
+      `${emoji} ${total}こを ${perGroup}こずつ ふくろに。なんふくろ できる？`,
+  });
+}
+
+/** なかよく わけっこ: ぜんぶを △人で おなじ かずずつ。「ひとり なんこ?」（等分除＝1つ分） */
+export function divFairToBattle(rng: () => number = Math.random): BattleQuestion {
+  return lookCountToBattle({
+    unitId: 'div-fair',
+    ask: 'perGroup',
+    groupLabel: '🙂',
+    rng,
+    prompt: ({ groups, total, emoji }) => `${emoji} ${total}こを ${groups}人で わけっこ。ひとり なんこ？`,
+  });
+}
+
+// ── 2けたの たしざん もっと（としょかんモード 追加ゾーン）──
+
+function bigAdditionWith(
+  unitId: string,
+  opts: { oneDigitB?: boolean; carry?: boolean },
+  rng: () => number,
+): BattleQuestion {
+  const p = generateBigAddition(rng, opts);
+  const answer = p.a + p.b;
+  const { choices, answerIndex } = toFourChoices(p.choices, answer, rng);
+  return {
+    unitId,
+    promptText: `${p.a} ＋ ${p.b} ＝ ？`,
+    visual: { kind: 'equation', text: `${p.a} ＋ ${p.b}` },
+    choices,
+    answerIndex,
+    explainSteps: explainBigAddition(p),
+  };
+}
+
+/** 2けた＋1けた（くりあがり なし）: いちばん やさしい 2けたの たしざん */
+export function bigAdd1ToBattle(rng: () => number = Math.random): BattleQuestion {
+  return bigAdditionWith('big-add-1', { oneDigitB: true, carry: false }, rng);
+}
+
+/** 2けた＋2けた（くりあがり なし）: くらいごとに たすと とける */
+export function bigAddNoCarryToBattle(rng: () => number = Math.random): BattleQuestion {
+  return bigAdditionWith('big-add-nc', { carry: false }, rng);
+}
+
+/** 2けた＋2けた（くりあがり あり）: いちの くらいが 10を こえる すこし むずかしい たしざん */
+export function bigAddCarryToBattle(rng: () => number = Math.random): BattleQuestion {
+  return bigAdditionWith('big-add-carry', { carry: true }, rng);
+}
+
 type AdapterFn = (rng: () => number) => BattleQuestion;
 
 export function shapeRotationToBattle(_rng: () => number = Math.random): BattleQuestion {
@@ -757,6 +867,14 @@ const ADAPTERS: Record<string, AdapterFn> = {
   'div-look-total': divLookTotalToBattle,
   'div-count-people': divCountPeopleToBattle,
   'div-flash-total': divFlashTotalToBattle,
+  'mul-repeated': mulRepeatedToBattle,
+  'mul-array': mulArrayToBattle,
+  'mul-double': mulDoubleToBattle,
+  'div-pack': divPackToBattle,
+  'div-fair': divFairToBattle,
+  'big-add-1': bigAdd1ToBattle,
+  'big-add-nc': bigAddNoCarryToBattle,
+  'big-add-carry': bigAddCarryToBattle,
 };
 
 export function generateBattleQuestion(
