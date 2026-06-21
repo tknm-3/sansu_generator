@@ -1,0 +1,10 @@
+# Cloudflare Workers（Static Assets）で この SPA を配信する設定。
+# 既存の ワーカー名 と そろえる＝同じ URL（sansu-generator.ttt-hhaa.workers.dev）に
+# 上書きデプロイ＝公開URLが かわらない＝こどもの すすみ(localStorage)も そのまま。
+name = "sansu-generator"
+compatibility_date = "2024-11-01"
+
+# ビルド成果物(dist)を そのまま 配信。404は index.html に返す（SPAルーティング）。
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"

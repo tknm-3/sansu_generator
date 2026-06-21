@@ -1,13 +1,16 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Workers
 
-# main に push されるたびに ビルドして Cloudflare Pages へ デプロイする。
+# main に push されるたびに ビルドして Cloudflare Workers（Static Assets）へ デプロイする。
+# 既存ワーカー sansu-generator に 上書き＝公開URL（sansu-generator.ttt-hhaa.workers.dev）は かわらない。
+#
 # 必要な設定（GitHub リポジトリの Settings → Secrets and variables → Actions）:
 #   Secrets:
-#     CLOUDFLARE_API_TOKEN   … Cloudflare の API トークン（Pages: Edit 権限）
+#     CLOUDFLARE_API_TOKEN   … Cloudflare の API トークン
+#                              ★Workers を 上書きするので「Workers スクリプト: 編集」権限が いる
+#                                （テンプレ「Edit Cloudflare Workers」で作るのが かんたん）。
+#                                Pages専用トークンだと 認証エラーに なるので 作り直し/権限追加が ひつよう。
 #     CLOUDFLARE_ACCOUNT_ID  … Cloudflare のアカウント ID
-#   Variables:
-#     CLOUDFLARE_PROJECT_NAME … Pages プロジェクト名（例: sansu-generator）
-#                               ＝ <プロジェクト名>.pages.dev の左側
+#   ※ワーカー名は wrangler.toml の name で 指定（CLOUDFLARE_PROJECT_NAME は つかわない）。
 
 on:
   push:
@@ -16,7 +19,7 @@ on:
 
 # 連続 push で デプロイが かさならないように 直列化（古いビルドは キャンセル）
 concurrency:
-  group: pages-deploy
+  group: workers-deploy
   cancel-in-progress: true
 
 jobs:
@@ -38,9 +41,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }} --branch=main
+          command: deploy
