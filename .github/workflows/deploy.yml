@@ -1,0 +1,46 @@
+name: Deploy to Cloudflare Pages
+
+# main に push されるたびに ビルドして Cloudflare Pages へ デプロイする。
+# 必要な設定（GitHub リポジトリの Settings → Secrets and variables → Actions）:
+#   Secrets:
+#     CLOUDFLARE_API_TOKEN   … Cloudflare の API トークン（Pages: Edit 権限）
+#     CLOUDFLARE_ACCOUNT_ID  … Cloudflare のアカウント ID
+#   Variables:
+#     CLOUDFLARE_PROJECT_NAME … Pages プロジェクト名（例: sansu-generator）
+#                               ＝ <プロジェクト名>.pages.dev の左側
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 手動実行も できるように
+
+# 連続 push で デプロイが かさならないように 直列化（古いビルドは キャンセル）
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }} --branch=main
