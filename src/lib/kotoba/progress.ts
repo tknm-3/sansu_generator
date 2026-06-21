@@ -75,14 +75,14 @@ export function worldFrontier(): number {
  * - さいしょの 世界は つねに 可
  * - クリア済みは つねに 可（やりなおし）
  * - 実績のある子は フロンティア＋さきどりぶん まで チャレンジできる
- * - ボス（ライン10）を クリアしたら 上級（11以降）は ぜんぶ あそべる
- *   ＝「むずかしいのを すぐ」を かなえる（design §13・算数版の 上級まきと同じ）
+ * - 上級（11以降＝おうよう/ながい/たつじん）は つねに あそべる
+ *   ＝「むずかしいのを すぐ」を かなえる。きほん（1〜10）だけ 順番に ひらく。
  */
 export function isWorldUnlocked(index: number): boolean {
   if (index <= 0) return true;
   if (isWorldCleared(WORLDS[index].id)) return true;
-  // ボスを クリアしたら 上級グループは 直線アンロックを とびこえて 常時開放
-  if (index >= ADVANCED_START && isBossCleared()) return true;
+  // 上級グループ（11以降）は 直線アンロックを とびこえて つねに 開放
+  if (index >= ADVANCED_START) return true;
   const cleared = clearedIndices();
   if (cleared.length === 0) return index <= WORLD_LOOKAHEAD; // 実績なしでも さいしょの 数個は えらべる
   return index <= Math.max(...cleared) + 1 + WORLD_LOOKAHEAD;
