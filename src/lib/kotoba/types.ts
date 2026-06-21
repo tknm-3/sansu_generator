@@ -20,7 +20,10 @@ export type LineId =
   | 'add-mora' // 音を たす（添加。削除と対の操作系）
   | 'substitute-mora' // 音を おきかえる（置換。削除より上位の操作）
   | 'find-position' // その音は ○ばんめ？（位置同定・nth の逆）
-  | 'swap-mora'; // さいしょと おしりを いれかえる（転置・spoonerism。WM最大級）
+  | 'swap-mora' // さいしょと おしりを いれかえる（転置・spoonerism。WM最大級）
+  | 'voice-mora' // てんてん(濁点)を つけると？（清音→濁音の操作・特殊音知識）
+  | 'semivoice-mora' // まる(半濁点)を つけると？（は行→ぱ行・かな最難の半濁音）
+  | 'odd-one-out'; // さいしょ/おしりの おとが ちがう なかまはずれ（音のオドリティ）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 

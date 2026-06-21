@@ -353,6 +353,75 @@ function genSwap(rng?: Rng, opts?: GenOpts): MojiQuestion {
   };
 }
 
+// 清音→濁音（てんてん）。は行は ば/ぱ の両方ありえて あいまいなので 入れない（一意に きめる）。
+const VOICE_MAP: Record<string, string> = {
+  か: 'が', き: 'ぎ', く: 'ぐ', け: 'げ', こ: 'ご',
+  さ: 'ざ', し: 'じ', す: 'ず', せ: 'ぜ', そ: 'ぞ',
+  た: 'だ', ち: 'ぢ', つ: 'づ', て: 'で', と: 'ど',
+};
+const VOICED_POOL = Object.values(VOICE_MAP);
+// は行→ぱ行（まる・半濁点）。
+const SEMIVOICE_MAP: Record<string, string> = { は: 'ぱ', ひ: 'ぴ', ふ: 'ぷ', へ: 'ぺ', ほ: 'ぽ' };
+const SEMI_POOL = Object.values(SEMIVOICE_MAP);
+
+// 共通: さいしょの音に てんてん/まる を つける（清音→濁音/半濁音）
+function genMark(lineId: 'voice-mora' | 'semivoice-mora', map: Record<string, string>, pool: string[], prompt: string, rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const ok = (w: WordItem) => map[w.mora[0]] !== undefined;
+  const cands = poolWords(opts).filter(ok);
+  const w = pick(cands.length ? cands : WORDS.filter(ok), rng);
+  const correct = map[w.mora[0]];
+  const n = opts?.choiceCount ?? 4;
+  const labels = shuffle([correct, ...shuffle(pool.filter((v) => v !== correct), rng).slice(0, n - 1)], rng);
+  return {
+    lineId,
+    mode: 'choose',
+    prompt,
+    speak: w.reading,
+    mora: w.mora,
+    pictureEmoji: w.display,
+    choices: labels.map((l) => ({ label: l })),
+    answer: labels.indexOf(correct),
+  };
+}
+
+// ── 濁点をつける ──
+function genVoice(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  return genMark('voice-mora', VOICE_MAP, VOICED_POOL, 'さいしょの おとに てんてんを つけると？', rng, opts);
+}
+// ── 半濁点をつける ──
+function genSemivoice(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  return genMark('semivoice-mora', SEMIVOICE_MAP, SEMI_POOL, 'さいしょの おとに まるを つけると？', rng, opts);
+}
+
+// ── なかまはずれ（さいしょ/おしりの おとが ちがう のは どれ）──
+// 音のオドリティ＝3つは そろえ、1つだけ ちがう。同定より難しい（比べて 抑制する）。
+function genOddOneOut(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const useLast = R(rng) < 0.4; // 4割で おしり版（押韻オドリティ）
+  const keyOf = (w: WordItem) => (useLast ? w.mora[w.mora.length - 1] : w.mora[0]);
+  const ws = poolWords(opts);
+  // 同じ key を 3つ以上 もつ グループを さがす
+  const groups = new Map<string, WordItem[]>();
+  for (const w of ws) {
+    const k = keyOf(w);
+    (groups.get(k) ?? groups.set(k, []).get(k)!).push(w);
+  }
+  const bigKeys = shuffle([...groups.keys()].filter((k) => groups.get(k)!.length >= 3), rng);
+  const sameKey = bigKeys[0] ?? [...groups.keys()][0];
+  const sames = shuffle(groups.get(sameKey)!, rng).slice(0, 3);
+  const odd = pick(shuffle(ws.filter((w) => keyOf(w) !== sameKey), rng), rng);
+  const opt = shuffle([...sames, odd], rng);
+  // 読み上げは「なかま側」の語にする（答え＝odd を 読み上げて バラさない）
+  return {
+    lineId: 'odd-one-out',
+    mode: 'choose',
+    prompt: useLast ? 'おしりの おとが ちがう のは どれ？' : 'さいしょの おとが ちがう のは どれ？',
+    speak: sames[0].reading,
+    mora: sames[0].mora,
+    choices: opt.map((w) => ({ label: w.reading, emoji: w.display })),
+    answer: opt.indexOf(odd),
+  };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -374,5 +443,8 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'substitute-mora': return genSubstitute(rng, opts);
     case 'find-position': return genFindPosition(rng, opts);
     case 'swap-mora': return genSwap(rng, opts);
+    case 'voice-mora': return genVoice(rng, opts);
+    case 'semivoice-mora': return genSemivoice(rng, opts);
+    case 'odd-one-out': return genOddOneOut(rng, opts);
   }
 }

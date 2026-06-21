@@ -28,7 +28,8 @@ const CHAPTERS: { label: string; start: number; end: number }[] = [
   { label: 'きほん', start: 0, end: 10 }, // 1〜10 教材
   { label: 'おうよう', start: 10, end: 18 }, // 11〜18 腕試し
   { label: 'ながい・ばんめ', start: 18, end: 24 }, // 19〜24 長語・位置
-  { label: 'たつじん', start: 24, end: WORLDS.length }, // 25〜 操作系・上級
+  { label: 'たつじん', start: 24, end: 32 }, // 25〜32 操作系（置換・転置…）
+  { label: 'でんせつ', start: 32, end: WORLDS.length }, // 33〜 濁点/半濁点・なかまはずれ・長語混合（最上級）
 ];
 
 function chapterOf(index: number): number {
