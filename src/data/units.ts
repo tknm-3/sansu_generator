@@ -1,4 +1,4 @@
-export type Category = 'sansu' | 'katachi' | 'programming' | 'family' | 'baby' | 'kotoba';
+export type Category = 'sansu' | 'katachi' | 'programming' | 'family' | 'baby' | 'kotoba' | 'rika';
 
 export interface UnitMeta {
   id: string;
