@@ -1,4 +1,4 @@
-import { RIKA_GROUPS } from './data';
+import { RIKA_GROUPS, RIKA_SEQUENCES } from './data';
 import type { RikaQuestion, RikaKind } from './types';
 
 // りかランドの問題生成。rng 既定は Math.random（テストは seeded を渡す）。
@@ -50,8 +50,30 @@ export function genOdd(rng?: Rng): RikaQuestion {
   };
 }
 
+// ── そだつ じゅんばん: シャッフルした絵を さいしょ から じゅんに タップ ──
+export function genSequence(rng?: Rng): RikaQuestion {
+  const seq = pick(RIKA_SEQUENCES, rng);
+  const stages = seq.stages;
+  // perm[displayPos] = もとの stage index（表示順）
+  const perm = shuffle(stages.map((_, i) => i), rng);
+  const choices = perm.map((i) => ({ emoji: stages[i] }));
+  // order[rank] = rank番目に タップすべき choice(表示) index
+  const order = stages.map((_, rank) => perm.indexOf(rank));
+  return {
+    kind: 'sequence',
+    prompt: seq.prompt,
+    speak: seq.prompt,
+    groupId: seq.id,
+    choices,
+    answer: -1,
+    order,
+  };
+}
+
 /** メカを 指定 or ランダムで 1問つくる */
 export function generateRika(rng?: Rng, kind?: RikaKind): RikaQuestion {
-  const k = kind ?? (R(rng) < 0.5 ? 'classify' : 'odd-one-out');
-  return k === 'classify' ? genClassify(rng) : genOdd(rng);
+  const k = kind ?? pick(['classify', 'odd-one-out', 'sequence'] as RikaKind[], rng);
+  if (k === 'classify') return genClassify(rng);
+  if (k === 'odd-one-out') return genOdd(rng);
+  return genSequence(rng);
 }

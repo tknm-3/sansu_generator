@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { RIKA_GROUPS } from './data';
-import { genClassify, genOdd, generateRika } from './generate';
+import { RIKA_GROUPS, RIKA_SEQUENCES } from './data';
+import { genClassify, genOdd, genSequence, generateRika } from './generate';
 
 // 決定的に回すための seeded RNG（mulberry32）
 function seeded(seed: number) {
@@ -81,9 +81,39 @@ describe('なかまはずれ(odd-one-out)の生成', () => {
   });
 });
 
+describe('系列辞書（RikaSequence）の整合', () => {
+  it('各系列: stages>=3・重複なし・prompt は ならべて', () => {
+    for (const s of RIKA_SEQUENCES) {
+      expect(s.stages.length).toBeGreaterThanOrEqual(3);
+      expect(new Set(s.stages).size).toBe(s.stages.length); // 重複なし＝順が一意
+      expect(s.prompt).toContain('ならべて');
+    }
+  });
+});
+
+describe('そだつ じゅんばん(sequence)の生成', () => {
+  it('100回: order は 0..n-1 の並べ替え・order どおり タップで 正しい順に なる', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = genSequence(seeded(s + 13));
+      expect(q.kind).toBe('sequence');
+      const seq = RIKA_SEQUENCES.find((x) => x.id === q.groupId)!;
+      const n = seq.stages.length;
+      expect(q.choices.length).toBe(n);
+      expect(q.order).toBeDefined();
+      const order = q.order!;
+      // order は 0..n-1 の 並べ替え
+      expect([...order].sort((a, b) => a - b)).toEqual(seq.stages.map((_, i) => i));
+      // order どおりに choice を ならべると もとの stages（正しい順）に なる
+      const built = order.map((ci) => q.choices[ci].emoji);
+      expect(built).toEqual(seq.stages);
+    }
+  });
+});
+
 describe('ディスパッチャ', () => {
   it('generateRika は kind 指定で その種類を返す', () => {
     expect(generateRika(seeded(1), 'classify').kind).toBe('classify');
     expect(generateRika(seeded(1), 'odd-one-out').kind).toBe('odd-one-out');
+    expect(generateRika(seeded(1), 'sequence').kind).toBe('sequence');
   });
 });
