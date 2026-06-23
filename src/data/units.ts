@@ -272,6 +272,15 @@ export const UNITS: UnitMeta[] = [
     curriculum: 'かぞく ゲーム：100マスすごろく＋ビンゴ の ドキドキ たいけつ！',
     emoji: '🎲',
   },
+  // ── りか カテゴリ ──
+  {
+    id: 'rika-land',
+    category: 'rika',
+    title: 'りかランド',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：観察と分類（なかまわけ・なかまはずれ）、うく/しずむ・じしゃくの予想',
+    emoji: '🔬',
+  },
 ];
 
 export function getUnit(id: string): UnitMeta | undefined {
