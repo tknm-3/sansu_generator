@@ -1,4 +1,4 @@
-import type { RikaGroup } from './types';
+import type { RikaGroup, RikaSequence } from './types';
 
 // りかランドの「なかま」辞書。
 // members = その属性を みたす絵／distractors = 明らかに みたさない絵。
@@ -48,4 +48,16 @@ export const RIKA_GROUPS: RikaGroup[] = [
     members: ['🔩', '📎', '🔧', '🔨', '⚙️', '🔗'],
     distractors: ['🧶', '🍎', '📄', '🪵', '🧽', '🎈', '🧦', '🍃'],
   },
+];
+
+// ── そだつ じゅんばん（系列・並べ替え）──
+// stages は さいしょ→さいご の 正しい順。重複なし（テストで保証）＝順が 一意。
+// 出題は シャッフルして 出し、こどもは さいしょ から じゅんに タップする。
+export const RIKA_SEQUENCES: RikaSequence[] = [
+  { id: 'chicken', prompt: 'たまごから そだつ じゅんに ならべて', stages: ['🥚', '🐣', '🐔'] },
+  { id: 'butterfly', prompt: 'ちょうちょに なる じゅんに ならべて', stages: ['🥚', '🐛', '🦋'] },
+  { id: 'plant', prompt: 'たねから そだつ じゅんに ならべて', stages: ['🌰', '🌱', '🌸'] },
+  { id: 'plant4', prompt: 'たねから はなが さく じゅんに ならべて', stages: ['🌰', '🌱', '🌿', '🌻'] },
+  { id: 'human', prompt: 'あかちゃんから おおきく なる じゅんに ならべて', stages: ['👶', '🧒', '🧑'] },
+  { id: 'day', prompt: 'あさから よるまで じゅんに ならべて', stages: ['🌅', '☀️', '🌇', '🌙'] },
 ];

@@ -25,6 +25,7 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
   const [round, setRound] = useState(0);
   const [q, setQ] = useState<RikaQuestion>(() => generateRika());
   const [status, setStatus] = useState<'asking' | 'right' | 'done'>('asking');
+  const [picked, setPicked] = useState<number[]>([]); // sequence: タップ済み choice index 列
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const later = (fn: () => void, ms: number) => {
@@ -44,14 +45,34 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
     if (status === 'asking') speakJa(q.speak, undefined, { rate: SPEAK_RATE });
   }, [q, status]);
 
+  function win() {
+    playSfx('correct');
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    speakJa('せいかい！', undefined, { rate: SPEAK_RATE });
+    setStatus('right');
+    later(next, 1400);
+  }
+
   function handlePick(index: number) {
     if (status !== 'asking') return;
+    // そだつ じゅんばん: さいしょ から じゅんに タップ
+    if (q.kind === 'sequence' && q.order) {
+      if (picked.includes(index)) return;
+      const expected = q.order[picked.length];
+      if (index === expected) {
+        const np = [...picked, index];
+        setPicked(np);
+        if (np.length === q.order.length) win();
+        else playSfx('correct');
+      } else {
+        playSfx('wrong');
+        speakJa('うーん、さいしょ から じゅんばんに さがしてみよう！', undefined, { rate: SPEAK_RATE });
+      }
+      return;
+    }
+    // なかまわけ／なかまはずれ: 1つ えらぶ
     if (index === q.answer) {
-      playSfx('correct');
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      speakJa('せいかい！', undefined, { rate: SPEAK_RATE });
-      setStatus('right');
-      later(next, 1400);
+      win();
     } else {
       playSfx('wrong');
       speakJa('もういちど よく みてみよう！', undefined, { rate: SPEAK_RATE });
@@ -69,6 +90,7 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
     } else {
       setRound((r) => r + 1);
       setQ(generateRika());
+      setPicked([]);
       setStatus('asking');
     }
   }
@@ -78,6 +100,7 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
     timers.current = [];
     setRound(0);
     setQ(generateRika());
+    setPicked([]);
     setStatus('asking');
   }
 
@@ -108,7 +131,7 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
         </div>
       ) : (
         <>
-          {/* お題（きまり） */}
+          {/* お題（きまり／じゅんばん） */}
           <motion.div
             key={`p-${round}`}
             initial={{ opacity: 0, y: -10 }}
@@ -117,26 +140,39 @@ export function RikaLandUnit({ characterName, onExit }: Props) {
           >
             {q.prompt}
           </motion.div>
+          {q.kind === 'sequence' && (
+            <p className="text-sm font-bold text-emerald-600">さいしょ から じゅんに タップしてね</p>
+          )}
 
-          {/* 選択肢 4つ（2×2） */}
+          {/* 選択肢（classify/odd は 2×2、sequence は タップ順に ばんごうが つく） */}
           <div className="mt-auto mb-10 grid grid-cols-2 gap-4">
-            {q.choices.map((c, i) => (
-              <motion.button
-                key={`${round}-${i}`}
-                type="button"
-                onClick={() => handlePick(i)}
-                disabled={status !== 'asking'}
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.08 }}
-                whileTap={status === 'asking' ? { scale: 0.92 } : undefined}
-                className={`flex h-28 w-28 items-center justify-center rounded-3xl border-4 bg-white/90 text-6xl shadow-[0_5px_0_#a7f3d0] ${
-                  status === 'right' && i === q.answer ? 'border-emerald-400' : 'border-white'
-                }`}
-              >
-                {c.emoji}
-              </motion.button>
-            ))}
+            {q.choices.map((c, i) => {
+              const pickedPos = picked.indexOf(i); // sequence: -1=未タップ
+              const isPicked = pickedPos >= 0;
+              const highlight = q.kind === 'sequence' ? isPicked : status === 'right' && i === q.answer;
+              return (
+                <motion.button
+                  key={`${round}-${i}`}
+                  type="button"
+                  onClick={() => handlePick(i)}
+                  disabled={status !== 'asking' || isPicked}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.08 }}
+                  whileTap={status === 'asking' && !isPicked ? { scale: 0.92 } : undefined}
+                  className={`relative flex h-28 w-28 items-center justify-center rounded-3xl border-4 bg-white/90 text-6xl shadow-[0_5px_0_#a7f3d0] ${
+                    highlight ? 'border-emerald-400' : 'border-white'
+                  } ${isPicked ? 'opacity-70' : ''}`}
+                >
+                  {c.emoji}
+                  {q.kind === 'sequence' && isPicked && (
+                    <span className="absolute -left-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-lg font-bold text-white shadow">
+                      {pickedPos + 1}
+                    </span>
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
         </>
       )}
