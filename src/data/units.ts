@@ -1,4 +1,4 @@
-export type Category = 'sansu' | 'katachi' | 'programming' | 'family' | 'baby' | 'kotoba';
+export type Category = 'sansu' | 'katachi' | 'programming' | 'family' | 'baby' | 'kotoba' | 'rika';
 
 export interface UnitMeta {
   id: string;
@@ -271,6 +271,15 @@ export const UNITS: UnitMeta[] = [
     grade: '年長〜小3',
     curriculum: 'かぞく ゲーム：100マスすごろく＋ビンゴ の ドキドキ たいけつ！',
     emoji: '🎲',
+  },
+  // ── りか カテゴリ ──
+  {
+    id: 'rika-land',
+    category: 'rika',
+    title: 'りかランド',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：観察と分類（なかまわけ・なかまはずれ）、うく/しずむ・じしゃくの予想',
+    emoji: '🔬',
   },
 ];
 

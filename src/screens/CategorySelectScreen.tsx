@@ -35,6 +35,15 @@ const CATEGORIES = [
     button: 'bg-teal-500',
   },
   {
+    id: 'rika' as Category,
+    label: 'りか',
+    emoji: '🔬',
+    description: 'なかまわけ・うくしずむ・じしゃく…',
+    bg: 'from-green-300 to-lime-200',
+    shadow: '#15803d',
+    button: 'bg-green-500',
+  },
+  {
     id: 'kotoba' as Category,
     label: 'ことば',
     emoji: '🤖',
