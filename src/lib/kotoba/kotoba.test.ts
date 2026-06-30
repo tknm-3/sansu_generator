@@ -128,7 +128,7 @@ const LINES: LineId[] = [
   'middle-mora', 'rhyme-match', 'nth-mora',
   'delete-medial', 'add-mora', 'substitute-mora', 'find-position', 'swap-mora',
   'voice-mora', 'semivoice-mora', 'odd-one-out',
-  'count-target-mora', 'anagram',
+  'count-target-mora', 'anagram', 'blend-mora',
 ];
 
 describe('問題生成（全10メカニクス）', () => {
@@ -342,6 +342,20 @@ describe('問題生成（全10メカニクス）', () => {
       const a = q.answer as number[];
       const built = a.map((i) => q.choices[i].label).join('');
       expect(built).toBe(q.speak);
+    }
+  });
+
+  it('blend-mora: お題の絵は ださず・正解は speak の語・選択肢は ぜんぶ 絵つき', () => {
+    for (let s = 0; s < 100; s++) {
+      const q = generateQuestion('blend-mora', seeded(s + 1));
+      expect(q.lineId).toBe('blend-mora');
+      expect(q.mode).toBe('choose');
+      // こたえバレ防止＝お題の絵は ださない（音だけで 合成させる）
+      expect(q.pictureEmoji).toBeUndefined();
+      // 正解の 選択肢ラベルは お題の語の reading
+      expect(q.choices[q.answer as number].label).toBe(q.speak);
+      // すべての 選択肢に 絵が ある（絵から えらぶ）
+      q.choices.forEach((c) => expect(c.emoji).toBeTruthy());
     }
   });
 

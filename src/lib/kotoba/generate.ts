@@ -481,6 +481,35 @@ function genAnagram(rng?: Rng, opts?: GenOpts): MojiQuestion {
   return { ...q, lineId: 'anagram', prompt: 'ばらばらの もじを ならべて！' };
 }
 
+// ── ばらばらの おとを つなげて 絵を あてる（聴覚ブレンディング＝合成）──
+// お題の絵は ださず（こたえバレ防止）、光の粒で 1拍ずつ「ば・な・な」と 読む。
+// こどもは 音を 頭の中で つなげて、正しい 絵を えらぶ。分解(count)の 逆操作で、
+// 合成と分解は 読字力の 二大予測スキル（エビデンス）。
+function genBlend(rng?: Rng, opts?: GenOpts): MojiQuestion {
+  const ws = poolWords(opts);
+  const w = pick(ws, rng);
+  // ダミーは ちがう絵の語（読みかぶり防止＝選択肢ラベルを ユニークに）
+  const used = new Set<string>([w.reading]);
+  const distractors: WordItem[] = [];
+  for (const d of shuffle(ws.length >= 4 ? ws : WORDS, rng)) {
+    if (used.has(d.reading)) continue;
+    used.add(d.reading);
+    distractors.push(d);
+    if (distractors.length >= (opts?.choiceCount ?? 4) - 1) break;
+  }
+  const opt = shuffle([w, ...distractors], rng);
+  return {
+    lineId: 'blend-mora',
+    mode: 'choose',
+    prompt: 'つなげると なーに？',
+    speak: w.reading,
+    mora: w.mora,
+    // pictureEmoji は あえて つけない＝音だけを たよりに 合成させる
+    choices: opt.map((x) => ({ label: x.reading, emoji: x.display })),
+    answer: opt.indexOf(w),
+  };
+}
+
 /** ライン別ディスパッチャ */
 export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): MojiQuestion {
   switch (lineId) {
@@ -508,5 +537,6 @@ export function generateQuestion(lineId: LineId, rng?: Rng, opts?: GenOpts): Moj
     case 'count-target-mora': return genCountTarget(rng, opts);
     case 'shiritori-chain': return genShiritoriChain(rng);
     case 'anagram': return genAnagram(rng, opts);
+    case 'blend-mora': return genBlend(rng, opts);
   }
 }
