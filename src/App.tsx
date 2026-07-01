@@ -27,6 +27,7 @@ import { ArrowAdventureUnit } from './screens/ArrowAdventureUnit';
 import { MathAdventureUnit } from './screens/MathAdventureUnit';
 import { MojiGearUnit } from './screens/MojiGearUnit';
 import { RikaLandUnit } from './screens/RikaLandUnit';
+import { RikaHomeScreen } from './screens/RikaHomeScreen';
 import { ArrowBranchUnit } from './screens/ArrowBranchUnit';
 import { ArrowMakerUnit } from './screens/ArrowMakerUnit';
 import { ChallengeMode } from './screens/ChallengeMode';
@@ -56,6 +57,7 @@ import type { Character } from './features/character/character';
 import type { TemplateFilled } from './lib/problemTemplates';
 import type { Category } from './data/units';
 import type { Difficulty } from './lib/programming/progress';
+import type { RikaUnitId } from './lib/rika/types';
 
 const PROFILE_KEY = 'math-app:profile';
 
@@ -67,7 +69,8 @@ type Screen =
   | { kind: 'programmingHome' }
   | { kind: 'bingoSugoroku' }
   | { kind: 'mojiGear' }
-  | { kind: 'rikaLand' }
+  | { kind: 'rikaHome' }
+  | { kind: 'rikaUnit'; unitId: RikaUnitId }
   | { kind: 'babyHome' }
   | { kind: 'babyUnit'; unitId: string }
   | { kind: 'progUnit'; unitId: string; difficulty: Difficulty }
@@ -151,7 +154,7 @@ export default function App() {
     else if (cat === 'family') setScreen({ kind: 'bingoSugoroku' });
     else if (cat === 'kotoba') setScreen({ kind: 'mojiGear' });
     else if (cat === 'baby') setScreen({ kind: 'babyHome' });
-    else if (cat === 'rika') setScreen({ kind: 'rikaLand' });
+    else if (cat === 'rika') setScreen({ kind: 'rikaHome' });
     else setScreen({ kind: 'home' });
   }
 
@@ -203,13 +206,26 @@ export default function App() {
       );
     }
 
-    if (screen.kind === 'rikaLand') {
+    if (screen.kind === 'rikaHome') {
       return (
-        <RikaLandUnit
+        <RikaHomeScreen
           key={refresh}
           characterName={character.name}
           characterId={character.id}
-          onExit={() => setScreen({ kind: 'categorySelect' })}
+          onSelectUnit={(unitId) => setScreen({ kind: 'rikaUnit', unitId })}
+          onBack={() => setScreen({ kind: 'categorySelect' })}
+        />
+      );
+    }
+
+    if (screen.kind === 'rikaUnit') {
+      return (
+        <RikaLandUnit
+          key={refresh}
+          unitId={screen.unitId}
+          characterName={character.name}
+          characterId={character.id}
+          onExit={() => setScreen({ kind: 'rikaHome' })}
         />
       );
     }
