@@ -504,6 +504,112 @@ export const WORLDS: WorldDef[] = [
     startLevel: 4,
     difficulty: { minMora: 4, maxMora: 5 },
   },
+  // ── 49〜58「エビデンス・バラエティ」: PA(音韻認識)階層の スキルごとに テーマを わけた 10ゾーン。
+  //    新メカ「音の合成(blend)」＋既存メカの 別組み合わせで、ねらう力を 1ゾーン1つに しぼる。──
+  {
+    id: 'seed-field',
+    name: 'ことばの たねばたけ',
+    emoji: '🌱',
+    friend: 'にわの ようせい',
+    story: 'ばらばらの おとを つなげると…\nたねから ことばが さくよ！',
+    tint: 'from-green-200 to-yellow-100',
+    lineIds: ['blend-mora'], // 聴覚ブレンディング（合成）＝読字力の 二大予測スキルの ひとつ
+    startLevel: 2,
+  },
+  {
+    id: 'oto-station',
+    name: 'おとつなぎ えき',
+    emoji: '🚉',
+    friend: 'しゃしょう ロボ',
+    story: 'おしりの おとで つぎへ つなぐ！\nしりとりの えきだよ',
+    tint: 'from-sky-200 to-teal-100',
+    lineIds: ['last-mora', 'first-mora', 'shiritori-chain'], // 語尾→語頭の連鎖＝モーラ意識（しりとり）
+    startLevel: 2,
+  },
+  {
+    id: 'oto-aquarium',
+    name: 'おとあて すいぞくかん',
+    emoji: '🐠',
+    friend: 'いるか',
+    story: 'おなじ おとの さかなを さがそう！\nさいしょ や おしりを よく きいて',
+    tint: 'from-cyan-200 to-blue-100',
+    lineIds: ['match-sound', 'rhyme-match'], // 頭韻＆押韻の感受性（Bradley & Bryant の古典課題）
+    startLevel: 2,
+  },
+  {
+    id: 'nakama-forest',
+    name: 'なかまはずれ もり',
+    emoji: '🦉',
+    friend: 'みみの いい ふくろう',
+    story: 'ひとつだけ おとが ちがう！\nなかまはずれを みみで みつけて',
+    tint: 'from-amber-200 to-lime-100',
+    lineIds: ['odd-one-out', 'match-sound'], // 音オドリティ＝同定より上位（比べて 抑制する）
+    startLevel: 3,
+  },
+  {
+    id: 'kazoe-mountain',
+    name: 'かぞえる ことばやま',
+    emoji: '🏔️',
+    friend: 'やぎ せんせい',
+    story: 'おとは いくつ かな？\nおなじ おとも かぞえてみよう',
+    tint: 'from-stone-200 to-sky-100',
+    lineIds: ['count-mora', 'count-target-mora'], // 音韻分析＋計数（分節化）
+    startLevel: 3,
+    difficulty: { minMora: 3, maxMora: 5 },
+  },
+  {
+    id: 'banme-detective',
+    name: 'ばんめ たんていしゃ',
+    emoji: '🔎',
+    friend: 'おとの たんてい',
+    story: 'なんばんめの おと？\nまんなかも さがせる たんていだ',
+    tint: 'from-slate-300 to-indigo-100',
+    lineIds: ['nth-mora', 'find-position', 'middle-mora'], // 位置の抽出・同定（語中＝発達的に最難）
+    startLevel: 3,
+    difficulty: { minMora: 3, maxMora: 5 },
+  },
+  {
+    id: 'nukitori-factory',
+    name: 'ぬきとり ファクトリー',
+    emoji: '🏭',
+    friend: 'ぬきとり ロボ',
+    story: 'おとを ぬいたり たしたり！\nことばが かわる こうじょう',
+    tint: 'from-zinc-300 to-amber-100',
+    lineIds: ['delete-mora', 'delete-medial', 'add-mora'], // 削除（語頭/語中）と添加＝対の操作系
+    startLevel: 3,
+  },
+  {
+    id: 'henshin-onsen',
+    name: 'へんしん おんせん',
+    emoji: '♨️',
+    friend: 'ばけだぬき',
+    story: 'おとを かえたり てんてんを つけたり！\nへんしんの おゆだよ',
+    tint: 'from-rose-200 to-fuchsia-100',
+    lineIds: ['substitute-mora', 'add-mora', 'voice-mora'], // 置換・添加・濁点＝音韻操作の上位
+    startLevel: 3,
+  },
+  {
+    id: 'sakasama-cave',
+    name: 'さかさま どうくつ',
+    emoji: '🦇',
+    friend: 'さかさ こうもり',
+    story: 'おとを さかさまに！\nさいしょと おしりも いれかえる',
+    tint: 'from-violet-300 to-slate-200',
+    lineIds: ['reverse-word', 'swap-mora'], // 逆唱・転置＝ワーキングメモリ最大級
+    startLevel: 4,
+    difficulty: { minMora: 3, maxMora: 4 },
+  },
+  {
+    id: 'word-lab',
+    name: 'ことばの だいけんきゅうじょ',
+    emoji: '🧪',
+    friend: 'ことば はかせ',
+    story: 'さいごの けんきゅう！\nつなぐ・さがす・かえる ぜんぶの ちから！',
+    tint: 'from-purple-300 to-red-200',
+    lineIds: ['blend-mora', 'nth-mora', 'substitute-mora', 'swap-mora', 'count-target-mora', 'find-position'], // 合成＋抽出＋操作の総合ボス
+    startLevel: 4,
+    difficulty: { minMora: 4, maxMora: 5 },
+  },
 ];
 
 export function getWorld(id: string): WorldDef | undefined {

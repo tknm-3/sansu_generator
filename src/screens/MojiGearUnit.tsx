@@ -30,7 +30,8 @@ const CHAPTERS: { label: string; start: number; end: number }[] = [
   { label: 'ながい・ばんめ', start: 18, end: 24 }, // 19〜24 長語・位置
   { label: 'たつじん', start: 24, end: 32 }, // 25〜32 操作系（置換・転置…）
   { label: 'でんせつ', start: 32, end: 40 }, // 33〜40 濁点/半濁点・なかまはずれ・長語混合
-  { label: 'おうごん', start: 40, end: WORLDS.length }, // 41〜 新メカ(数える/しりとり/ばらばら)＋難混合（最上級）
+  { label: 'おうごん', start: 40, end: 48 }, // 41〜48 新メカ(数える/しりとり/ばらばら)＋難混合（最上級）
+  { label: 'バラエティ', start: 48, end: WORLDS.length }, // 49〜 PAスキル別の テーマ10ゾーン（合成ほか）
 ];
 
 function chapterOf(index: number): number {

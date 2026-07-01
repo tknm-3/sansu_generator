@@ -26,7 +26,8 @@ export type LineId =
   | 'odd-one-out' // さいしょ/おしりの おとが ちがう なかまはずれ（音のオドリティ）
   | 'count-target-mora' // その おとは いくつ？（特定音の計数・音韻分析＋計数の合体）
   | 'shiritori-chain' // しりとりに ならべる（語尾→語頭の連鎖・WM最大級）
-  | 'anagram'; // ばらばらの もじを ならべて 絵の語を 作る（build-word の上位・足場なし）
+  | 'anagram' // ばらばらの もじを ならべて 絵の語を 作る（build-word の上位・足場なし）
+  | 'blend-mora'; // ばらばらの おとを つなげて 絵を あてる（聴覚ブレンディング＝合成。読字力の最重要予測因子の1つ。build/anagram の「見える文字を並べる」とは別＝音だけで合成する）
 
 export type WordCat = 'food' | 'animal' | 'vehicle' | 'nature' | 'thing';
 
