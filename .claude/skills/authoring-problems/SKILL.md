@@ -392,3 +392,22 @@ npx vitest run                                          # 全部
   ・**子の意欲＝即時・前向き強化**: コンボ(れんぞくせいかい)とノーミスのパーフェクト演出を足した
     （時間で罰しない原則は維持）。combo は親 state に持ち、PlayScreen には `combo` を渡して
     正解時に `combo+1` を表示（PlayScreen は key={qi} で問題ごとに remount するため）。
+- [2026-07-01] 理科/りかを「1画面ごちゃ混ぜ」→テーマ別5単元に再編（いきもの🐾・そだつ🌱・
+  うくしずむ🛟・じしゃく🧲・きせつ🌤️）。他カテゴリと同じく専用ホーム(`RikaHomeScreen`)＋
+  単元選択にした。学んだこと:
+  ・**データに `unit` タグを付け、generate は unit でプールをしぼる**（`RIKA_GROUPS`/`RIKA_SEQUENCES`/
+    `RIKA_PREDICTS` の各要素に `unit: RikaUnitId`）。単元定義は `src/lib/rika/units.ts`（title・emoji・
+    出すメカ `kinds`・stampId・色 theme）に一元化し、ホームと出題の両方が参照＝単一の真実。
+  ・**新メカ predict は Predict-Observe-Explain（予想→観察→理由）**。1つのものを見せ2択で予想→
+    結果アニメ（うく=上へ/しずむ=下へ、magnet も同型）→ ひとこと理由。**エビデンスのある幼児の
+    科学的思考の型**。原則: **まちがっても せめない**＝予想が外れても結果と理由を見せて必ず進む
+    （`handlePredict` は正誤に関わらず `later(next,…)`）。分類と同じ辞書(members/distractors)を
+    予想でも使えるが、predict は「positive/negative＋reason」を持つ別セット `RikaPredictSet` にした。
+  ・**Tailwind v4 の動的クラス名は拾えない罠**: `text-${accent}-800` の様な文字列連結は `@source` の
+    スキャンに載らず**色が出ない**（CategorySelectScreen 方式に倣う）。単元色は theme に
+    **完成したリテラルクラス**（`text-emerald-800` 等）で持たせ、そのまま `className` に差す。
+    src 配下のリテラルなら v4 の `@source "./**/*.{ts,tsx}"` が生成する。
+  ・スクショ罠: 単元が predict/classify を**ランダムで混ぜて出す**ので、predict UI を撮るには
+    数回撮り直すか kind 固定で撮る。予想リビールは confetti＋「あたり！」＋理由まで待つ(≈1400ms)。
+  ・検証: `src/lib/rika/rika.test.ts` に unit タグ整合・**各単元の kinds に必要データが在る
+    （プール枯渇なし）**・predict の answer＝item.positive 一致・単元しぼり生成を常設。

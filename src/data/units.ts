@@ -272,14 +272,46 @@ export const UNITS: UnitMeta[] = [
     curriculum: 'かぞく ゲーム：100マスすごろく＋ビンゴ の ドキドキ たいけつ！',
     emoji: '🎲',
   },
-  // ── りか カテゴリ ──
+  // ── りか カテゴリ（テーマ別5単元。詳細は src/lib/rika/units.ts）──
   {
-    id: 'rika-land',
+    id: 'rika-ikimono',
     category: 'rika',
-    title: 'りかランド',
+    title: 'いきもの かんさつ',
     grade: '年長〜小2',
-    curriculum: '理科の素地：観察と分類（なかまわけ・なかまはずれ）、うく/しずむ・じしゃくの予想',
-    emoji: '🔬',
+    curriculum: '理科の素地：観察と分類（なかまわけ・なかまはずれ）',
+    emoji: '🐾',
+  },
+  {
+    id: 'rika-sodatsu',
+    category: 'rika',
+    title: 'そだつ じゅんばん',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：成長・変化の系列（たまご→ひよこ 等）を順に並べる',
+    emoji: '🌱',
+  },
+  {
+    id: 'rika-ukishizumu',
+    category: 'rika',
+    title: 'うくかな？ しずむかな？',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：予想→観察→理由（うく/しずむ）。Predict-Observe-Explain',
+    emoji: '🛟',
+  },
+  {
+    id: 'rika-jishaku',
+    category: 'rika',
+    title: 'じしゃく けんきゅうじょ',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：予想→観察→理由（じしゃくに くっつく/つかない）',
+    emoji: '🧲',
+  },
+  {
+    id: 'rika-kisetsu',
+    category: 'rika',
+    title: 'きせつと おてんき',
+    grade: '年長〜小2',
+    curriculum: '理科の素地：季節・天気のなかまわけ、季節の系列',
+    emoji: '🌤️',
   },
 ];
 
